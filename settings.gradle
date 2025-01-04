@@ -1,0 +1,137 @@
+pluginManagement {
+    repositories {
+
+        maven { url 'https://maven.aliyun.com/repository/central' }
+//        maven { url 'https://maven.aliyun.com/repository/jcenter' }
+        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
+//        maven { url 'https://maven.aliyun.com/repository/apache-snapshots' }
+        gradlePluginPortal()
+        mavenCentral()
+        maven { url 'https://repo.spring.io/milestone' }
+        mavenLocal()
+    }
+    plugins {
+        id "${quarkusPluginId}" version "${quarkusPluginVersion}"
+        // FIX: https://github.com/diffplug/spotless/issues/2311
+        id "com.diffplug.spotless" version "7.0.0.BETA4"
+        id 'nu.studer.jooq' version '9.0'
+    }
+}
+dependencyResolutionManagement {
+    versionCatalogs {
+        libs {
+            // versions
+            version('quarkus', '3.17.5')
+            version('camel', '3.17.0')
+            version('jooq', '3.19.12')
+            version('jooqQuarkiverse', '2.0.1')
+            version('slf4j-jboss-logmanager', '2.0.1.Final')
+            version('testcontainers', '1.19.6')
+            version('consul', '2.2.2')
+            version('hanlp', 'portable-1.8.4')
+            version('commons', '4.4')
+            version('guava', '33.2.1-jre')
+
+            // NOTE: quarkus
+            plugin('quarkusPlugin', 'io.quarkus').versionRef('quarkus')
+            library('quarkusPlatform', 'io.quarkus.platform', 'quarkus-bom').versionRef('quarkus')
+            library('quarkusCamelPlatform', 'io.quarkus.platform', 'quarkus-camel-bom').versionRef('quarkus')
+            library('quarkusSmallryeOpenapi', 'io.quarkus', 'quarkus-smallrye-openapi').versionRef('quarkus')
+            library('quarkusArc', 'io.quarkus', 'quarkus-arc').versionRef('quarkus') //CDI
+            library('quarkusJunit5', 'io.quarkus', 'quarkus-junit5').versionRef('quarkus')
+//            library('gson', 'org.apache.camel.quarkus', 'camel-quarkus-gson').versionRef('camel')
+            library('gson', 'com.google.code.gson', 'gson').version('2.11.0')
+            library('xml','jakarta.xml.bind','jakarta.xml.bind-api').version('4.0.2')
+
+            // NOTE: protocol
+            library('websocket', 'io.quarkus', 'quarkus-websockets-client').versionRef('quarkus')
+            // NOTE: auth
+            library('oidc', 'io.quarkus', 'quarkus-oidc').versionRef('quarkus')
+            library('vault', 'io.quarkiverse', 'quarkus-vault').versionRef('quarkus')
+            // NOTE: cached
+            library('cache', 'io.quarkus', 'quarkus-cache').versionRef('quarkus')
+
+            // NOTE: slf4j-jboss-logmanager (links quarkus jboss-logging so it can log jOOQs slf4j logging)
+            library('slf4jJbossLogManager', 'org.jboss.slf4j', 'slf4j-jboss-logmanager').versionRef('slf4j-jboss-logmanager')
+
+            // NOTE: vert.x
+            library('vertx', 'io.quarkus', 'quarkus-vertx').versionRef('quarkus')
+            library('vertxClient', 'io.smallrye.reactive', 'smallrye-mutiny-vertx-web-client').versionRef('quarkus')
+
+            // NOTE: db
+            library('agroal', 'io.quarkus', 'quarkus-agroal').versionRef('quarkus')
+            library('quarkusJdbcPostgreSQL', 'io.quarkus', 'quarkus-jdbc-postgresql').versionRef('quarkus')
+            // TODO: need check , Is it necessary to do this?
+            library('quarkusReactivePgClient', 'io.quarkus', 'quarkus-reactive-pg-client').versionRef('quarkus')
+
+            library('mongodb', 'io.quarkus', 'quarkus-mongodb-client').versionRef('quarkus')
+            library('redis', 'io.quarkus', 'quarkus-redis-client').versionRef('quarkus')
+
+
+            // NOTE: tool
+            library('flyway', 'io.quarkus', 'quarkus-flyway').versionRef('quarkus')
+            library('dbHealth', 'io.quarkus', 'quarkus-smallrye-health').versionRef('quarkus')
+            library('graphql', 'io.quarkus', 'quarkus-smallrye-graphql').versionRef('quarkus')
+            library("rest-client-jackson", "io.quarkus", "quarkus-rest-client-jackson").versionRef('quarkus')
+            library("rest-client", "io.quarkus", "quarkus-rest-client-jackson").versionRef('quarkus')
+            library("guava", "com.google.guava", "guava").versionRef('guava')
+            library("opentelemetry", "io.quarkus", "quarkus-opentelemetry").versionRef('quarkus')
+            library('commons', 'org.apache.commons', 'commons-collections4').versionRef('commons')
+            library('micrometer', 'io.quarkus', 'quarkus-micrometer').versionRef('quarkus')
+
+            // NOTE: jooq
+            library('jooq', 'org.jooq', 'jooq').versionRef('jooq')
+            library('jooqQuarkus', 'io.quarkiverse.jooq', 'quarkus-jooq').versionRef('jooqQuarkiverse')
+            library('jooqMeta', 'org.jooq', 'jooq-meta').versionRef('jooq')
+            library('jooqCodegen', 'org.jooq', 'jooq-codegen').versionRef('jooq')
+
+            // NOTE: search
+            library('es', 'io.quarkus', 'quarkus-elasticsearch-java-client').versionRef('quarkus')
+
+            // NOTE: consul
+            library('consul', 'io.quarkiverse.config', 'quarkus-config-consul').version('2.2.2')
+//            library('consul', 'io.quarkiverse.config', 'quarkus-config-consul').versionRef('quarkus')
+//            library('consulStork', 'io.smallrye.stork', 'stork-service-discovery-consul').versionRef('quarkus')
+//            library('consulClient', 'io.smallrye.reactive', 'smallrye-mutiny-vertx-consul-client').versionRef('quarkus')
+            library('pulsar', 'io.quarkus', 'quarkus-messaging-pulsar').versionRef('quarkus')
+            library('grpc', 'io.quarkus', 'quarkus-grpc').versionRef('quarkus')
+
+            // NOTE: testcontainers
+            library('testcontainers', 'org.testcontainers', 'testcontainers').versionRef('testcontainers')
+            library('testcontainersPg', 'org.testcontainers', 'postgresql').versionRef('testcontainers')
+            library('testcontainersJunitJupiter', 'org.testcontainers', 'junit-jupiter').versionRef('testcontainers')
+
+            // NOTE: jwt
+            library('jwt', 'io.quarkus', 'quarkus-smallrye-jwt').versionRef('quarkus')
+            library('jwtBuild', 'io.quarkus', 'quarkus-smallrye-jwt-build').versionRef('quarkus')
+
+            // NOTE: NLP
+            library('hanlp', 'com.hankcs', 'hanlp').versionRef('hanlp')
+            // NOTE: SMTP
+            library('smtp', 'io.quarkus', 'quarkus-mailer').versionRef('quarkus')
+            // NOTE: valid
+            library('valid', 'io.quarkus', 'quarkus-hibernate-validator').versionRef('quarkus')
+
+            // NOTE: base
+            bundle('base', ['gson', 'quarkusArc', 'quarkusJunit5', 'consul', 'quarkusSmallryeOpenapi','xml'])
+            // NOTE: persistence
+            bundle('persistence', ['quarkusJdbcPostgreSQL', 'quarkusReactivePgClient', 'mongodb', 'agroal', 'jooq'])
+            // NOTE: cache
+            bundle('cache', ['cache','redis'])
+            // NOTE: message
+            bundle('mq', ['pulsar'])
+            // NOTE: search
+            bundle('search', ['es'])
+            // NOTE: utils
+            bundle('utils',['guava'])
+            // NOTE: protocol
+            bundle('protocol', ['grpc', 'websocket'])
+
+            bundle('testcontainers', ['testcontainers', 'testcontainersPg'])
+
+            bundle('test', ['testcontainers', 'testcontainersPg', 'flyway', 'quarkusJunit5'])
+        }
+    }
+}
+rootProject.name = 'infrastructure'
+
