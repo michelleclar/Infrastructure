@@ -1,4 +1,4 @@
-package org.carl.persistence.engine.runtime;
+package org.carl.infrastructure.persistence.engine.runtime;
 
 import io.quarkus.runtime.annotations.ConfigGroup;
 import io.quarkus.runtime.annotations.ConfigItem;
