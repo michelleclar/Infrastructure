@@ -15,7 +15,7 @@ plugins {
 }
 
 group = 'org.carl'
-version = '1.0-SNAPSHOT'
+version = '1.0-BATE '
 repositories {
     maven { url 'https://maven.aliyun.com/repository/central' }
     mavenCentral()
@@ -52,7 +52,6 @@ test {
 }
 
 spotless {
-    // optional: limit format enforcement to just the files changed by this feature branch
     ratchetFrom 'origin/main'
 
     java {
@@ -64,7 +63,6 @@ spotless {
         cleanthat()
         googleJavaFormat().aosp().reflowLongStrings().formatJavadoc(false).reorderImports(false).groupArtifact("com.google.googlejavaformat:google-java-format")
         formatAnnotations()
-        //        removeUnusedImports()
         trimTrailingWhitespace()
         endWithNewline()
     }

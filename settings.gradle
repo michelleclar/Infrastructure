@@ -13,7 +13,6 @@ pluginManagement {
     plugins {
         id "${quarkusPluginId}" version "${quarkusPluginVersion}"
         id 'nu.studer.jooq' version '9.0'
-        id 'org.ec4j.editorconfig' version '0.1.0'
         id 'com.diffplug.spotless' version '7.0.0.BETA4'
     }
 }
@@ -40,6 +39,12 @@ dependencyResolutionManagement {
             library('quarkusArc', 'io.quarkus', 'quarkus-arc').versionRef('quarkus') //CDI
             library('quarkusJunit5', 'io.quarkus', 'quarkus-junit5').versionRef('quarkus')
             //            library('gson', 'org.apache.camel.quarkus', 'camel-quarkus-gson').versionRef('camel')
+            library('rest','io.quarkus','quarkus-rest').versionRef('quarkus')
+            library('mutiny','io.quarkus','quarkus-mutiny').versionRef('quarkus')
+            library('vertx', 'io.quarkus', 'quarkus-vertx').versionRef('quarkus')
+            library('jsonp', 'io.quarkus', 'quarkus-jsonp').versionRef('quarkus')
+
+            library('context','io.quarkus','quarkus-smallrye-context-propagation').versionRef('quarkus')
             library('gson', 'com.google.code.gson', 'gson').version('2.11.0')
             library('xml','jakarta.xml.bind','jakarta.xml.bind-api').version('4.0.2')
 
@@ -55,7 +60,7 @@ dependencyResolutionManagement {
             library('slf4jJbossLogManager', 'org.jboss.slf4j', 'slf4j-jboss-logmanager').versionRef('slf4j-jboss-logmanager')
 
             // NOTE: vert.x
-            library('vertx', 'io.quarkus', 'quarkus-vertx').versionRef('quarkus')
+
             library('vertxClient', 'io.smallrye.reactive', 'smallrye-mutiny-vertx-web-client').versionRef('quarkus')
 
             // NOTE: db
@@ -119,7 +124,10 @@ dependencyResolutionManagement {
                 'quarkusJunit5',
                 'consul',
                 'quarkusSmallryeOpenapi',
-                'xml'
+                'xml',
+                'rest',
+                'mutiny',
+                'vertx'
             ])
             // NOTE: persistence
             bundle('persistence', [
