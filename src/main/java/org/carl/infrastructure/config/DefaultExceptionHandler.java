@@ -6,6 +6,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
 import org.jboss.logging.Logger;
+
 @Provider
 public class DefaultExceptionHandler implements ExceptionMapper<Exception> {
     private final Logger log = Logger.getLogger(DefaultExceptionHandler.class);
@@ -15,7 +16,9 @@ public class DefaultExceptionHandler implements ExceptionMapper<Exception> {
     public Response toResponse(Exception e) {
 
         log.error("Unhandled exception.", e.getMessage(), e);
-        return Response.status(Response.Status.BAD_REQUEST).entity(e.getMessage())
-                .type(MediaType.TEXT_PLAIN).build();
+        return Response.status(Response.Status.BAD_REQUEST)
+                .entity(e.getMessage())
+                .type(MediaType.TEXT_PLAIN)
+                .build();
     }
 }
