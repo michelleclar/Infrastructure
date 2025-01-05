@@ -28,8 +28,7 @@ public class DSLContextX extends DefaultDSLContext {
         if (fields == null || fields.length == 0) { // FIXME: check design
             fields = new SelectFieldOrAsterisk[1];
         }
-        if (fields.length == 1 && fields[0] instanceof TableImpl<?>) {
-            TableImpl<?> ta = (TableImpl<?>) fields[0];
+        if (fields.length == 1 && fields[0] instanceof TableImpl<?> ta) {
             Field<?>[] _f = ta.fields();
             fields = Arrays.copyOf((SelectFieldOrAsterisk[]) _f, _f.length + 1);
         }

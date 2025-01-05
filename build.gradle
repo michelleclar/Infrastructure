@@ -1,3 +1,9 @@
+buildscript {
+    repositories {
+        maven { url 'https://maven.aliyun.com/repository/central' }
+        mavenCentral()
+    }
+}
 plugins {
     id 'java'
     id 'idea'
@@ -13,8 +19,8 @@ version = '1.0-SNAPSHOT'
 repositories {
     maven { url 'https://maven.aliyun.com/repository/central' }
     mavenCentral()
-
 }
+
 java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
@@ -43,6 +49,68 @@ dependencies {
 
 test {
     systemProperty "java.util.logging.manager", "org.jboss.logmanager.LogManager"
+}
+
+spotless {
+    // optional: limit format enforcement to just the files changed by this feature branch
+    ratchetFrom 'origin/main'
+
+    java {
+        target fileTree('.') {
+            include '**/*.java'
+            exclude '**/build/**', '**/build-*/**'
+        }
+        importOrder()
+        cleanthat()
+        googleJavaFormat().aosp().reflowLongStrings().formatJavadoc(false).reorderImports(false).groupArtifact("com.google.googlejavaformat:google-java-format")
+        formatAnnotations()
+        //        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+    groovyGradle {
+        target fileTree('.') {
+            include '**/*.gradle'
+            exclude '**/build/**', '**/build-*/**'
+        }
+        greclipse()
+        indentWithSpaces(4)
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+    format 'xml', {
+        target fileTree('.') {
+            include '**/*.xml'
+            exclude '**/build/**', '**/build-*/**'
+        }
+        eclipseWtp('xml')
+        trimTrailingWhitespace()
+        indentWithSpaces(2)
+        endWithNewline()
+    }
+    format 'misc', {
+        target fileTree('.') {
+            include '**/*.md', '**/.gitignore'
+            exclude '**/build/**', '**/build-*/**'
+        }
+        trimTrailingWhitespace()
+        indentWithSpaces(2)
+        endWithNewline()
+    }
+}
+afterEvaluate {
+    def spotless = tasks.findByName('spotlessApply')
+    if (spotless) {
+        tasks.withType(JavaCompile).configureEach {
+            finalizedBy(spotless)
+        }
+
+        tasks.withType(GroovyCompile).tap {
+            configureEach {
+                finalizedBy(spotless)
+            }
+        }
+    }
 }
 
 
@@ -124,18 +192,18 @@ jooq {
                     database {
                         name = 'org.jooq.meta.postgres.PostgresDatabase'
                         inputSchema = 'public'
-//                        forcedTypes {
-//                            forcedType {
-//                                name = 'varchar'
-//                                includeExpression = '.*'
-//                                includeTypes = 'JSONB?'
-//                            }
-//                            forcedType {
-//                                name = 'varchar'
-//                                includeExpression = '.*'
-//                                includeTypes = 'INET'
-//                            }
-//                        }
+                        //                        forcedTypes {
+                        //                            forcedType {
+                        //                                name = 'varchar'
+                        //                                includeExpression = '.*'
+                        //                                includeTypes = 'JSONB?'
+                        //                            }
+                        //                            forcedType {
+                        //                                name = 'varchar'
+                        //                                includeExpression = '.*'
+                        //                                includeTypes = 'INET'
+                        //                            }
+                        //                        }
                     }
                     generate {
                         deprecated = false

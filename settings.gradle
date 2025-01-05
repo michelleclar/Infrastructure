@@ -2,9 +2,9 @@ pluginManagement {
     repositories {
 
         maven { url 'https://maven.aliyun.com/repository/central' }
-//        maven { url 'https://maven.aliyun.com/repository/jcenter' }
+        //        maven { url 'https://maven.aliyun.com/repository/jcenter' }
         maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
-//        maven { url 'https://maven.aliyun.com/repository/apache-snapshots' }
+        //        maven { url 'https://maven.aliyun.com/repository/apache-snapshots' }
         gradlePluginPortal()
         mavenCentral()
         maven { url 'https://repo.spring.io/milestone' }
@@ -12,9 +12,9 @@ pluginManagement {
     }
     plugins {
         id "${quarkusPluginId}" version "${quarkusPluginVersion}"
-        // FIX: https://github.com/diffplug/spotless/issues/2311
-        id "com.diffplug.spotless" version "7.0.0.BETA4"
         id 'nu.studer.jooq' version '9.0'
+        id 'org.ec4j.editorconfig' version '0.1.0'
+        id 'com.diffplug.spotless' version '7.0.0.BETA4'
     }
 }
 dependencyResolutionManagement {
@@ -39,7 +39,7 @@ dependencyResolutionManagement {
             library('quarkusSmallryeOpenapi', 'io.quarkus', 'quarkus-smallrye-openapi').versionRef('quarkus')
             library('quarkusArc', 'io.quarkus', 'quarkus-arc').versionRef('quarkus') //CDI
             library('quarkusJunit5', 'io.quarkus', 'quarkus-junit5').versionRef('quarkus')
-//            library('gson', 'org.apache.camel.quarkus', 'camel-quarkus-gson').versionRef('camel')
+            //            library('gson', 'org.apache.camel.quarkus', 'camel-quarkus-gson').versionRef('camel')
             library('gson', 'com.google.code.gson', 'gson').version('2.11.0')
             library('xml','jakarta.xml.bind','jakarta.xml.bind-api').version('4.0.2')
 
@@ -90,9 +90,9 @@ dependencyResolutionManagement {
 
             // NOTE: consul
             library('consul', 'io.quarkiverse.config', 'quarkus-config-consul').version('2.2.2')
-//            library('consul', 'io.quarkiverse.config', 'quarkus-config-consul').versionRef('quarkus')
-//            library('consulStork', 'io.smallrye.stork', 'stork-service-discovery-consul').versionRef('quarkus')
-//            library('consulClient', 'io.smallrye.reactive', 'smallrye-mutiny-vertx-consul-client').versionRef('quarkus')
+            //            library('consul', 'io.quarkiverse.config', 'quarkus-config-consul').versionRef('quarkus')
+            //            library('consulStork', 'io.smallrye.stork', 'stork-service-discovery-consul').versionRef('quarkus')
+            //            library('consulClient', 'io.smallrye.reactive', 'smallrye-mutiny-vertx-consul-client').versionRef('quarkus')
             library('pulsar', 'io.quarkus', 'quarkus-messaging-pulsar').versionRef('quarkus')
             library('grpc', 'io.quarkus', 'quarkus-grpc').versionRef('quarkus')
 
@@ -113,11 +113,24 @@ dependencyResolutionManagement {
             library('valid', 'io.quarkus', 'quarkus-hibernate-validator').versionRef('quarkus')
 
             // NOTE: base
-            bundle('base', ['gson', 'quarkusArc', 'quarkusJunit5', 'consul', 'quarkusSmallryeOpenapi','xml'])
+            bundle('base', [
+                'gson',
+                'quarkusArc',
+                'quarkusJunit5',
+                'consul',
+                'quarkusSmallryeOpenapi',
+                'xml'
+            ])
             // NOTE: persistence
-            bundle('persistence', ['quarkusJdbcPostgreSQL', 'quarkusReactivePgClient', 'mongodb', 'agroal', 'jooq'])
+            bundle('persistence', [
+                'quarkusJdbcPostgreSQL',
+                'quarkusReactivePgClient',
+                'mongodb',
+                'agroal',
+                'jooq'
+            ])
             // NOTE: cache
-            bundle('cache', ['cache','redis'])
+            bundle('cache', ['cache', 'redis'])
             // NOTE: message
             bundle('mq', ['pulsar'])
             // NOTE: search
@@ -127,11 +140,18 @@ dependencyResolutionManagement {
             // NOTE: protocol
             bundle('protocol', ['grpc', 'websocket'])
 
-            bundle('testcontainers', ['testcontainers', 'testcontainersPg'])
+            bundle('testcontainers', [
+                'testcontainers',
+                'testcontainersPg'
+            ])
 
-            bundle('test', ['testcontainers', 'testcontainersPg', 'flyway', 'quarkusJunit5'])
+            bundle('test', [
+                'testcontainers',
+                'testcontainersPg',
+                'flyway',
+                'quarkusJunit5'
+            ])
         }
     }
 }
 rootProject.name = 'infrastructure'
-
