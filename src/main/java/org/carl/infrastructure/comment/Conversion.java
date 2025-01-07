@@ -1,6 +1,5 @@
 package org.carl.infrastructure.comment;
 
-import io.smallrye.mutiny.Uni;
 import java.util.function.Function;
 import org.carl.infrastructure.annotations.NotThreadSafe;
 import org.carl.infrastructure.comment.parse.json.JSON;
@@ -19,86 +18,106 @@ public class Conversion {
         this.value = value;
     }
 
-    public <T> Uni<T> to(Class<T> type) {
-        return this.to(type::cast);
+    public <T> T to(Class<T> type) {
+        return to(type::cast);
     }
 
-    public Uni<Integer> toInt() {
-        return this.to(o -> Integer.parseInt(o.toString()));
+    public Integer toInt() {
+        return to(o -> Integer.parseInt(o.toString()));
     }
 
-    public Uni<Integer> toIntOrDefault(int defaultValue) {
-        return this.toOrDefault(o -> Integer.parseInt(o.toString()), defaultValue);
+    public Integer toIntOrDefault(int defaultValue) {
+        try {
+            return toOrDefault(o -> Integer.parseInt(o.toString()), defaultValue);
+        } catch (Exception e) {
+            log.warnf("NonReactiveConversion failed, returning default value: %s", defaultValue);
+            return defaultValue;
+        }
     }
 
-    public Uni<Long> toLong() {
-        return this.to(o -> Long.parseLong(o.toString()));
+    public Long toLong() {
+        return to(o -> Long.parseLong(o.toString()));
     }
 
-    public Uni<Long> toLongOrDefault(long defaultValue) {
-        return this.toOrDefault(o -> Long.parseLong(o.toString()), defaultValue);
+    public Long toLongOrDefault(long defaultValue) {
+        try {
+            return toOrDefault(o -> Long.parseLong(o.toString()), defaultValue);
+        } catch (Exception e) {
+            log.warnf("NonReactiveConversion failed, returning default value: %s", defaultValue);
+            return defaultValue;
+        }
     }
 
-    public Uni<Double> toDouble() {
-        return this.to(o -> Double.parseDouble(o.toString()));
+    public Double toDouble() {
+        return to(o -> Double.parseDouble(o.toString()));
     }
 
-    public Uni<Double> toDoubleOrDefault(double defaultValue) {
-        return this.toOrDefault(o -> Double.parseDouble(o.toString()), defaultValue);
+    public Double toDoubleOrDefault(double defaultValue) {
+        try {
+            return toOrDefault(o -> Double.parseDouble(o.toString()), defaultValue);
+        } catch (Exception e) {
+            log.warnf("NonReactiveConversion failed, returning default value: %s", defaultValue);
+            return defaultValue;
+        }
     }
 
-    public Uni<Float> toFloat() {
-        return this.to(o -> Float.parseFloat(o.toString()));
+    public Float toFloat() {
+        return to(o -> Float.parseFloat(o.toString()));
     }
 
-    public Uni<Float> toFloatOrDefault(float defaultValue) {
-        return this.toOrDefault(o -> Float.parseFloat(o.toString()), defaultValue);
+    public Float toFloatOrDefault(float defaultValue) {
+        try {
+            return toOrDefault(o -> Float.parseFloat(o.toString()), defaultValue);
+        } catch (Exception e) {
+            log.warnf("NonReactiveConversion failed, returning default value: %s", defaultValue);
+            return defaultValue;
+        }
     }
 
-    public Uni<Boolean> toBoolean() {
-        return this.to(o -> Boolean.parseBoolean(o.toString()));
+    public Boolean toBoolean() {
+        return to(o -> Boolean.parseBoolean(o.toString()));
     }
 
-    public Uni<Boolean> toBooleanOrDefault(boolean defaultValue) {
-        return this.toOrDefault(o -> Boolean.parseBoolean(o.toString()), defaultValue);
+    public Boolean toBooleanOrDefault(boolean defaultValue) {
+        try {
+            return toOrDefault(o -> Boolean.parseBoolean(o.toString()), defaultValue);
+        } catch (Exception e) {
+            log.warnf("NonReactiveConversion failed, returning default value: %s", defaultValue);
+            return defaultValue;
+        }
     }
 
-    public Uni<Short> toShort() {
-        return this.to(o -> Short.parseShort(o.toString()));
+    public Short toShort() {
+        return to(o -> Short.parseShort(o.toString()));
     }
 
-    public Uni<Short> toShortOrDefault(short defaultValue) {
-        return this.toOrDefault(o -> Short.parseShort(o.toString()), defaultValue);
+    public Short toShortOrDefault(short defaultValue) {
+        try {
+            return toOrDefault(o -> Short.parseShort(o.toString()), defaultValue);
+        } catch (Exception e) {
+            log.warnf("NonReactiveConversion failed, returning default value: %s", defaultValue);
+            return defaultValue;
+        }
     }
 
-    public Uni<String> toJsonString() {
-        return this.to(o -> JSON.toJsonString(this.value));
+    public String toJsonString() {
+        return to(JSON::toJsonString);
     }
 
-    public Uni<String> toJsonObject() {
-        return this.to(o -> JSON.toJsonString(this.value));
+    public String toJsonObject() {
+        return to(JSON::toJsonString);
     }
 
-    public <T> Uni<T> to(Function<Object, T> adapter) {
-        return Uni.createFrom().item(adapter.apply(this.value));
+    public <T> T to(Function<Object, T> adapter) {
+        return adapter.apply(this.value);
     }
 
-    public <T> Uni<T> toOrDefault(Function<Object, T> adapter, T defaultValue) {
-        return Uni.createFrom()
-                .item(
-                        () -> {
-                            try {
-                                return adapter.apply(this.value);
-                            } catch (Exception e) {
-                                log.warnf(
-                                        "Conversion failed, returning default value: %s"
-                                                + defaultValue);
-                                return defaultValue;
-                            }
-                        });
-    }
-
-    public Boolean isNull() {
-        return this.value == null;
+    public <T> T toOrDefault(Function<Object, T> adapter, T defaultValue) {
+        try {
+            return adapter.apply(this.value);
+        } catch (Exception e) {
+            log.warnf("NonReactiveConversion failed, returning default value: %s", defaultValue);
+            return defaultValue;
+        }
     }
 }
