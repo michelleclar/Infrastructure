@@ -11,7 +11,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import java.time.Duration;
 import java.util.List;
 import java.util.function.Function;
-import org.carl.infrastructure.comment.ReactiveConversion;
+import org.carl.infrastructure.comment.Conversion;
 
 @ApplicationScoped
 public class RemoteCacheService {
@@ -28,8 +28,8 @@ public class RemoteCacheService {
         this.reactiveValueCommands = reactive.value(Object.class);
     }
 
-    public ReactiveConversion get(String key) {
-        return this.executeValueCommands(o -> valueCommands.get(key));
+    public Conversion get(CacheTopic topic) {
+        return this.executeValueCommands(o -> valueCommands.get(topic.cacheName));
     }
 
     public Uni<Void> del(String key) {
@@ -66,8 +66,8 @@ public class RemoteCacheService {
         return executeKeyCommands(o -> o.keys("*"));
     }
 
-    ReactiveConversion executeValueCommands(Function<ValueCommands<String, Object>, Object> f) {
-        return ReactiveConversion.create(f.apply(this.valueCommands));
+    Conversion executeValueCommands(Function<ValueCommands<String, Object>, Object> f) {
+        return Conversion.create(f.apply(this.valueCommands));
     }
 
     <T> T executeKeyCommands(Function<ReactiveKeyCommands<String>, T> f) {
