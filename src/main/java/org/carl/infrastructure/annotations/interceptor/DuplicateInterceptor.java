@@ -28,12 +28,12 @@ public class DuplicateInterceptor {
     @Inject RemoteCacheService remoteCacheService;
 
     @AroundInvoke
-    Object duplicateInterceptor(
-            InvocationContext ctx, PreventDuplicateValidator preventDuplicateValidator)
-            throws Exception {
-        var includeKeys = preventDuplicateValidator.includeFieldKeys();
-        var optionalValues = preventDuplicateValidator.optionalValues();
-        var expiredTime = preventDuplicateValidator.expireTime();
+    Object duplicateInterceptor(InvocationContext ctx) throws Exception {
+        PreventDuplicateValidator interceptorBinding =
+                ctx.getInterceptorBinding(PreventDuplicateValidator.class);
+        var includeKeys = interceptorBinding.includeFieldKeys();
+        var optionalValues = interceptorBinding.optionalValues();
+        var expiredTime = interceptorBinding.expireTime();
 
         if (includeKeys == null || includeKeys.length == 0) {
             log.warn(
