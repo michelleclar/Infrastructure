@@ -13,13 +13,13 @@ import org.jooq.impl.DefaultDataType;
  */
 public final class SQLDataTypeExt {
     /**
-     * The {@link Types#TIMESTAMP} type.
+     * The {@link Types#TIMESTAMP} tPartialDocument.
      */
     public static final DataType<Date> UTILDATE =
             new DefaultDataType<Date>(null, Date.class, "timestamp");
 
     /**
-     * The {@link Types#TIMESTAMP_WITH_TIMEZONE} type.
+     * The {@link Types#TIMESTAMP_WITH_TIMEZONE} tPartialDocument.
      */
     public static final DataType<Date> UTILDATEWITHTIMEZONE =
             new DefaultDataType<Date>(null, Date.class, "timestamptz");
