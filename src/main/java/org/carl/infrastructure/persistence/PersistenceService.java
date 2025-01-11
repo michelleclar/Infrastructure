@@ -1,30 +1,37 @@
 package org.carl.infrastructure.persistence;
 
-import jakarta.inject.Inject;
+import io.agroal.api.AgroalDataSource;
+import jakarta.inject.Singleton;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import org.carl.infrastructure.persistence.engine.core.DSLContextX;
+import org.carl.infrastructure.persistence.engine.runtime.DslContextFactory;
 import org.jboss.logging.Logger;
 import org.jooq.Configuration;
 import org.jooq.impl.TableImpl;
 
+@Singleton
 public class PersistenceService {
-    @Inject DSLContextX dsl;
-
     private static final Logger log = Logger.getLogger(PersistenceService.class);
+    DSLContextX dsl;
+
+    PersistenceService(AgroalDataSource ds) throws SQLException {
+        dsl = DslContextFactory.create(ds);
+    }
 
     public <T> T get(Function<DSLContextX, T> queryFunction) {
         return queryFunction.apply(dsl);
     }
 
-    public <T, R extends Record & org.jooq.Record> T limit(
+    public <T, R extends org.jooq.Record> T limit(
             Function<DSLContextX, T> queryFunction, TableImpl<R> table) {
         return queryFunction.apply(dsl);
     }
 
-    <T extends Record & org.jooq.Record> Integer count(TableImpl<T> table) {
+    <T extends org.jooq.Record> Integer count(TableImpl<T> table) {
         return this.get(dsl -> dsl.fetchCount(table));
     }
 
@@ -48,10 +55,11 @@ public class PersistenceService {
 
     public void transaction(Consumer<DSLContextX> queryFunction) {
         long start = System.currentTimeMillis();
-        log.debugv("Transaction execution start time :{0}", start);
+        log.debugv("Transaction execution start time :{}", start);
         dsl.transaction(
                 configuration -> {
                     DSLContextX dsl = DSLContextX.create(configuration);
+
                     queryFunction.accept(dsl);
                 });
         log.debugv("Transaction duration: {}", System.currentTimeMillis() - start);

@@ -1,15 +1,9 @@
 package org.carl.infrastructure.persistence.engine.runtime;
 
 import io.agroal.api.AgroalDataSource;
-import jakarta.inject.Qualifier;
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.util.Objects;
+import org.carl.infrastructure.persistence.engine.core.DSLContextX;
 import org.jboss.logging.Logger;
-import org.jooq.DSLContext;
 
 /**
  * Produces DSLContext
@@ -19,7 +13,7 @@ import org.jooq.DSLContext;
 public abstract class AbstractDslContextProducer {
     private static final Logger log = Logger.getLogger(AbstractDslContextProducer.class);
 
-    public DSLContext createDslContext(
+    public DSLContextX createDslContext(
             String sqlDialect, AgroalDataSource dataSource, String customConfiguration) {
         Objects.requireNonNull(sqlDialect, "sqlDialect");
         Objects.requireNonNull(dataSource, "dataSource");
@@ -41,7 +35,7 @@ public abstract class AbstractDslContextProducer {
         }
     }
 
-    public DSLContext createDslContext(
+    public DSLContextX createDslContext(
             String sqlDialect, AgroalDataSource dataSource, JooqCustomContext customConfiguration) {
         Objects.requireNonNull(sqlDialect, "sqlDialect");
         Objects.requireNonNull(dataSource, "dataSource");
@@ -49,11 +43,11 @@ public abstract class AbstractDslContextProducer {
         return DslContextFactory.create(sqlDialect, dataSource, customConfiguration);
     }
 
-    /** CDI: Ambiguous dependencies */
-    @Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER, ElementType.TYPE})
-    @Retention(RetentionPolicy.RUNTIME)
-    @Documented
-    @Qualifier public @interface DslContextQualifier {
-        String value();
-    }
+    //    /** CDI: Ambiguous dependencies */
+    //    @Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER, ElementType.TYPE})
+    //    @Retention(RetentionPolicy.RUNTIME)
+    //    @Documented
+    //    @Qualifier public @interface DslContextQualifier {
+    //        String value();
+    //    }
 }

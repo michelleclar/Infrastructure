@@ -5,12 +5,12 @@ import javax.sql.DataSource;
 import org.jooq.*;
 import org.jooq.Record;
 import org.jooq.impl.DSL;
-import org.jooq.impl.DefaultConfiguration;
 import org.jooq.impl.DefaultDSLContext;
 import org.jooq.impl.TableImpl;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class DSLContextX extends DefaultDSLContext {
+
     public DSLContextX(SQLDialect dialect) {
         super(dialect);
     }
@@ -19,8 +19,20 @@ public class DSLContextX extends DefaultDSLContext {
         super(datasource, dialect, null);
     }
 
-    public DSLContextX(DefaultConfiguration configuration) {
+    public static DSLContextX create(SQLDialect dialect) {
+        return new DSLContextX(dialect);
+    }
+
+    public static DSLContextX create(DataSource ds, SQLDialect dialect) {
+        return new DSLContextX(ds, dialect);
+    }
+
+    public DSLContextX(Configuration configuration) {
         super(configuration);
+    }
+
+    public static DSLContextX create(Configuration configuration) {
+        return new DSLContextX(configuration);
     }
 
     public SelectSelectStep<Record> selectPage(SelectFieldOrAsterisk... fields) {

@@ -1,10 +1,11 @@
 package org.carl.infrastructure.persistence.engine.runtime;
 
 import io.agroal.api.AgroalDataSource;
+import java.sql.SQLException;
+import org.carl.infrastructure.persistence.engine.core.DSLContextX;
 import org.jboss.logging.Logger;
-import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
-import org.jooq.impl.DSL;
+import org.jooq.tools.jdbc.JDBCUtils;
 
 /**
  * @author <a href="mailto:leo.tu.taipei@gmail.com">Leo Tu</a>
@@ -16,34 +17,41 @@ public class DslContextFactory {
         System.setProperty("org.jooq.no-logo", String.valueOf(true)); // -Dorg.jooq.no-logo=true
     }
 
-    public static DSLContext create(
+    public static DSLContextX create(AgroalDataSource ds) throws SQLException {
+        DSLContextX context;
+        SQLDialect dialect = JDBCUtils.dialect(ds.getConnection());
+        context = DSLContextX.create(ds, dialect);
+        return context;
+    }
+
+    public static DSLContextX create(
             String sqlDialect, AgroalDataSource ds, JooqCustomContext customContext) {
-        DSLContext context;
+        DSLContextX context;
         if ("PostgreSQL".equalsIgnoreCase(sqlDialect) || "Postgres".equalsIgnoreCase(sqlDialect)) {
-            context = DSL.using(ds, SQLDialect.POSTGRES);
+            context = DSLContextX.create(ds, SQLDialect.POSTGRES);
         } else if ("MySQL".equalsIgnoreCase(sqlDialect)) {
-            context = DSL.using(ds, SQLDialect.MYSQL);
+            context = DSLContextX.create(ds, SQLDialect.MYSQL);
         } else if ("MARIADB".equalsIgnoreCase(sqlDialect)) {
-            context = DSL.using(ds, SQLDialect.MARIADB);
+            context = DSLContextX.create(ds, SQLDialect.MARIADB);
         } else if ("Oracle".equalsIgnoreCase(sqlDialect)) {
-            context = DSL.using(ds, SQLDialect.DEFAULT);
+            context = DSLContextX.create(ds, SQLDialect.DEFAULT);
         } else if ("SQLServer".equalsIgnoreCase(sqlDialect)) {
-            context = DSL.using(ds, SQLDialect.DEFAULT);
+            context = DSLContextX.create(ds, SQLDialect.DEFAULT);
         } else if ("DB2".equalsIgnoreCase(sqlDialect)) {
-            context = DSL.using(ds, SQLDialect.DEFAULT);
+            context = DSLContextX.create(ds, SQLDialect.DEFAULT);
         } else if ("Derby".equalsIgnoreCase(sqlDialect)) {
-            context = DSL.using(ds, SQLDialect.DERBY);
+            context = DSLContextX.create(ds, SQLDialect.DERBY);
         } else if ("HSQLDB".equalsIgnoreCase(sqlDialect)) {
-            context = DSL.using(ds, SQLDialect.HSQLDB);
+            context = DSLContextX.create(ds, SQLDialect.HSQLDB);
         } else if ("H2".equalsIgnoreCase(sqlDialect)) {
-            context = DSL.using(ds, SQLDialect.H2);
+            context = DSLContextX.create(ds, SQLDialect.H2);
         } else if ("Firebird".equalsIgnoreCase(sqlDialect)) {
-            context = DSL.using(ds, SQLDialect.FIREBIRD);
+            context = DSLContextX.create(ds, SQLDialect.FIREBIRD);
         } else if ("SQLite".equalsIgnoreCase(sqlDialect)) {
-            context = DSL.using(ds, SQLDialect.SQLITE);
+            context = DSLContextX.create(ds, SQLDialect.SQLITE);
         } else {
             log.warnv("Undefined sqlDialect: {0}", sqlDialect);
-            context = DSL.using(ds, SQLDialect.DEFAULT);
+            context = DSLContextX.create(ds, SQLDialect.DEFAULT);
         }
         customContext.apply(context.configuration());
         return context;
