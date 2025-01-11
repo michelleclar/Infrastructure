@@ -36,6 +36,8 @@ compileTestJava {
 }
 javadoc.options.encoding = 'UTF-8'
 dependencies {
+    implementation enforcedPlatform(libs.quarkusPlatform)
+    implementation enforcedPlatform(libs.quarkusCamelPlatform)
     implementation libs.bundles.persistence
     jooqGenerator libs.quarkusJdbcPostgreSQL
     implementation libs.bundles.search
@@ -110,6 +112,13 @@ afterEvaluate {
         }
     }
 }
+
+tasks.withType(GenerateModuleMetadata).configureEach {
+    // The value 'enforced-platform' is provided in the validation
+    // error message you got
+    suppressedValidationErrors.add('enforced-platform')
+}
+
 
 
 publishing {

@@ -94,8 +94,8 @@ dependencyResolutionManagement {
             library('es', 'io.quarkus', 'quarkus-elasticsearch-java-client').versionRef('quarkus')
 
             // NOTE: consul
-            library('consul', 'io.quarkiverse.config', 'quarkus-config-consul').version('2.2.2')
-            //            library('consul', 'io.quarkiverse.config', 'quarkus-config-consul').versionRef('quarkus')
+            //            library('consul', 'io.quarkiverse.config', 'quarkus-config-consul').version('2.2.2')
+            library('consul', 'io.quarkiverse.config', 'quarkus-config-consul').versionRef('quarkus')
             //            library('consulStork', 'io.smallrye.stork', 'stork-service-discovery-consul').versionRef('quarkus')
             //            library('consulClient', 'io.smallrye.reactive', 'smallrye-mutiny-vertx-consul-client').versionRef('quarkus')
             library('pulsar', 'io.quarkus', 'quarkus-messaging-pulsar').versionRef('quarkus')
