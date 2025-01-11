@@ -8,10 +8,8 @@ import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.UpdateRequest;
 import co.elastic.clients.elasticsearch.indices.CreateIndexResponse;
 import co.elastic.clients.elasticsearch.indices.ElasticsearchIndicesClient;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-
 import org.carl.infrastructure.search.core.action.Delete;
 import org.carl.infrastructure.search.core.action.Get;
 import org.carl.infrastructure.search.core.action.Index;

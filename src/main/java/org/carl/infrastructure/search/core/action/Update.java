@@ -3,7 +3,6 @@ package org.carl.infrastructure.search.core.action;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.UpdateRequest;
 import co.elastic.clients.elasticsearch.core.UpdateResponse;
-
 import jakarta.annotation.Nullable;
 import java.io.IOException;
 
