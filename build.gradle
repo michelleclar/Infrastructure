@@ -22,6 +22,9 @@ repositories {
 }
 
 java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
 }
@@ -162,8 +165,8 @@ def applicationEnv = new Properties()
 def datasourceEnv = new Properties()
 def envPropertiesFile = file('src/main/resources/application.properties')
 def JDBCURL = 'jdbcUrl'
-def DBUSER= 'dbUser'
-def DBPASSWORD= 'dbPassword'
+def DBUSER = 'dbUser'
+def DBPASSWORD = 'dbPassword'
 def SCHEMA = 'schema'
 if (envPropertiesFile.exists()) {
     envPropertiesFile.withReader('UTF-8') { reader ->
@@ -211,7 +214,7 @@ jooq {
                     name = 'org.jooq.codegen.DefaultGenerator'
                     database {
                         name = 'org.jooq.meta.postgres.PostgresDatabase'
-//                        outputSchemaToDefault = false
+                        //                        outputSchemaToDefault = false
                         inputSchema = datasourceEnv.getProperty(SCHEMA)
                         //                        forcedTypes {
                         //                            forcedType {
