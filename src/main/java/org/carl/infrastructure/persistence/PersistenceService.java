@@ -18,7 +18,7 @@ public class PersistenceService {
     private static final Logger log = Logger.getLogger(PersistenceService.class);
     DSLContextX dsl;
 
-    PersistenceService(AgroalDataSource ds) throws SQLException {
+    public PersistenceService(AgroalDataSource ds) throws SQLException {
         dsl = DslContextFactory.create(ds);
     }
 

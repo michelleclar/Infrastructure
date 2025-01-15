@@ -39,14 +39,14 @@ dependencyResolutionManagement {
             library('quarkusArc', 'io.quarkus', 'quarkus-arc').versionRef('quarkus') //CDI
             library('quarkusJunit5', 'io.quarkus', 'quarkus-junit5').versionRef('quarkus')
             //            library('gson', 'org.apache.camel.quarkus', 'camel-quarkus-gson').versionRef('camel')
-            library('rest','io.quarkus','quarkus-rest').versionRef('quarkus')
-            library('mutiny','io.quarkus','quarkus-mutiny').versionRef('quarkus')
+            library('rest', 'io.quarkus', 'quarkus-rest').versionRef('quarkus')
+            library('mutiny', 'io.quarkus', 'quarkus-mutiny').versionRef('quarkus')
             library('vertx', 'io.quarkus', 'quarkus-vertx').versionRef('quarkus')
             library('jsonp', 'io.quarkus', 'quarkus-jsonp').versionRef('quarkus')
 
-            library('context','io.quarkus','quarkus-smallrye-context-propagation').versionRef('quarkus')
+            library('context', 'io.quarkus', 'quarkus-smallrye-context-propagation').versionRef('quarkus')
             library('gson', 'com.google.code.gson', 'gson').version('2.11.0')
-            library('xml','jakarta.xml.bind','jakarta.xml.bind-api').version('4.0.2')
+            library('xml', 'jakarta.xml.bind', 'jakarta.xml.bind-api').version('4.0.2')
 
             // NOTE: protocol
             library('websocket', 'io.quarkus', 'quarkus-websockets-client').versionRef('quarkus')
@@ -71,7 +71,6 @@ dependencyResolutionManagement {
 
             library('mongodb', 'io.quarkus', 'quarkus-mongodb-client').versionRef('quarkus')
             library('redis', 'io.quarkus', 'quarkus-redis-client').versionRef('quarkus')
-
 
             // NOTE: tool
             library('flyway', 'io.quarkus', 'quarkus-flyway').versionRef('quarkus')
@@ -119,23 +118,23 @@ dependencyResolutionManagement {
 
             // NOTE: base
             bundle('base', [
-                'gson',
-                'quarkusArc',
-                'quarkusJunit5',
-                'consul',
-                'quarkusSmallryeOpenapi',
-                'xml',
-                'rest',
-                'mutiny',
-                'vertx'
+                    'gson',
+                    'quarkusArc',
+                    'quarkusJunit5',
+                    'consul',
+                    'quarkusSmallryeOpenapi',
+                    'xml',
+                    'rest',
+                    'mutiny',
+                    'vertx'
             ])
             // NOTE: persistence
             bundle('persistence', [
-                'quarkusJdbcPostgreSQL',
-                'quarkusReactivePgClient',
-                'mongodb',
-                'agroal',
-                'jooq'
+                    'quarkusJdbcPostgreSQL',
+                    'quarkusReactivePgClient',
+                    'mongodb',
+                    'agroal',
+                    'jooq'
             ])
             // NOTE: cache
             bundle('cache', ['cache', 'redis'])
@@ -144,20 +143,20 @@ dependencyResolutionManagement {
             // NOTE: search
             bundle('search', ['es'])
             // NOTE: utils
-            bundle('utils',['guava'])
+            bundle('utils', ['guava'])
             // NOTE: protocol
             bundle('protocol', ['grpc', 'websocket'])
 
             bundle('testcontainers', [
-                'testcontainers',
-                'testcontainersPg'
+                    'testcontainers',
+                    'testcontainersPg'
             ])
 
             bundle('test', [
-                'testcontainers',
-                'testcontainersPg',
-                'flyway',
-                'quarkusJunit5'
+                    'testcontainers',
+                    'testcontainersPg',
+                    'flyway',
+                    'quarkusJunit5'
             ])
         }
     }

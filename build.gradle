@@ -120,7 +120,6 @@ tasks.withType(GenerateModuleMetadata).configureEach {
 }
 
 
-
 publishing {
     repositories {
         maven {
@@ -159,15 +158,29 @@ idea {
     }
 }
 
-def envProperties = new Properties()
-def envPropertiesFile = file('.env')
+def applicationEnv = new Properties()
+def datasourceEnv = new Properties()
+def envPropertiesFile = file('src/main/resources/application.properties')
+def JDBCURL = 'jdbcUrl'
+def DBUSER= 'dbUser'
+def DBPASSWORD= 'dbPassword'
+def SCHEMA = 'schema'
 if (envPropertiesFile.exists()) {
     envPropertiesFile.withReader('UTF-8') { reader ->
-        envProperties.load(reader)
+        applicationEnv.load(reader)
     }
-    println "Loaded environment properties from .env"
+    def prefix = applicationEnv.getProperty('quarkus.profile') == null ? '' : '%' + applicationEnv.get('quarkus.profile');
+    def datasource = applicationEnv.getProperty('generate.pojo') == null || applicationEnv.getProperty('generate.pojo') == 'default' ? '' : applicationEnv.getProperty('generate.pojo') + '.'
+    println(prefix + 'quarkus.datasource.' + datasource + 'jdbc.url')
+
+    datasourceEnv.setProperty(JDBCURL, applicationEnv.getProperty(prefix + 'quarkus.datasource.' + datasource + 'jdbc.url'))
+    datasourceEnv.setProperty(DBUSER, applicationEnv.getProperty(prefix + 'quarkus.datasource.' + datasource + 'username'))
+    datasourceEnv.setProperty(DBPASSWORD, applicationEnv.getProperty(prefix + 'quarkus.datasource.' + datasource + 'password'))
+    datasourceEnv.setProperty(SCHEMA, applicationEnv.getProperty(prefix + 'quarkus.datasource.' + datasource + 'schema') == null ? '*' : applicationEnv.getProperty(prefix + 'quarkus.datasource.' + datasource + '.schema'))
+    println(datasourceEnv)
+    println "Loaded environment properties from application.properties"
 } else {
-    println ".env file not found, skipping loading environment properties."
+    println "application.properties file not found, skipping loading environment properties."
 }
 
 import nu.studer.gradle.jooq.JooqEdition
@@ -184,9 +197,9 @@ jooq {
                 logging = Logging.WARN
                 jdbc {
                     driver = 'org.postgresql.Driver'
-                    url = envProperties.getProperty('jdbcUrl')
-                    user = envProperties.getProperty('dbUser')
-                    password = envProperties.getProperty('dbPassword')
+                    url = datasourceEnv.getProperty(JDBCURL)
+                    user = datasourceEnv.getProperty(DBUSER)
+                    password = datasourceEnv.getProperty(DBPASSWORD)
                     properties {
                         property {
                             key = 'ssl'
@@ -198,7 +211,8 @@ jooq {
                     name = 'org.jooq.codegen.DefaultGenerator'
                     database {
                         name = 'org.jooq.meta.postgres.PostgresDatabase'
-                        inputSchema = 'public'
+//                        outputSchemaToDefault = false
+                        inputSchema = datasourceEnv.getProperty(SCHEMA)
                         //                        forcedTypes {
                         //                            forcedType {
                         //                                name = 'varchar'

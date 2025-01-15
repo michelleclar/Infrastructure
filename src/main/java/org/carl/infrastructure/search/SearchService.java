@@ -16,14 +16,13 @@ import org.carl.infrastructure.search.core.action.Index;
 import org.carl.infrastructure.search.core.action.Indices;
 import org.carl.infrastructure.search.core.action.Search;
 import org.carl.infrastructure.search.core.action.Update;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.Logger;
 
 // TODO: use json query to search ?
 @ApplicationScoped
 public class SearchService {
     @Inject ElasticsearchClient esClient;
-    static final Logger log = LoggerFactory.getLogger(SearchService.class);
+    static final Logger log = Logger.getLogger(SearchService.class);
 
     public CreateIndexResponse createIndex(String indexName) {
         return this.indices().create(indexName);

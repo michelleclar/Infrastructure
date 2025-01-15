@@ -1,11 +1,13 @@
 package org.carl.infrastructure.annotations.interceptor;
 
+import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpServerRequest;
 import jakarta.annotation.Priority;
 import jakarta.inject.Inject;
 import jakarta.interceptor.AroundInvoke;
 import jakarta.interceptor.Interceptor;
 import jakarta.interceptor.InvocationContext;
+import jakarta.ws.rs.core.Request;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
@@ -28,7 +30,7 @@ public class DuplicateInterceptor {
     @Inject RemoteCacheService remoteCacheService;
 
     @AroundInvoke
-    Object duplicateInterceptor(InvocationContext ctx) throws Exception {
+    Uni<Request> duplicateInterceptor(InvocationContext ctx) throws Exception {
         PreventDuplicateValidator interceptorBinding =
                 ctx.getInterceptorBinding(PreventDuplicateValidator.class);
         var includeKeys = interceptorBinding.includeFieldKeys();
@@ -39,7 +41,7 @@ public class DuplicateInterceptor {
             log.warn(
                     "[PreventDuplicateRequestAspect] ignore because includeKeys not found in"
                             + " annotation");
-            return ctx.proceed();
+            return (Uni<Request>) ctx.proceed();
         }
 
         var requestBody = request.body().result();
@@ -47,7 +49,7 @@ public class DuplicateInterceptor {
             log.warn(
                     "[PreventDuplicateRequestAspect] ignore because request body object find not"
                             + " found in method arguments");
-            return ctx.proceed();
+            return (Uni<Request>) ctx.proceed();
         }
         var requestBodyMap = requestBody.toJsonObject().getMap();
         var keyRedis = buildKeyRedisByIncludeKeys(includeKeys, optionalValues, requestBodyMap);
@@ -56,7 +58,7 @@ public class DuplicateInterceptor {
                 "[PreventDuplicateRequestAspect] rawKey: [%s] and generated keyRedisMD5: [%s]",
                 keyRedis, keyRedisMD5);
         deduplicateRequestByRedisKey(keyRedisMD5, expiredTime);
-        return ctx.proceed();
+        return (Uni<Request>) ctx.proceed();
     }
 
     private String buildKeyRedisByIncludeKeys(
@@ -89,7 +91,6 @@ public class DuplicateInterceptor {
                 String.format(
                         "[PreventDuplicateRequestAspect] key: %s has already existed !!!", key));
         throw new DuplicationException(
-                StatusType.ERROR_DUPLICATE.getStatusCode(),
-                StatusType.ERROR_DUPLICATE.getReasonPhrase());
+                StatusType.ERROR_DUPLICATE);
     }
 }
