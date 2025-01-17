@@ -7,7 +7,6 @@ pluginManagement {
         //        maven { url 'https://maven.aliyun.com/repository/apache-snapshots' }
         gradlePluginPortal()
         mavenCentral()
-        maven { url 'https://repo.spring.io/milestone' }
         mavenLocal()
     }
     plugins {
@@ -20,8 +19,7 @@ dependencyResolutionManagement {
     versionCatalogs {
         libs {
             // versions
-            version('quarkus', '3.17.5')
-            version('camel', '3.17.0')
+            version('quarkus', "${quarkusPluginVersion}")
             version('jooq', '3.19.12')
             version('jooqQuarkiverse', '2.0.1')
             version('slf4j-jboss-logmanager', '2.0.1.Final')
@@ -38,7 +36,6 @@ dependencyResolutionManagement {
             library('quarkusSmallryeOpenapi', 'io.quarkus', 'quarkus-smallrye-openapi').versionRef('quarkus')
             library('quarkusArc', 'io.quarkus', 'quarkus-arc').versionRef('quarkus') //CDI
             library('quarkusJunit5', 'io.quarkus', 'quarkus-junit5').versionRef('quarkus')
-            //            library('gson', 'org.apache.camel.quarkus', 'camel-quarkus-gson').versionRef('camel')
             library('rest', 'io.quarkus', 'quarkus-rest').versionRef('quarkus')
             library('mutiny', 'io.quarkus', 'quarkus-mutiny').versionRef('quarkus')
             library('vertx', 'io.quarkus', 'quarkus-vertx').versionRef('quarkus')
@@ -57,7 +54,7 @@ dependencyResolutionManagement {
             library('cache', 'io.quarkus', 'quarkus-cache').versionRef('quarkus')
 
             // NOTE: slf4j-jboss-logmanager (links quarkus jboss-logging so it can log jOOQs slf4j logging)
-            library('slf4jJbossLogManager', 'org.jboss.slf4j', 'slf4j-jboss-logmanager').versionRef('slf4j-jboss-logmanager')
+            //            library('slf4jJbossLogManager', 'org.jboss.slf4j', 'slf4j-jboss-logmanager').versionRef('slf4j-jboss-logmanager')
 
             // NOTE: vert.x
 
@@ -66,6 +63,7 @@ dependencyResolutionManagement {
             // NOTE: db
             library('agroal', 'io.quarkus', 'quarkus-agroal').versionRef('quarkus')
             library('quarkusJdbcPostgreSQL', 'io.quarkus', 'quarkus-jdbc-postgresql').versionRef('quarkus')
+            library('quarkusJdbcMysql', 'io.quarkus', 'quarkus-jdbc-mysql').versionRef('quarkus')
             // TODO: need check , Is it necessary to do this?
             library('quarkusReactivePgClient', 'io.quarkus', 'quarkus-reactive-pg-client').versionRef('quarkus')
 
@@ -85,7 +83,7 @@ dependencyResolutionManagement {
 
             // NOTE: jooq
             library('jooq', 'org.jooq', 'jooq').versionRef('jooq')
-            library('jooqQuarkus', 'io.quarkiverse.jooq', 'quarkus-jooq').versionRef('jooqQuarkiverse')
+            //            library('jooqQuarkus', 'io.quarkiverse.jooq', 'quarkus-jooq').versionRef('jooqQuarkiverse')
             library('jooqMeta', 'org.jooq', 'jooq-meta').versionRef('jooq')
             library('jooqCodegen', 'org.jooq', 'jooq-codegen').versionRef('jooq')
 
@@ -109,7 +107,7 @@ dependencyResolutionManagement {
             library('jwt', 'io.quarkus', 'quarkus-smallrye-jwt').versionRef('quarkus')
             library('jwtBuild', 'io.quarkus', 'quarkus-smallrye-jwt-build').versionRef('quarkus')
 
-            // NOTE: NLP
+            // FIXME: NLP remove application , use by model service
             library('hanlp', 'com.hankcs', 'hanlp').versionRef('hanlp')
             // NOTE: SMTP
             library('smtp', 'io.quarkus', 'quarkus-mailer').versionRef('quarkus')
@@ -118,23 +116,24 @@ dependencyResolutionManagement {
 
             // NOTE: base
             bundle('base', [
-                    'gson',
-                    'quarkusArc',
-                    'quarkusJunit5',
-                    'consul',
-                    'quarkusSmallryeOpenapi',
-                    'xml',
-                    'rest',
-                    'mutiny',
-                    'vertx'
+                'gson',
+                'quarkusArc',
+                //                    'quarkusJunit5',
+                //                'consul',
+                'quarkusSmallryeOpenapi',
+                'xml',
+                'rest',
+                'mutiny',
+                'vertx'
             ])
             // NOTE: persistence
             bundle('persistence', [
-                    'quarkusJdbcPostgreSQL',
-                    'quarkusReactivePgClient',
-                    'mongodb',
-                    'agroal',
-                    'jooq'
+                //                    'quarkusJdbcPostgreSQL',
+                'quarkusJdbcMysql',
+                'quarkusReactivePgClient',
+                'mongodb',
+                'agroal',
+                'jooq'
             ])
             // NOTE: cache
             bundle('cache', ['cache', 'redis'])
@@ -143,20 +142,20 @@ dependencyResolutionManagement {
             // NOTE: search
             bundle('search', ['es'])
             // NOTE: utils
-            bundle('utils', ['guava'])
+            bundle('utils', ['guava', 'hanlp'])
             // NOTE: protocol
             bundle('protocol', ['grpc', 'websocket'])
 
             bundle('testcontainers', [
-                    'testcontainers',
-                    'testcontainersPg'
+                'testcontainers',
+                'testcontainersPg'
             ])
 
             bundle('test', [
-                    'testcontainers',
-                    'testcontainersPg',
-                    'flyway',
-                    'quarkusJunit5'
+                'testcontainers',
+                'testcontainersPg',
+                'flyway',
+                'quarkusJunit5'
             ])
         }
     }

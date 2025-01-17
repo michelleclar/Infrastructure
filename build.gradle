@@ -1,9 +1,3 @@
-buildscript {
-    repositories {
-        maven { url 'https://maven.aliyun.com/repository/central' }
-        mavenCentral()
-    }
-}
 plugins {
     id 'java'
     id 'idea'
@@ -40,9 +34,8 @@ compileTestJava {
 javadoc.options.encoding = 'UTF-8'
 dependencies {
     implementation enforcedPlatform(libs.quarkusPlatform)
-    implementation enforcedPlatform(libs.quarkusCamelPlatform)
     implementation libs.bundles.persistence
-    jooqGenerator libs.quarkusJdbcPostgreSQL
+    jooqGenerator libs.quarkusJdbcMysql
     implementation libs.bundles.search
     implementation libs.bundles.protocol
     implementation libs.bundles.mq
@@ -180,7 +173,6 @@ if (envPropertiesFile.exists()) {
     datasourceEnv.setProperty(DBUSER, applicationEnv.getProperty(prefix + 'quarkus.datasource.' + datasource + 'username'))
     datasourceEnv.setProperty(DBPASSWORD, applicationEnv.getProperty(prefix + 'quarkus.datasource.' + datasource + 'password'))
     datasourceEnv.setProperty(SCHEMA, applicationEnv.getProperty(prefix + 'quarkus.datasource.' + datasource + 'schema') == null ? '*' : applicationEnv.getProperty(prefix + 'quarkus.datasource.' + datasource + '.schema'))
-    println(datasourceEnv)
     println "Loaded environment properties from application.properties"
 } else {
     println "application.properties file not found, skipping loading environment properties."
@@ -199,10 +191,14 @@ jooq {
             generationTool {
                 logging = Logging.WARN
                 jdbc {
-                    driver = 'org.postgresql.Driver'
-                    url = datasourceEnv.getProperty(JDBCURL)
-                    user = datasourceEnv.getProperty(DBUSER)
-                    password = datasourceEnv.getProperty(DBPASSWORD)
+                    //                    driver = 'org.postgresql.Driver'
+                    driver = 'com.mysql.cj.jdbc.Driver'
+                    url = 'jdbc:mysql://172.2.2.26:3306/xjrc365'
+                    user = 'root'
+                    password = 'Rc365@dzsJRSK'
+                    //                    url = datasourceEnv.getProperty(JDBCURL)
+                    //                    user = datasourceEnv.getProperty(DBUSER)
+                    //                    password = datasourceEnv.getProperty(DBPASSWORD)
                     properties {
                         property {
                             key = 'ssl'
@@ -213,9 +209,11 @@ jooq {
                 generator {
                     name = 'org.jooq.codegen.DefaultGenerator'
                     database {
-                        name = 'org.jooq.meta.postgres.PostgresDatabase'
+                        //                        name = 'org.jooq.meta.postgres.PostgresDatabase'
+                        name = 'org.jooq.meta.mysql.MySQLDatabase'
                         //                        outputSchemaToDefault = false
-                        inputSchema = datasourceEnv.getProperty(SCHEMA)
+                        //                        inputSchema = datasourceEnv.getProperty(SCHEMA)
+                        inputSchema = 'xjrc365'
                         //                        forcedTypes {
                         //                            forcedType {
                         //                                name = 'varchar'
