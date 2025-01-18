@@ -4,3 +4,6 @@
 · Value Objects: Objects that are defined by their attributes.
 · Aggregates: A cluster of domain objects that can be treated as a single unit.
 · Domain Events: This is the event that domain experts care about.
+
+base:
+constant.Constants
