@@ -8,6 +8,7 @@ public class BaseException extends RuntimeException {
         super(message);
         this.errorCode = errorCode;
     }
+
     public BaseException(StatusType statusType, Long traceId) {
         super(statusType.getReasonPhrase());
         this.traceId = traceId;

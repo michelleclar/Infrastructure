@@ -1,5 +1,6 @@
 package org.carl.infrastructure.cache;
 
+import io.quarkus.arc.properties.IfBuildProperty;
 import io.quarkus.redis.datasource.ReactiveRedisDataSource;
 import io.quarkus.redis.datasource.RedisDataSource;
 import io.quarkus.redis.datasource.keys.KeyCommands;
@@ -14,6 +15,7 @@ import java.util.function.Function;
 import org.carl.infrastructure.comment.Conversion;
 
 @ApplicationScoped
+@IfBuildProperty(name = "quarkus.remote.cache.enable", stringValue = "true")
 public class RemoteCacheService {
 
     private final ReactiveKeyCommands<String> reactiveKeyCommands;

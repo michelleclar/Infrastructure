@@ -113,23 +113,24 @@ dependencyResolutionManagement {
             library('smtp', 'io.quarkus', 'quarkus-mailer').versionRef('quarkus')
             // NOTE: valid
             library('valid', 'io.quarkus', 'quarkus-hibernate-validator').versionRef('quarkus')
-
+            // NOTE: share
+            bundle('share',['quarkusArc'])
             // NOTE: base
             bundle('base', [
-                'gson',
-                'quarkusArc',
-                //                    'quarkusJunit5',
-                //                'consul',
-                'quarkusSmallryeOpenapi',
-                'xml',
-                'rest',
-                'mutiny',
-                'vertx'
+                    'gson',
+//                    'quarkusArc',
+                    //                    'quarkusJunit5',
+                    //                'consul',
+                    'quarkusSmallryeOpenapi',
+                    'xml',
+                    'rest',
+                    'mutiny',
+                    'vertx'
             ])
             // NOTE: persistence
             bundle('persistence', [
-                //                    'quarkusJdbcPostgreSQL',
-                'quarkusJdbcMysql',
+                                    'quarkusJdbcPostgreSQL',
+//                'quarkusJdbcMysql',
                 'quarkusReactivePgClient',
                 'mongodb',
                 'agroal',
@@ -160,4 +161,5 @@ dependencyResolutionManagement {
         }
     }
 }
-rootProject.name = 'infrastructure'
+rootProject.name = 'scaffold'
+include 'infrastructure'

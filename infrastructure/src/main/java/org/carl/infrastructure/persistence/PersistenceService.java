@@ -1,6 +1,7 @@
 package org.carl.infrastructure.persistence;
 
 import io.agroal.api.AgroalDataSource;
+import io.quarkus.arc.properties.IfBuildProperty;
 import jakarta.inject.Singleton;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -14,6 +15,7 @@ import org.jooq.Configuration;
 import org.jooq.impl.TableImpl;
 
 @Singleton
+@IfBuildProperty(name = "quarkus.persistence.enable", stringValue = "true")
 public class PersistenceService {
     private static final Logger log = Logger.getLogger(PersistenceService.class);
     DSLContextX dsl;

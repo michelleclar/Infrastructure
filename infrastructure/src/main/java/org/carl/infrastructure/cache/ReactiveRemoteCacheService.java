@@ -1,5 +1,6 @@
 package org.carl.infrastructure.cache;
 
+import io.quarkus.arc.properties.IfBuildProperty;
 import io.quarkus.redis.datasource.ReactiveRedisDataSource;
 import io.quarkus.redis.datasource.keys.ReactiveKeyCommands;
 import io.quarkus.redis.datasource.value.ReactiveValueCommands;
@@ -10,6 +11,7 @@ import java.util.function.Function;
 
 // TODO: need redisAPI override,because is base vert.x
 @ApplicationScoped
+@IfBuildProperty(name = "quarkus.remote.cache.enable", stringValue = "true")
 public class ReactiveRemoteCacheService implements BaseCache {
 
     private final ReactiveKeyCommands<String> reactiveKeyCommands;

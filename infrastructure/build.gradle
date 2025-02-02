@@ -1,0 +1,25 @@
+plugins {
+    id 'io.quarkus'
+    id 'java-library'
+    id 'nu.studer.jooq'
+}
+dependencies {
+    implementation enforcedPlatform(libs.quarkusPlatform)
+    implementation libs.bundles.persistence
+    jooqGenerator libs.quarkusJdbcPostgreSQL
+    implementation libs.bundles.search
+    implementation libs.bundles.protocol
+    implementation libs.bundles.mq
+    implementation libs.bundles.utils
+    implementation libs.bundles.cache
+    implementation libs.bundles.base
+    api libs.bundles.share
+    testImplementation libs.quarkusJunit5
+}
+
+quarkusBuild {
+    nativeArgs {
+        containerBuild = true
+        builderImage = "quay.io/quarkus/ubi-quarkus-mandrel-builder-image:jdk-21"
+    }
+}

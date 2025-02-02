@@ -8,6 +8,7 @@ import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.UpdateRequest;
 import co.elastic.clients.elasticsearch.indices.CreateIndexResponse;
 import co.elastic.clients.elasticsearch.indices.ElasticsearchIndicesClient;
+import io.quarkus.arc.properties.IfBuildProperty;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.carl.infrastructure.search.core.action.Delete;
@@ -20,6 +21,7 @@ import org.jboss.logging.Logger;
 
 // TODO: use json query to search ?
 @ApplicationScoped
+@IfBuildProperty(name = "quarkus.elasticsearch.enable", stringValue = "true")
 public class SearchService {
     @Inject ElasticsearchClient esClient;
     static final Logger log = Logger.getLogger(SearchService.class);

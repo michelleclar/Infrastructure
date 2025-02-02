@@ -2,6 +2,7 @@ package org.carl.infrastructure.annotations.interceptor;
 
 import io.vertx.core.http.HttpServerRequest;
 import jakarta.annotation.Priority;
+import jakarta.enterprise.inject.Vetoed;
 import jakarta.inject.Inject;
 import jakarta.interceptor.AroundInvoke;
 import jakarta.interceptor.Interceptor;
@@ -20,6 +21,7 @@ import org.jboss.logging.Logger;
 @Interceptor
 @PreventDuplicateValidator
 @Priority(1000)
+@Vetoed
 public class DuplicateInterceptor {
     private final Logger log = Logger.getLogger(DuplicateInterceptor.class);
     @Inject HttpServerRequest request;

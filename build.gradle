@@ -1,247 +1,111 @@
 plugins {
     id 'java'
-    id 'idea'
-    id 'groovy'
-    id 'maven-publish'
-    id 'io.quarkus'
-    id 'nu.studer.jooq'
     id "com.diffplug.spotless"
 }
-
-group = 'org.carl'
-version = '1.0-BATE'
-repositories {
-    maven { url 'https://maven.aliyun.com/repository/central' }
-    mavenCentral()
-}
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+subprojects {
+    apply {
+        plugin('com.diffplug.spotless')
+        plugin('java')
     }
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
-}
-
-compileJava {
-    options.encoding = 'UTF-8'
-    options.compilerArgs << '-parameters'
-}
-
-compileTestJava {
-    options.encoding = 'UTF-8'
-}
-javadoc.options.encoding = 'UTF-8'
-dependencies {
-    implementation enforcedPlatform(libs.quarkusPlatform)
-    implementation libs.bundles.persistence
-    jooqGenerator libs.quarkusJdbcMysql
-    implementation libs.bundles.search
-    implementation libs.bundles.protocol
-    implementation libs.bundles.mq
-    implementation libs.bundles.utils
-    implementation libs.bundles.cache
-    implementation libs.bundles.base
-    testImplementation libs.quarkusJunit5
-}
-
-test {
-    systemProperty "java.util.logging.manager", "org.jboss.logmanager.LogManager"
-}
-
-spotless {
-    ratchetFrom 'origin/main'
-
+    group = 'org.carl'
+    version = '1.0-BATE'
+    repositories {
+        maven { url 'https://maven.aliyun.com/repository/central' }
+    }
     java {
-        target fileTree('.') {
-            include '**/*.java'
-            exclude '**/build/**', '**/build-*/**'
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
         }
-        importOrder()
-        cleanthat()
-        googleJavaFormat().aosp().reflowLongStrings().formatJavadoc(false).reorderImports(false).groupArtifact("com.google.googlejavaformat:google-java-format")
-        formatAnnotations()
-        trimTrailingWhitespace()
-        endWithNewline()
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
-    groovyGradle {
-        target fileTree('.') {
-            include '**/*.gradle'
-            exclude '**/build/**', '**/build-*/**'
-        }
-        greclipse()
-        indentWithSpaces(4)
-        trimTrailingWhitespace()
-        endWithNewline()
-    }
-    format 'xml', {
-        target fileTree('.') {
-            include '**/*.xml'
-            exclude '**/build/**', '**/build-*/**'
-        }
-        eclipseWtp('xml')
-        trimTrailingWhitespace()
-        indentWithSpaces(2)
-        endWithNewline()
-    }
-    format 'misc', {
-        target fileTree('.') {
-            include '**/*.md', '**/.gitignore'
-            exclude '**/build/**', '**/build-*/**'
-        }
-        trimTrailingWhitespace()
-        indentWithSpaces(2)
-        endWithNewline()
-    }
-}
-afterEvaluate {
-    def spotless = tasks.findByName('spotlessApply')
-    if (spotless) {
-        tasks.withType(JavaCompile).configureEach {
-            finalizedBy(spotless)
-        }
 
-        tasks.withType(GroovyCompile).tap {
-            configureEach {
+
+    compileJava {
+        options.encoding = 'UTF-8'
+        options.compilerArgs << '-parameters'
+    }
+
+    compileTestJava {
+        options.encoding = 'UTF-8'
+    }
+    javadoc.options.encoding = 'UTF-8'
+    test {
+        useJUnitPlatform()
+        systemProperty "java.util.logging.manager", "org.jboss.logmanager.LogManager"
+    }
+    spotless {
+        ratchetFrom 'origin/main'
+
+        java {
+            target fileTree('.') {
+                include '**/*.java'
+                exclude '**/build/**', '**/build-*/**'
+            }
+            importOrder()
+            cleanthat()
+            googleJavaFormat().aosp().reflowLongStrings().formatJavadoc(false).reorderImports(false).groupArtifact("com.google.googlejavaformat:google-java-format")
+            formatAnnotations()
+            trimTrailingWhitespace()
+            endWithNewline()
+        }
+        groovyGradle {
+            target fileTree('.') {
+                include '**/*.gradle'
+                exclude '**/build/**', '**/build-*/**'
+            }
+            greclipse()
+            indentWithSpaces(4)
+            trimTrailingWhitespace()
+            endWithNewline()
+        }
+        format 'xml', {
+            target fileTree('.') {
+                include '**/*.xml'
+                exclude '**/build/**', '**/build-*/**'
+            }
+            eclipseWtp('xml')
+            trimTrailingWhitespace()
+            indentWithSpaces(2)
+            endWithNewline()
+        }
+        format 'misc', {
+            target fileTree('.') {
+                include '**/*.md', '**/.gitignore'
+                exclude '**/build/**', '**/build-*/**'
+            }
+            trimTrailingWhitespace()
+            indentWithSpaces(2)
+            endWithNewline()
+        }
+    }
+    afterEvaluate {
+        def spotless = tasks.named('spotlessApply')
+        if (spotless) {
+            tasks.withType(JavaCompile).configureEach {
                 finalizedBy(spotless)
             }
-        }
-    }
-}
 
-tasks.withType(GenerateModuleMetadata).configureEach {
-    // The value 'enforced-platform' is provided in the validation
-    // error message you got
-    suppressedValidationErrors.add('enforced-platform')
-}
-
-
-publishing {
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/michelleclar/Infrastructure")
-            credentials {
-                username = 'carl'
-                password = System.getenv('GITHUB_TOKEN')
-            }
-        }
-    }
-
-    publications {
-        gpr(MavenPublication) {
-            from(components.java)
-        }
-    }
-}
-
-def mySrcDir = 'src/main/java'
-def generatedDir = 'src/main/generated'
-sourceSets {
-    main {
-        java {
-            srcDir generatedDir
-            srcDir mySrcDir
-        }
-    }
-}
-
-idea {
-    module {
-        generatedSourceDirs.addAll(file(generatedDir))
-        sourceDirs.addAll(file(generatedDir))
-        sourceDirs.addAll(file(mySrcDir))
-    }
-}
-
-def applicationEnv = new Properties()
-def datasourceEnv = new Properties()
-def envPropertiesFile = file('src/main/resources/application.properties')
-def JDBCURL = 'jdbcUrl'
-def DBUSER = 'dbUser'
-def DBPASSWORD = 'dbPassword'
-def SCHEMA = 'schema'
-if (envPropertiesFile.exists()) {
-    envPropertiesFile.withReader('UTF-8') { reader ->
-        applicationEnv.load(reader)
-    }
-    def prefix = applicationEnv.getProperty('quarkus.profile') == null ? '' : '%' + applicationEnv.get('quarkus.profile');
-    def datasource = applicationEnv.getProperty('generate.pojo') == null || applicationEnv.getProperty('generate.pojo') == 'default' ? '' : applicationEnv.getProperty('generate.pojo') + '.'
-    println(prefix + 'quarkus.datasource.' + datasource + 'jdbc.url')
-
-    datasourceEnv.setProperty(JDBCURL, applicationEnv.getProperty(prefix + 'quarkus.datasource.' + datasource + 'jdbc.url'))
-    datasourceEnv.setProperty(DBUSER, applicationEnv.getProperty(prefix + 'quarkus.datasource.' + datasource + 'username'))
-    datasourceEnv.setProperty(DBPASSWORD, applicationEnv.getProperty(prefix + 'quarkus.datasource.' + datasource + 'password'))
-    datasourceEnv.setProperty(SCHEMA, applicationEnv.getProperty(prefix + 'quarkus.datasource.' + datasource + 'schema') == null ? '*' : applicationEnv.getProperty(prefix + 'quarkus.datasource.' + datasource + '.schema'))
-    println "Loaded environment properties from application.properties"
-} else {
-    println "application.properties file not found, skipping loading environment properties."
-}
-
-import nu.studer.gradle.jooq.JooqEdition
-import org.jooq.meta.jaxb.Logging
-
-jooq {
-    version = '3.19.12'
-    edition = JooqEdition.OSS
-
-    configurations {
-        main {
-            generateSchemaSourceOnCompilation = false
-            generationTool {
-                logging = Logging.WARN
-                jdbc {
-                    //                    driver = 'org.postgresql.Driver'
-                    driver = 'com.mysql.cj.jdbc.Driver'
-                    url = 'jdbc:mysql://172.2.2.26:3306/xjrc365'
-                    user = 'root'
-                    password = 'Rc365@dzsJRSK'
-                    //                    url = datasourceEnv.getProperty(JDBCURL)
-                    //                    user = datasourceEnv.getProperty(DBUSER)
-                    //                    password = datasourceEnv.getProperty(DBPASSWORD)
-                    properties {
-                        property {
-                            key = 'ssl'
-                            value = 'false'
-                        }
-                    }
-                }
-                generator {
-                    name = 'org.jooq.codegen.DefaultGenerator'
-                    database {
-                        //                        name = 'org.jooq.meta.postgres.PostgresDatabase'
-                        name = 'org.jooq.meta.mysql.MySQLDatabase'
-                        //                        outputSchemaToDefault = false
-                        //                        inputSchema = datasourceEnv.getProperty(SCHEMA)
-                        inputSchema = 'xjrc365'
-                        //                        forcedTypes {
-                        //                            forcedType {
-                        //                                name = 'varchar'
-                        //                                includeExpression = '.*'
-                        //                                includeTypes = 'JSONB?'
-                        //                            }
-                        //                            forcedType {
-                        //                                name = 'varchar'
-                        //                                includeExpression = '.*'
-                        //                                includeTypes = 'INET'
-                        //                            }
-                        //                        }
-                    }
-                    generate {
-                        deprecated = false
-                        records = true
-                        immutablePojos = false
-                        fluentSetters = true
-                        pojos = true
-                        daos = true
-                    }
-                    target {
-                        packageName = 'org.carl.generated'
-                        directory = 'src/main/generated'
-                    }
-                    strategy.name = "org.jooq.codegen.DefaultGeneratorStrategy"
+            tasks.withType(GroovyCompile).tap {
+                configureEach {
+                    finalizedBy(spotless)
                 }
             }
+        }
+    }
+    configurations.configureEach {
+        resolutionStrategy.dependencySubstitution {
+            substitute(module("org.apache.bookkeeper:circe-checksum"))
+                    .using(module("org.apache.bookkeeper:circe-checksum:4.17.0"))
+                    .withoutClassifier()
+            substitute(module("org.apache.bookkeeper:cpu-affinity"))
+                    .using(module("org.apache.bookkeeper:cpu-affinity:4.17.0"))
+                    .withoutClassifier()
+        }
+    }
+    if (!name.startsWith('infrastructure')) {
+        dependencies {
+            implementation project(':infrastructure')
         }
     }
 }
