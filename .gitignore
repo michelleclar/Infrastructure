@@ -40,3 +40,4 @@ bin/
 /.env
 /src/test/
 /temp/
+/log/
