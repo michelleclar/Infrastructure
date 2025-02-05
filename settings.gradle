@@ -130,6 +130,7 @@ dependencyResolutionManagement {
                     'vertx'
             ])
             bundle('registerCenterConsul', ['consul', 'consulStork', 'consulClient'])
+//            bundle('registerCenterConsul', [ 'consulStork', 'consulClient'])
             // NOTE: persistence
             bundle('persistence', [
                     'quarkusJdbcPostgreSQL',
