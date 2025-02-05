@@ -1,3 +1,43 @@
+# **Fundamental Service Platform Construction Principles**
+
+> **Cloud-Native Platform**  
+> Emphasizes type-safe development practices.  
+> Supports multiple programming languages, but Java remains the primary language for business logic.  
+> The business layer will not involve multiple languages.  
+> Uses **Tekton** for CI/CD.
+
+---
+
+## **Fundamental Service Selection**
+
+### **Search Service**
+
+> Currently, only **Elasticsearch** is considered.
+
+### **Message Queue**
+
+> Evaluated **RabbitMQ, Kafka, RocketMQ, and Pulsar**.  
+> Ultimately, **Pulsar** is chosen for most business use cases, while **Kafka** may be used for log collection.
+
+### **Persistence Layer**
+
+> **PostgreSQL (PG)** is selected.
+
+### **Caching**
+
+> Currently, only **Redis** is considered, but it may be replaced in the future.
+
+### **Network Communication**
+
+> External communication via **HTTP**.  
+> Inter-service communication across different languages uses **gRPC** (code generation for type safety).  
+> Internal service **load balancing** is not yet implemented; **Istio** is being considered.
+
+### **ORM Framework**
+
+> **JOOQ** is currently used, but a replacement is planned because it is **partially open-source**.  
+> JOOQ was chosen for its **type safety** and **fluent API** for writing SQL.
+
 ## How to Approach Business Development and Avoid Reinventing the Wheel
 
 > Most common functionalities should be encapsulated in a plugin-based manner using interfaces, such as data masking, permissions, basic CRUD operations (multi-table references to be developed later), data archiving, etc.  
@@ -15,10 +55,12 @@
 > This approach generates entity classes from the database schema before implementing business logic.
 
 #### **Disadvantages:**
+
 1. If modifications are made to entity classes, code generation may overwrite existing business logic.
 2. Changes to the database often require corresponding updates in business logic, diverting the developer’s focus between database and code.
 
 #### **Advantages:**
+
 1. Code generation ensures type safety, reducing inconsistencies between database fields and code.
 
 ---
@@ -28,9 +70,11 @@
 > The database schema is defined in the code, and the service synchronizes it with the database at startup (typically, this check runs only once at startup, with options for lazy loading to minimize performance overhead).
 
 #### **Disadvantages:**
+
 1. Requires changes in the development workflow when using code generation.
 
 #### **Advantages:**
+
 1. Allows developers to focus solely on the code, improving efficiency.
 2. If multiple services rely on a shared foundational service, maintenance costs can be significantly reduced.
 
@@ -44,12 +88,14 @@
 > Requires adjustments to the development process.
 
 #### **Tip for Developers:**
+
 ```mermaid
 graph LR
-   A[ER Diagram] --> B[Define table structures in code (preferably using DSL statements)]
-   B --> C[Schema alignment check (plugin-based approach: first create tables, then generate code)]
+   A[ER Diagram] --> B[Define table structures in code preferably using DSL statements]
+   B --> C[Schema alignment check plugin-based approach: first create tables, then generate code]
    C --> D[Business logic development]
 ```
 
 #### **Disadvantages:**
+
 1. Introduces additional steps in the development process.

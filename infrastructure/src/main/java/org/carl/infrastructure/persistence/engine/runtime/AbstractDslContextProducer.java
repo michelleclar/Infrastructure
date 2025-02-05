@@ -1,9 +1,12 @@
 package org.carl.infrastructure.persistence.engine.runtime;
 
 import io.agroal.api.AgroalDataSource;
+import jakarta.inject.Qualifier;
+import java.lang.annotation.*;
+import java.sql.SQLException;
 import java.util.Objects;
-import org.carl.infrastructure.persistence.engine.core.DSLContextX;
 import org.jboss.logging.Logger;
+import org.jooq.DSLContext;
 
 /**
  * Produces DSLContext
@@ -13,7 +16,7 @@ import org.jboss.logging.Logger;
 public abstract class AbstractDslContextProducer {
     private static final Logger log = Logger.getLogger(AbstractDslContextProducer.class);
 
-    public DSLContextX createDslContext(
+    public DSLContext createDslContext(
             String sqlDialect, AgroalDataSource dataSource, String customConfiguration) {
         Objects.requireNonNull(sqlDialect, "sqlDialect");
         Objects.requireNonNull(dataSource, "dataSource");
@@ -35,7 +38,12 @@ public abstract class AbstractDslContextProducer {
         }
     }
 
-    public DSLContextX createDslContext(
+    public DSLContext createDslContext(AgroalDataSource dataSource) throws SQLException {
+        Objects.requireNonNull(dataSource, "dataSource");
+        return DslContextFactory.create(dataSource);
+    }
+
+    public DSLContext createDslContext(
             String sqlDialect, AgroalDataSource dataSource, JooqCustomContext customConfiguration) {
         Objects.requireNonNull(sqlDialect, "sqlDialect");
         Objects.requireNonNull(dataSource, "dataSource");
@@ -43,11 +51,11 @@ public abstract class AbstractDslContextProducer {
         return DslContextFactory.create(sqlDialect, dataSource, customConfiguration);
     }
 
-    //    /** CDI: Ambiguous dependencies */
-    //    @Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER, ElementType.TYPE})
-    //    @Retention(RetentionPolicy.RUNTIME)
-    //    @Documented
-    //    @Qualifier public @interface DslContextQualifier {
-    //        String value();
-    //    }
+    /** CDI: Ambiguous dependencies */
+    @Target({ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER, ElementType.TYPE})
+    @Retention(RetentionPolicy.RUNTIME)
+    @Documented
+    @Qualifier public @interface DslContextQualifier {
+        String value();
+    }
 }
