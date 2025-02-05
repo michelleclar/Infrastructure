@@ -1,5 +1,7 @@
 package org.carl.infrastructure.search;
 
+import jakarta.inject.Inject;
+
 import java.util.Map;
 
 public interface ElasticsearchClient extends SearchClient{
