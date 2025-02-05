@@ -3,7 +3,7 @@ package org.carl.infrastructure.ability;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.carl.infrastructure.parse.json.JacksonProvider;
+import org.carl.infrastructure.util.parse.json.JacksonProvider;
 
 public interface JacksonAbility {
     default String toJsonString(Object obj) throws JsonProcessingException {

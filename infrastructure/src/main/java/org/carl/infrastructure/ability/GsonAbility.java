@@ -6,7 +6,7 @@ import java.util.function.Function;
 
 
 import com.google.gson.JsonObject;
-import org.carl.infrastructure.parse.json.GsonProvider;
+import org.carl.infrastructure.util.parse.json.GsonProvider;
 
 public interface GsonAbility{
 

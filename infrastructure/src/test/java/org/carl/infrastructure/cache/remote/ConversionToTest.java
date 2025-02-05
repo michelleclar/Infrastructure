@@ -1,6 +1,6 @@
 package org.carl.infrastructure.cache.remote;
 
-import org.carl.infrastructure.comment.Conversion;
+import org.carl.infrastructure.util.Conversion;
 import org.junit.jupiter.api.Test;
 
 class ConversionToTest {

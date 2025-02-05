@@ -1,4 +1,4 @@
-package org.carl.infrastructure.comment;
+package org.carl.infrastructure.util;
 
 import jakarta.xml.bind.DatatypeConverter;
 import java.security.MessageDigest;

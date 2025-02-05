@@ -12,7 +12,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import java.time.Duration;
 import java.util.List;
 import java.util.function.Function;
-import org.carl.infrastructure.comment.Conversion;
+import org.carl.infrastructure.util.Conversion;
 
 @ApplicationScoped
 @IfBuildProperty(name = "quarkus.remote.cache.enable", stringValue = "true")

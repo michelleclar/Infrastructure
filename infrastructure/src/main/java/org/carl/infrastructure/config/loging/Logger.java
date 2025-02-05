@@ -1,4 +1,4 @@
-package org.carl.infrastructure.loging;
+package org.carl.infrastructure.config.loging;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.LoggingException;

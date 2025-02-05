@@ -1,4 +1,4 @@
-package org.carl.infrastructure.runtime;
+package org.carl.infrastructure.config.runtime;
 
 import io.vertx.core.json.JsonObject;
 

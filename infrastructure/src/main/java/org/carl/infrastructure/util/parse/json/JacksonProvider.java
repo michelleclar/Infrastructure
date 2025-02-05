@@ -1,4 +1,4 @@
-package org.carl.infrastructure.parse.json;
+package org.carl.infrastructure.util.parse.json;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;

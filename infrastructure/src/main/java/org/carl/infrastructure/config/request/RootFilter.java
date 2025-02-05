@@ -14,8 +14,8 @@ import jakarta.ws.rs.Priorities;
 import org.carl.infrastructure.config.ScaffoldConfig;
 import org.carl.infrastructure.constant.Constants;
 import org.carl.infrastructure.model.ApiRequest;
-import org.carl.infrastructure.runtime.IRuntimeProvider;
-import org.carl.infrastructure.runtime.IRuntimeUser;
+import org.carl.infrastructure.config.runtime.IRuntimeProvider;
+import org.carl.infrastructure.config.runtime.IRuntimeUser;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.util.Optional;

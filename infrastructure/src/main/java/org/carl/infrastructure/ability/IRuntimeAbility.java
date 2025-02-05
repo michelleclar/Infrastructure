@@ -4,7 +4,7 @@ import io.vertx.ext.web.RoutingContext;
 import org.carl.infrastructure.config.IProfile;
 import org.carl.infrastructure.constant.Constants;
 import org.carl.infrastructure.model.ApiRequest;
-import org.carl.infrastructure.runtime.IRuntimeUser;
+import org.carl.infrastructure.config.runtime.IRuntimeUser;
 
 public interface IRuntimeAbility extends IProfile {
     RoutingContext getRoutingContext();

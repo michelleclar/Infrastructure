@@ -15,7 +15,7 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import org.carl.infrastructure.annotations.Limit;
 import org.carl.infrastructure.cache.CacheFields;
-import org.carl.infrastructure.comment.StatusType;
+import org.carl.infrastructure.config.StatusType;
 import org.jboss.logging.Logger;
 
 @Interceptor

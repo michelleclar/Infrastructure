@@ -1,4 +1,4 @@
-package org.carl.infrastructure.comment;
+package org.carl.infrastructure.config;
 
 import jakarta.ws.rs.core.Response;
 

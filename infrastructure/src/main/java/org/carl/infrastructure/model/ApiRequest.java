@@ -1,6 +1,6 @@
 package org.carl.infrastructure.model;
 
-import org.carl.infrastructure.runtime.IRuntimeUser;
+import org.carl.infrastructure.config.runtime.IRuntimeUser;
 
 public class ApiRequest {
 

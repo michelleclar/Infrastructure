@@ -1,4 +1,4 @@
-package org.carl.infrastructure.comment;
+package org.carl.infrastructure.util;
 
 import java.util.function.Function;
 import org.carl.infrastructure.annotations.NotThreadSafe;

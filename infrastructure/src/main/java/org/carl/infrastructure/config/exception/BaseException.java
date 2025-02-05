@@ -1,7 +1,7 @@
 package org.carl.infrastructure.config.exception;
 
 import jakarta.ws.rs.core.Response;
-import org.carl.infrastructure.comment.StatusType;
+import org.carl.infrastructure.config.StatusType;
 
 public class BaseException extends RuntimeException {
     private int errorCode;
