@@ -1,13 +1,15 @@
 package org.carl.infrastructure.comment;
 
 import io.smallrye.mutiny.Uni;
+
 import java.util.function.Function;
+
 import org.carl.infrastructure.annotations.NotThreadSafe;
-import org.carl.infrastructure.comment.parse.json.JSON;
+import org.carl.infrastructure.ability.GsonAbility;
 import org.jboss.logging.Logger;
 
 @NotThreadSafe
-public class ReactiveConversion {
+public class ReactiveConversion implements GsonAbility {
     private final Logger log = Logger.getLogger(ReactiveConversion.class);
     private final Object value;
 
@@ -72,11 +74,11 @@ public class ReactiveConversion {
     }
 
     public Uni<String> toJsonString() {
-        return this.to(o -> JSON.toJsonString(this.value));
+        return this.to(this::toJsonString);
     }
 
     public Uni<String> toJsonObject() {
-        return this.to(o -> JSON.toJsonString(this.value));
+        return this.to(this::toJsonString);
     }
 
     public <T> Uni<T> to(Function<Object, T> adapter) {

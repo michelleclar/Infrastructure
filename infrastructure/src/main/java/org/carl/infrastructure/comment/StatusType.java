@@ -2,8 +2,9 @@ package org.carl.infrastructure.comment;
 
 import jakarta.ws.rs.core.Response;
 
-public enum StatusType implements Response.StatusType {
-    ERROR_DUPLICATE(467, "Invalid email format");
+// TODO: need code ,reason ,change family
+public class StatusType implements Response.StatusType {
+    public static final StatusType ERROR_DUPLICATE = StatusType.create(467, "ERROR_DUPLICATE");
     private final int code;
     private final String reason;
     private final Response.Status.Family family;
@@ -12,6 +13,10 @@ public enum StatusType implements Response.StatusType {
         this.code = statusCode;
         this.reason = reasonPhrase;
         this.family = Response.Status.Family.familyOf(statusCode);
+    }
+
+    public static StatusType create(final int statusCode, final String reasonPhrase) {
+        return new StatusType(statusCode, reasonPhrase);
     }
 
     /**
