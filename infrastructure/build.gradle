@@ -1,5 +1,5 @@
 plugins {
-    id 'io.quarkus'
+    alias(libs.plugins.quarkusPlugin)
     id 'java-library'
     id 'nu.studer.jooq'
 }
@@ -13,8 +13,9 @@ dependencies {
     implementation libs.bundles.utils
     implementation libs.bundles.cache
     implementation libs.bundles.base
+    implementation libs.bundles.registerCenterConsul
     api libs.bundles.share
-    testImplementation libs.quarkusJunit5
+    testImplementation libs.bundles.test
 }
 
 quarkusBuild {

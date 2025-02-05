@@ -1,16 +1,19 @@
 plugins {
     id 'java'
     id "com.diffplug.spotless"
+
 }
 subprojects {
     apply {
         plugin('com.diffplug.spotless')
         plugin('java')
+        plugin('idea')
     }
     group = 'org.carl'
     version = '1.0-BATE'
     repositories {
         maven { url 'https://maven.aliyun.com/repository/central' }
+        maven { url 'https://mirrors.cloud.tencent.com/repository/maven' }
     }
     java {
         toolchain {
@@ -21,9 +24,18 @@ subprojects {
     }
 
 
-    compileJava {
+    tasks.withType(JavaCompile).configureEach {
         options.encoding = 'UTF-8'
         options.compilerArgs << '-parameters'
+    }
+    tasks.withType(Javadoc).configureEach {
+        enabled = false
+    }
+    tasks.named("javadoc") {
+        mustRunAfter { tasks.named("jandex") }
+    }
+    tasks.withType(GenerateModuleMetadata).configureEach {
+        suppressedValidationErrors.add("enforced-platform")
     }
 
     compileTestJava {
@@ -33,7 +45,9 @@ subprojects {
     test {
         useJUnitPlatform()
         systemProperty "java.util.logging.manager", "org.jboss.logmanager.LogManager"
+        systemProperty "quarkus.profile", "dev"
     }
+    // NOTE: https://github.com/diffplug/spotless/tree/main/plugin-gradle
     spotless {
         ratchetFrom 'origin/main'
 
@@ -48,6 +62,38 @@ subprojects {
             formatAnnotations()
             trimTrailingWhitespace()
             endWithNewline()
+        }
+        protobuf {
+            target '**/*.proto'
+            buf()
+            licenseHeader '/* (C) $YEAR */'
+        }
+        flexmark {
+            target '**/*.md'
+            flexmark()
+        }
+        sql {
+            target fileTree('.') {
+                include 'src/main/resources/**/*.sql'
+                exclude '**/build/**', '**/build-*/**'
+            }
+            dbeaver()
+            prettier()
+        }
+        yaml {
+            target fileTree('.') {
+                include 'src/main/resources/**/*.yaml'
+                exclude '**/build/**', '**/build-*/**'
+            }
+            jackson()
+            prettier()
+        }
+        shell {
+            target fileTree('.') {
+                include 'src/main/resources/**/*.sh'
+                exclude '**/build/**', '**/build-*/**'
+            }
+            shfmt()
         }
         groovyGradle {
             target fileTree('.') {
@@ -93,6 +139,7 @@ subprojects {
             }
         }
     }
+    // NOTE: pulsar
     configurations.configureEach {
         resolutionStrategy.dependencySubstitution {
             substitute(module("org.apache.bookkeeper:circe-checksum"))
@@ -103,6 +150,26 @@ subprojects {
                     .withoutClassifier()
         }
     }
+
+    def mainSrc = 'src/main/java'
+    def generatedDir = 'src/main/generated'
+    sourceSets {
+        main {
+            java {
+                srcDir generatedDir
+                srcDir mainSrc
+            }
+        }
+    }
+
+    idea {
+        module {
+            generatedSourceDirs.addAll(file(generatedDir))
+            sourceDirs.addAll(file(generatedDir))
+            sourceDirs.addAll(file(mainSrc))
+        }
+    }
+
     if (!name.startsWith('infrastructure')) {
         dependencies {
             implementation project(':infrastructure')
