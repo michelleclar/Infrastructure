@@ -1,0 +1,47 @@
+package org.carl.infrastructure.testcontainers;
+
+import com.github.dockerjava.core.DefaultDockerClientConfig;
+import com.github.dockerjava.core.DockerClientConfig;
+import java.util.Optional;
+import org.eclipse.microprofile.config.ConfigProvider;
+import org.testcontainers.dockerclient.DockerClientProviderStrategy;
+import org.testcontainers.dockerclient.TransportConfig;
+
+public class MyDockerClientProviderStrategy extends DockerClientProviderStrategy {
+
+    private final DockerClientConfig dockerClientConfig;
+
+    public MyDockerClientProviderStrategy() {
+        DefaultDockerClientConfig.Builder configBuilder =
+                DefaultDockerClientConfig.createDefaultConfigBuilder();
+        Optional<String> optionalValue =
+                ConfigProvider.getConfig().getOptionalValue("docker.host", String.class);
+        String dockerHost = "unix:///var/run/docker.sock";
+        if (optionalValue.isPresent()) {
+            dockerHost = optionalValue.get();
+        }
+        configBuilder.withDockerHost(dockerHost);
+        //        configBuilder.withDockerTlsVerify(true);
+        //        configBuilder.withDockerCertPath("~/.docker");
+
+        dockerClientConfig = configBuilder.build();
+    }
+
+    @Override
+    public TransportConfig getTransportConfig() {
+        return TransportConfig.builder()
+                .dockerHost(dockerClientConfig.getDockerHost())
+                //                .sslConfig(dockerClientConfig.getSSLConfig())
+                .build();
+    }
+
+    @Override
+    protected boolean isApplicable() {
+        return true;
+    }
+
+    @Override
+    public String getDescription() {
+        return "test-custom-strategy";
+    }
+}

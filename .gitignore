@@ -41,3 +41,5 @@ bin/
 /src/test/
 /temp/
 **/log/
+!infrastructure/src/main/resources/composev2/docker-compose.yml
+/infrastructure/src/main/resources/composev2/

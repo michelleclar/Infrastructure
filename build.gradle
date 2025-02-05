@@ -45,7 +45,7 @@ subprojects {
     test {
         useJUnitPlatform()
         systemProperty "java.util.logging.manager", "org.jboss.logmanager.LogManager"
-        systemProperty "quarkus.profile", "dev"
+        systemProperty "TESTCONTAINERS_REUSE_ENABLE", "true"
     }
     // NOTE: https://github.com/diffplug/spotless/tree/main/plugin-gradle
     spotless {

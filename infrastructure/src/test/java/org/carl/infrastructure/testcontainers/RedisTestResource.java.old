@@ -1,0 +1,46 @@
+package org.carl.infrastructure.testcontainers;
+
+import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Map;
+import org.carl.infrastructure.util.Utils;
+import org.eclipse.microprofile.config.ConfigProvider;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
+import org.testcontainers.utility.DockerImageName;
+
+public class RedisTestResource implements QuarkusTestResourceLifecycleManager {
+
+    private static final String TAG = "redis:7-alpine";
+
+    public static GenericContainer<?> CONTAINER;
+    ;
+
+    static {
+        try {
+
+            URL url =
+                    Utils.createURL(
+                            ConfigProvider.getConfig()
+                                    .getValue("quarkus.redis.hosts", String.class));
+            CONTAINER =
+                    new GenericContainer<>(DockerImageName.parse(TAG))
+                            .withExposedPorts(url.getPort())
+                            .withReuse(true);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public Map<String, String> start() {
+        if (!CONTAINER.isRunning()) {
+            CONTAINER.start();
+        }
+        return ImmutableMap.of();
+    }
+
+    @Override
+    public void stop() {}
+}

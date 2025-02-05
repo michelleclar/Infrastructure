@@ -99,9 +99,13 @@ dependencyResolutionManagement {
             library('testcontainersPg', 'org.testcontainers', 'postgresql').versionRef('testcontainers')
             library('testcontainersConsul', 'org.testcontainers', 'consul').versionRef('testcontainers')
             library('testcontainersPulsar', 'org.testcontainers', 'pulsar').versionRef('testcontainers')
+            library('testcontainersNeo4j', 'org.testcontainers', 'neo4j').versionRef('testcontainers')
+            library('testcontainersElasticsearch', 'org.testcontainers', 'elasticsearch').versionRef('testcontainers')
+            library('testcontainersMilvus', 'org.testcontainers', 'milvus').versionRef('testcontainers')
             library('testcontainersJunitJupiter', 'org.testcontainers', 'junit-jupiter').versionRef('testcontainers')
             library('quarkusJunit5', 'io.quarkus', 'quarkus-junit5').versionRef('quarkus')
             library('assured', 'io.rest-assured', 'rest-assured').versionRef('quarkus')
+            library('dockerJava','com.github.docker-java','docker-java').version('3.4.0')
 
             // NOTE: jwt
             library('jwt', 'io.quarkus', 'quarkus-smallrye-jwt').versionRef('quarkus')
@@ -145,9 +149,15 @@ dependencyResolutionManagement {
             bundle('protocol', ['grpc', 'websocket'])
 
             bundle('test', [
-                    'testcontainersPg',
-                    'testcontainersPulsar',
-                    'testcontainersConsul',
+                    'testcontainersJunitJupiter',
+                    'testcontainers',
+//                    'testcontainersPg',
+//                    'testcontainersPulsar',
+//                    'testcontainersConsul',
+//                    'testcontainersNeo4j',
+//                    'testcontainersElasticsearch',
+//                    'testcontainersMilvus',
+                    'dockerJava',
                     'flyway',
                     'assured',
                     'quarkusJunit5'

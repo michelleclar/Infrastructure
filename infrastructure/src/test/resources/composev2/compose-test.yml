@@ -1,0 +1,26 @@
+services:
+  consul:
+    image: hashicorp/consul:1.20
+  neo4j:
+    image: neo4j:5.24.2
+  redis:
+    image: redis:7-alpine
+  pg:
+    image: postgres:17-alpine
+  pulsar:
+    image: apachepulsar/pulsar:3.2.4
+  es:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.16.0
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.16
+  minio:
+    image: minio/minio:RELEASE.2023-03-20T20-16-18Z
+  milvus:
+    image: milvusdb/milvus:v2.5.4
+
+networks:
+  default:
+    name: scaffold
+    driver: bridge
+  milvus:
+    driver: bridge
