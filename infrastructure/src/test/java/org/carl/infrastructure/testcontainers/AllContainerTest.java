@@ -9,9 +9,8 @@ import org.carl.infrastructure.config.IProfile;
 import org.carl.infrastructure.util.Utils;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.testcontainers.containers.ComposeContainer;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
-@Testcontainers
+// @Testcontainers
 public interface AllContainerTest {
     ComposeContainer compose =
             new ComposeContainer(new File("src/test/resources/composev2/compose-test.yml"));
