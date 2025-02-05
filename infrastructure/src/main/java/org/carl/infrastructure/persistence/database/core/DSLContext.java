@@ -1,10 +1,13 @@
 package org.carl.infrastructure.persistence.database.core;
 
 import jakarta.annotation.Nullable;
+
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
+
+import org.carl.infrastructure.constant.Constants;
 import org.jboss.logging.Logger;
 import org.jooq.*;
 import org.jooq.Record;
@@ -57,6 +60,12 @@ public class DSLContext {
 
     public <R extends Record> SelectWhereStep<R> selectFrom(TableLike<R> table) {
         return dslContext.selectFrom(table);
+    }
+
+    public int create(String tableName,Field<?>... fields) {
+        // TODO: create table need run gen code
+        Objects.requireNonNull(fields, "condition is null");
+        return dslContext.createTableIfNotExists(DSL.table(tableName)).columns(fields).execute();
     }
 
     public int update(UpdatableRecord<?> record, @Nullable Condition condition) {
