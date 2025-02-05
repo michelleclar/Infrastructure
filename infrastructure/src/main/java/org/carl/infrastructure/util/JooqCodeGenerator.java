@@ -32,9 +32,11 @@ public class JooqCodeGenerator {
                                 new Generator()
                                         .withDatabase(
                                                 new Database()
-                                                        .withName("org.jooq.meta.postgres.PostgresDatabase")
+                                                        .withName(
+                                                                "org.jooq.meta.postgres.PostgresDatabase")
                                                         .withInputSchema("public")
-                                                        .withOutputSchemaToDefault(true) // don't generator schema
+                                                        .withOutputSchemaToDefault(
+                                                                true) // don't generator schema
                                                         .withIncludes(".*")
                                                         .withExcludes(""))
                                         .withGenerate(
@@ -50,7 +52,8 @@ public class JooqCodeGenerator {
                                         .withTarget(
                                                 new Target()
                                                         .withPackageName("org.carl.generated")
-                                                        .withDirectory("../application/src/main/generated")));
+                                                        .withDirectory(
+                                                                "../application/src/main/generated")));
 
         GenerationTool.generate(configuration);
     }

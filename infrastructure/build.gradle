@@ -14,13 +14,6 @@ dependencies {
     implementation libs.bundles.cache
     implementation libs.bundles.base
     implementation libs.bundles.registerCenterConsul
-    System.getProperties().findAll() {
-        o ->
-            {
-                print(o.getKey())
-                print(o.getValue())
-            }
-    }
     def applicationEnv = new Properties()
     def envPropertiesFile = file('src/main/resources/application.properties')
     if (envPropertiesFile.exists()) {

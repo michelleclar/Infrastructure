@@ -4,7 +4,6 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.ext.web.RoutingContext;
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
-
 import org.carl.infrastructure.ability.IRuntimeAbility;
 import org.carl.infrastructure.ability.ISearchAbility;
 import org.carl.infrastructure.ability.ISentMessageAbility;
@@ -12,7 +11,8 @@ import org.carl.infrastructure.persistence.IPersistenceOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class Scaffold implements IPersistenceOperations, IRuntimeAbility, ISearchAbility, ISentMessageAbility {
+public abstract class Scaffold
+        implements IPersistenceOperations, IRuntimeAbility, ISearchAbility, ISentMessageAbility {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -56,8 +56,5 @@ public abstract class Scaffold implements IPersistenceOperations, IRuntimeAbilit
         logger.info("{} initialized", this.getClass().getSimpleName());
     }
 
-    protected void afterInit() {
-
-    }
-
+    protected void afterInit() {}
 }

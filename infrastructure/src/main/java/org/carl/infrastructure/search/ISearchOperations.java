@@ -1,4 +1,3 @@
 package org.carl.infrastructure.search;
 
-public interface ISearchOperations {
-}
+public interface ISearchOperations {}
