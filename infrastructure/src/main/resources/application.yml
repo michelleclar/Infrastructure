@@ -1,0 +1,310 @@
+# app
+"prod":
+  quarkus:
+    application:
+      name: Carl
+    http:
+      port: 9080
+      cors:
+        origins: https://note-hffsr6019-michelleclars-projects.vercel.app
+        headers: accept, authorization, content-type, x-requested-with, refreshToken
+        methods: GET,OPTIONS,POST
+    plugins:
+      persistence:
+        enable: true
+    jackson:
+      serialization-inclusion: NON_NULL
+    rest-client:
+      "org.carl.auth.client.OAuthClient":
+        url: https://github.com/login
+      "org.carl.langChain.client.RestClientWithOllama":
+        url: https://api.github.com
+    package:
+      jar:
+        enabled: false
+    mailer:
+      auth-methods: DIGEST-MD5 CRAM-SHA256 CRAM-SHA1 CRAM-MD5 PLAIN LOGIN
+      host: smtp.gmail.com
+      start-tls: REQUIRED
+    grpc:
+      clients:
+        demo:
+          host: localhost
+          port: 50051
+    langchain4j:
+      timeout: 60s
+    cache:
+      caffeine:
+        "ip":
+          expire-after-write: 60S
+        "code":
+          expire-after-write: PT5M
+    naming:
+      enable-jndi: true
+    redis:
+      hosts: redis://192.168.111.32:63790
+      password: dzs@2024
+    datasource:
+      db-kind: postgresql
+      jdbc:
+        url: jdbc:postgresql://localhost:15432/db
+        max-size: 11
+      username: root
+      password: root
+    elasticsearch:
+      protocol: http
+      hosts: 192.168.111.34:9200
+      username: elastic
+      password: 123456
+    log:
+      category:
+        "io.quarkus.smallrye.jwt.runtime.auth.MpJwtValidator":
+          level: TRACE
+          min-level: TRACE
+        "org.carl.aop.LoggingInterceptor":
+          level: DEBUG
+        "jooq.tools.LoggerListener":
+          level: DEBUG
+      level: INFO
+      file:
+        enable: true
+        path: ./log/app.log
+        format: "%d{HH:mm:ss} %-5p traceId=%X{traceId}, parentId=%X{parentId}, spanId=%X{spanId}, sampled=%X{sampled} [%c{2.}] (%t) %s%e%n"
+      console:
+        format: "%d{HH:mm:ss} %-5p traceId=%X{traceId}, parentId=%X{parentId}, spanId=%X{spanId}, sampled=%X{sampled} [%c{2.}] (%t) %s%e%n"
+    shutdown:
+      timeout: 10
+    smallrye-openapi:
+      info-title: Carl
+      info-version: 1.0.0
+      info-description: Open Knowledge
+      info-contact-email: carlmichelle493@gmail.com
+      info-contact-name: carl
+      info-contact-url: https://github.com/michelleclar
+  app:
+    id: 1
+  generate:
+    pojo: default
+  mp:
+    jwt:
+      verify:
+        publickey:
+          location: publicKey.pem
+          algorithm: RS256
+        issuer: https://org.carl/issuer
+        clock:
+          skew: 60
+        token:
+          age: 3000000
+  smallrye:
+    jwt:
+      sign:
+        key:
+          location: privateKey.pem
+
+"%dev":
+  quarkus:
+    application:
+      name: Carl
+    http:
+      port: 9080
+      cors:
+        origins: https://note-hffsr6019-michelleclars-projects.vercel.app
+        headers: accept, authorization, content-type, x-requested-with, refreshToken
+        methods: GET,OPTIONS,POST
+    plugins:
+      persistence:
+        enable: true
+    jackson:
+      serialization-inclusion: NON_NULL
+    rest-client:
+      "org.carl.auth.client.OAuthClient":
+        url: https://github.com/login
+      "org.carl.langChain.client.RestClientWithOllama":
+        url: https://api.github.com
+    package:
+      jar:
+        enabled: false
+    mailer:
+      auth-methods: DIGEST-MD5 CRAM-SHA256 CRAM-SHA1 CRAM-MD5 PLAIN LOGIN
+      host: smtp.gmail.com
+      start-tls: REQUIRED
+    grpc:
+      clients:
+        demo:
+          host: localhost
+          port: 50051
+    langchain4j:
+      timeout: 60s
+    cache:
+      caffeine:
+        "ip":
+          expire-after-write: 60S
+        "code":
+          expire-after-write: PT5M
+    naming:
+      enable-jndi: true
+    redis:
+      hosts: redis://192.168.111.32:63790
+      password: dzs@2024
+    datasource:
+      db-kind: postgresql
+      jdbc:
+        url: jdbc:postgresql://localhost:15432/db
+        max-size: 11
+      username: root
+      password: root
+    elasticsearch:
+      protocol: http
+      hosts: 192.168.111.34:9200
+      username: elastic
+      password: 123456
+    log:
+      category:
+        "io.quarkus.smallrye.jwt.runtime.auth.MpJwtValidator":
+          level: TRACE
+          min-level: TRACE
+        "org.carl.aop.LoggingInterceptor":
+          level: DEBUG
+        "jooq.tools.LoggerListener":
+          level: DEBUG
+      level: INFO
+      file:
+        enable: true
+        path: ./log/app.log
+        format: "%d{HH:mm:ss} %-5p traceId=%X{traceId}, parentId=%X{parentId}, spanId=%X{spanId}, sampled=%X{sampled} [%c{2.}] (%t) %s%e%n"
+      console:
+        format: "%d{HH:mm:ss} %-5p traceId=%X{traceId}, parentId=%X{parentId}, spanId=%X{spanId}, sampled=%X{sampled} [%c{2.}] (%t) %s%e%n"
+    shutdown:
+      timeout: 10
+    smallrye-openapi:
+      info-title: Carl (development)
+      info-version: 1.0.0
+      info-description: Open Knowledge
+      info-contact-email: carlmichelle493@gmail.com
+      info-contact-name: carl
+      info-contact-url: https://github.com/michelleclar
+  app:
+    id: 1
+  generate:
+    pojo: default
+  mp:
+    jwt:
+      verify:
+        publickey:
+          location: publicKey.pem
+          algorithm: RS256
+        issuer: https://org.carl/issuer
+        clock:
+          skew: 60
+        token:
+          age: 3000000000000
+  smallrye:
+    jwt:
+      sign:
+        key:
+          location: privateKey.pem
+
+
+"%test":
+  quarkus:
+    application:
+      name: Carl
+    http:
+      port: 9080
+      cors:
+        origins: https://note-hffsr6019-michelleclars-projects.vercel.app
+        headers: accept, authorization, content-type, x-requested-with, refreshToken
+        methods: GET,OPTIONS,POST
+    plugins:
+      persistence:
+        enable: true
+    jackson:
+      serialization-inclusion: NON_NULL
+    rest-client:
+      "org.carl.auth.client.OAuthClient":
+        url: https://github.com/login
+      "org.carl.langChain.client.RestClientWithOllama":
+        url: https://api.github.com
+    package:
+      jar:
+        enabled: false
+    mailer:
+      auth-methods: DIGEST-MD5 CRAM-SHA256 CRAM-SHA1 CRAM-MD5 PLAIN LOGIN
+      host: smtp.gmail.com
+      start-tls: REQUIRED
+    grpc:
+      clients:
+        demo:
+          host: localhost
+          port: 50051
+    langchain4j:
+      timeout: 60s
+    cache:
+      caffeine:
+        "ip":
+          expire-after-write: 60S
+        "code":
+          expire-after-write: PT5M
+    naming:
+      enable-jndi: true
+    redis:
+      hosts: redis://192.168.111.32:63790
+      password: dzs@2024
+    datasource:
+      db-kind: postgresql
+      jdbc:
+        url: jdbc:postgresql://localhost:15432/db
+        max-size: 11
+      username: root
+      password: root
+    elasticsearch:
+      protocol: http
+      hosts: 192.168.111.34:9200
+      username: elastic
+      password: 123456
+    log:
+      category:
+        "io.quarkus.smallrye.jwt.runtime.auth.MpJwtValidator":
+          level: TRACE
+          min-level: TRACE
+        "org.carl.aop.LoggingInterceptor":
+          level: DEBUG
+        "jooq.tools.LoggerListener":
+          level: DEBUG
+      level: INFO
+      file:
+        enable: true
+        path: ./log/app.log
+        format: "%d{HH:mm:ss} %-5p traceId=%X{traceId}, parentId=%X{parentId}, spanId=%X{spanId}, sampled=%X{sampled} [%c{2.}] (%t) %s%e%n"
+      console:
+        format: "%d{HH:mm:ss} %-5p traceId=%X{traceId}, parentId=%X{parentId}, spanId=%X{spanId}, sampled=%X{sampled} [%c{2.}] (%t) %s%e%n"
+    shutdown:
+      timeout: 10
+    smallrye-openapi:
+      info-title: Carl (development)
+      info-version: 1.0.0
+      info-description: Open Knowledge
+      info-contact-email: carlmichelle493@gmail.com
+      info-contact-name: carl
+      info-contact-url: https://github.com/michelleclar
+  app:
+    id: 1
+  generate:
+    pojo: default
+  mp:
+    jwt:
+      verify:
+        publickey:
+          location: publicKey.pem
+          algorithm: RS256
+        issuer: https://org.carl/issuer
+        clock:
+          skew: 60
+        token:
+          age: 3000000000000
+  smallrye:
+    jwt:
+      sign:
+        key:
+          location: privateKey.pem
