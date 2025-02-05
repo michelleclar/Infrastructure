@@ -2,11 +2,11 @@ package org.carl.infrastructure.comment;
 
 import java.util.function.Function;
 import org.carl.infrastructure.annotations.NotThreadSafe;
-import org.carl.infrastructure.comment.parse.json.JSON;
+import org.carl.infrastructure.ability.GsonAbility;
 import org.jboss.logging.Logger;
 
 @NotThreadSafe
-public class Conversion {
+public class Conversion implements GsonAbility {
     private final Logger log = Logger.getLogger(Conversion.class);
     private final Object value;
 
@@ -101,11 +101,11 @@ public class Conversion {
     }
 
     public String toJsonString() {
-        return to(JSON::toJsonString);
+        return to(this::toJsonString);
     }
 
     public String toJsonObject() {
-        return to(JSON::toJsonString);
+        return to(this::toJsonString);
     }
 
     public <T> T to(Function<Object, T> adapter) {

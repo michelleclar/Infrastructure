@@ -1,4 +1,7 @@
-package org.carl.infrastructure.comment;
+package org.carl.infrastructure.config.exception;
+
+import jakarta.ws.rs.core.Response;
+import org.carl.infrastructure.comment.StatusType;
 
 public class BaseException extends RuntimeException {
     private int errorCode;
@@ -20,7 +23,15 @@ public class BaseException extends RuntimeException {
         return this;
     }
 
+    public Response getErrorResponse() {
+        return Response.status(this.errorCode)
+                .entity(new ErrorPair(traceId, this.getMessage()))
+                .build();
+    }
+
     public int getErrorCode() {
         return errorCode;
     }
+
+    record ErrorPair(Long traceId, String message) {}
 }

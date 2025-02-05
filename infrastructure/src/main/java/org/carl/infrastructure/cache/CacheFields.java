@@ -1,7 +1,7 @@
 package org.carl.infrastructure.cache;
 
-import org.carl.infrastructure.comment.Fields;
+import org.carl.infrastructure.constant.Constants;
 
 public class CacheFields {
-    public static final String IP = Fields.IP;
+    public static final String IP = Constants.Fields.IP;
 }

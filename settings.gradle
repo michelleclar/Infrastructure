@@ -21,9 +21,7 @@ dependencyResolutionManagement {
             // versions
             version('quarkus', "${quarkusPluginVersion}")
             version('jooq', '3.19.12')
-            version('jooqQuarkiverse', '2.0.1')
-            version('slf4j-jboss-logmanager', '2.0.1.Final')
-            version('testcontainers', '1.19.6')
+            version('testcontainers', '1.20.4')
             version('consul', '2.2.2')
             version('hanlp', 'portable-1.8.4')
             version('commons', '4.4')
@@ -35,11 +33,12 @@ dependencyResolutionManagement {
             library('quarkusCamelPlatform', 'io.quarkus.platform', 'quarkus-camel-bom').versionRef('quarkus')
             library('quarkusSmallryeOpenapi', 'io.quarkus', 'quarkus-smallrye-openapi').versionRef('quarkus')
             library('quarkusArc', 'io.quarkus', 'quarkus-arc').versionRef('quarkus') //CDI
-            library('quarkusJunit5', 'io.quarkus', 'quarkus-junit5').versionRef('quarkus')
+            library('configYaml', 'io.quarkus', 'quarkus-config-yaml').versionRef('quarkus') //CDI
             library('rest', 'io.quarkus', 'quarkus-rest').versionRef('quarkus')
-            library('mutiny', 'io.quarkus', 'quarkus-mutiny').versionRef('quarkus')
+            library('routes', 'io.quarkus', 'quarkus-reactive-routes').versionRef('quarkus')
             library('vertx', 'io.quarkus', 'quarkus-vertx').versionRef('quarkus')
             library('jsonp', 'io.quarkus', 'quarkus-jsonp').versionRef('quarkus')
+            library('jackson', 'io.quarkus', 'quarkus-rest-jackson').versionRef('quarkus')
 
             library('context', 'io.quarkus', 'quarkus-smallrye-context-propagation').versionRef('quarkus')
             library('gson', 'com.google.code.gson', 'gson').version('2.11.0')
@@ -57,7 +56,6 @@ dependencyResolutionManagement {
             //            library('slf4jJbossLogManager', 'org.jboss.slf4j', 'slf4j-jboss-logmanager').versionRef('slf4j-jboss-logmanager')
 
             // NOTE: vert.x
-
             library('vertxClient', 'io.smallrye.reactive', 'smallrye-mutiny-vertx-web-client').versionRef('quarkus')
 
             // NOTE: db
@@ -67,7 +65,6 @@ dependencyResolutionManagement {
             // TODO: need check , Is it necessary to do this?
             library('quarkusReactivePgClient', 'io.quarkus', 'quarkus-reactive-pg-client').versionRef('quarkus')
 
-            library('mongodb', 'io.quarkus', 'quarkus-mongodb-client').versionRef('quarkus')
             library('redis', 'io.quarkus', 'quarkus-redis-client').versionRef('quarkus')
 
             // NOTE: tool
@@ -83,7 +80,6 @@ dependencyResolutionManagement {
 
             // NOTE: jooq
             library('jooq', 'org.jooq', 'jooq').versionRef('jooq')
-            //            library('jooqQuarkus', 'io.quarkiverse.jooq', 'quarkus-jooq').versionRef('jooqQuarkiverse')
             library('jooqMeta', 'org.jooq', 'jooq-meta').versionRef('jooq')
             library('jooqCodegen', 'org.jooq', 'jooq-codegen').versionRef('jooq')
 
@@ -91,17 +87,21 @@ dependencyResolutionManagement {
             library('es', 'io.quarkus', 'quarkus-elasticsearch-java-client').versionRef('quarkus')
 
             // NOTE: consul
-            //            library('consul', 'io.quarkiverse.config', 'quarkus-config-consul').version('2.2.2')
             library('consul', 'io.quarkiverse.config', 'quarkus-config-consul').versionRef('quarkus')
-            //            library('consulStork', 'io.smallrye.stork', 'stork-service-discovery-consul').versionRef('quarkus')
-            //            library('consulClient', 'io.smallrye.reactive', 'smallrye-mutiny-vertx-consul-client').versionRef('quarkus')
+            library('consulStork', 'io.smallrye.stork', 'stork-service-discovery-consul').versionRef('quarkus')
+            library('consulClient', 'io.smallrye.reactive', 'smallrye-mutiny-vertx-consul-client').versionRef('quarkus')
+
             library('pulsar', 'io.quarkus', 'quarkus-messaging-pulsar').versionRef('quarkus')
             library('grpc', 'io.quarkus', 'quarkus-grpc').versionRef('quarkus')
 
-            // NOTE: testcontainers
+            // NOTE: test https://java.testcontainers.org/modules/databases/
             library('testcontainers', 'org.testcontainers', 'testcontainers').versionRef('testcontainers')
             library('testcontainersPg', 'org.testcontainers', 'postgresql').versionRef('testcontainers')
+            library('testcontainersConsul', 'org.testcontainers', 'consul').versionRef('testcontainers')
+            library('testcontainersPulsar', 'org.testcontainers', 'pulsar').versionRef('testcontainers')
             library('testcontainersJunitJupiter', 'org.testcontainers', 'junit-jupiter').versionRef('testcontainers')
+            library('quarkusJunit5', 'io.quarkus', 'quarkus-junit5').versionRef('quarkus')
+            library('assured', 'io.rest-assured', 'rest-assured').versionRef('quarkus')
 
             // NOTE: jwt
             library('jwt', 'io.quarkus', 'quarkus-smallrye-jwt').versionRef('quarkus')
@@ -114,27 +114,24 @@ dependencyResolutionManagement {
             // NOTE: valid
             library('valid', 'io.quarkus', 'quarkus-hibernate-validator').versionRef('quarkus')
             // NOTE: share
-            bundle('share',['quarkusArc'])
+            bundle('share', ['quarkusArc','jackson'])
+//            bundle('share', ['quarkusArc', 'configYaml'])
             // NOTE: base
             bundle('base', [
                     'gson',
-//                    'quarkusArc',
-                    //                    'quarkusJunit5',
-                    //                'consul',
                     'quarkusSmallryeOpenapi',
                     'xml',
                     'rest',
-                    'mutiny',
+                    'routes',
                     'vertx'
             ])
+            bundle('registerCenterConsul', ['consul', 'consulStork', 'consulClient'])
             // NOTE: persistence
             bundle('persistence', [
-                                    'quarkusJdbcPostgreSQL',
-//                'quarkusJdbcMysql',
-                'quarkusReactivePgClient',
-                'mongodb',
-                'agroal',
-                'jooq'
+                    'quarkusJdbcPostgreSQL',
+                    'quarkusReactivePgClient',
+                    'agroal',
+                    'jooq'
             ])
             // NOTE: cache
             bundle('cache', ['cache', 'redis'])
@@ -147,16 +144,13 @@ dependencyResolutionManagement {
             // NOTE: protocol
             bundle('protocol', ['grpc', 'websocket'])
 
-            bundle('testcontainers', [
-                'testcontainers',
-                'testcontainersPg'
-            ])
-
             bundle('test', [
-                'testcontainers',
-                'testcontainersPg',
-                'flyway',
-                'quarkusJunit5'
+                    'testcontainersPg',
+                    'testcontainersPulsar',
+                    'testcontainersConsul',
+                    'flyway',
+                    'assured',
+                    'quarkusJunit5'
             ])
         }
     }
