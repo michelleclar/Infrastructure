@@ -73,3 +73,21 @@ public class UrlParser {
                 + '}';
     }
 }
+
+enum Protocol {
+    HTTP,
+    HTTPS,
+    FTP,
+    REDIS,
+    JDBC,
+    PULSAR,
+    SMTP;
+
+    public static Protocol from(String protocol) {
+        try {
+            return Protocol.valueOf(protocol.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new UnsupportedOperationException("Unsupported protocol: " + protocol);
+        }
+    }
+}
