@@ -1,4 +1,4 @@
-package org.carl.infrastructure.message;
+package org.carl.infrastructure.broadcast;
 
 import io.quarkus.arc.properties.IfBuildProperty;
 
