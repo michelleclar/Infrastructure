@@ -1,4 +1,4 @@
-package org.carl.infrastructure.util;
+package org.carl.infrastructure.util.gen;
 
 import io.quarkus.arc.profile.IfBuildProfile;
 import org.eclipse.microprofile.config.ConfigProvider;
@@ -8,14 +8,19 @@ import org.jooq.meta.jaxb.*;
 @IfBuildProfile(anyOf = {"test", "dev"})
 public class JooqCodeGenerator {
 
-    String jdbcUrl =
-            ConfigProvider.getConfig().getValue("quarkus.datasource.jdbc.url", String.class);
+    String jdbcUrl;
 
-    String username =
-            ConfigProvider.getConfig().getValue("quarkus.datasource.username", String.class);
+    String username;
 
-    String password =
-            ConfigProvider.getConfig().getValue("quarkus.datasource.password", String.class);
+    String password;
+
+    public JooqCodeGenerator() {
+        jdbcUrl = ConfigProvider.getConfig().getValue("quarkus.datasource.jdbc.url", String.class);
+
+        username = ConfigProvider.getConfig().getValue("quarkus.datasource.username", String.class);
+
+        password = ConfigProvider.getConfig().getValue("quarkus.datasource.password", String.class);
+    }
 
     public void codeGenByContainers() throws Exception {
 
@@ -30,6 +35,7 @@ public class JooqCodeGenerator {
                                         .withPassword(password))
                         .withGenerator(
                                 new Generator()
+                                        .withName(DatabaseGenerator.class.getName())
                                         .withDatabase(
                                                 new Database()
                                                         .withName(
