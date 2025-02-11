@@ -1,10 +1,8 @@
-package org.carl.infrastructure.ability;
+package org.carl.infrastructure.core.ability;
 
 import jakarta.transaction.Transactional;
+import org.carl.infrastructure.persistence.IPersistenceOperations;
 
-/**
- * 创建表能力
- */
 public interface ITableCreateAbility extends IMetadataAbility {
 
     //    void fitOut(TableWrapper wrapper);
@@ -12,7 +10,7 @@ public interface ITableCreateAbility extends IMetadataAbility {
     default void onTableCreated(boolean isFirst) {}
 
     @Transactional
-    default void create(IPersistenceAbility db) {
+    default void create(IPersistenceOperations db) {
         String mainTable = getMainTable().getName();
         if (!mainTable.toLowerCase().equals(mainTable)) {
             throw new RuntimeException("%s need Up Case table name".formatted(mainTable));

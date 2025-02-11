@@ -2,27 +2,30 @@ package org.carl.infrastructure.persistence;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
-import org.carl.infrastructure.persistence.database.core.DSLContext;
+import org.carl.infrastructure.persistence.database.core.PersistenceContext;
 import org.carl.infrastructure.persistence.database.metadata.DBInfo;
 import org.carl.infrastructure.persistence.database.metadata.DBSchema;
 import org.carl.infrastructure.persistence.database.metadata.DBTable;
 
 /**
- * use database or file
- * only provider original tool
- * current only database and database support pg
+ * use database or file only provider original tool current only database and database support pg
  * <>provide database default read all schema</>
  */
 public interface IPersistenceProvider {
-    // persistence context,because after replace,use `Decorator`,inner use JOOQ DSLContext
-    DSLContext getDSLContext();
+    // persistence context,because after replace,use `Decorator`,inner use JOOQ PersistenceContext
+    PersistenceContext getPersistenceContext();
 
-    void setDSLContext(DSLContext dslContext);
+    void setPersistenceContext(PersistenceContext persistenceContext);
 
     void resetDBInfo();
 
+    /**
+     * get runtime dbinfo
+     *
+     * @return
+     */
     default DBInfo getDBInfo() {
-        return getDSLContext()
+        return getPersistenceContext()
                 .connectionResult(
                         r -> {
                             try {
@@ -44,7 +47,7 @@ public interface IPersistenceProvider {
                                         String tableName = tablesRs.getString("TABLE_NAME");
                                         String schema = tablesRs.getString("TABLE_SCHEM");
                                         DBTable table =
-                                                new DBTable(getDSLContext())
+                                                new DBTable(getPersistenceContext())
                                                         .setTableName(tableName)
                                                         .setSchema(schema);
                                         info.getSchema(schema).addTable(table);

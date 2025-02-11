@@ -1,23 +1,32 @@
 package org.carl.infrastructure.persistence;
 
 import jakarta.annotation.Nonnull;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import org.carl.infrastructure.persistence.database.core.DSLContext;
+
+import org.carl.infrastructure.persistence.database.core.PersistenceContext;
 import org.carl.infrastructure.persistence.database.metadata.DBColumn;
 import org.carl.infrastructure.persistence.database.metadata.DBTable;
 import org.jooq.*;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Consumer;
+
+// core method all is ·xxxCtx·
 public interface IPersistenceOperations extends IPersistenceProvider {
     // NOTE: code sync by database
     default Map<String, DBColumn> getColumnMap(String schema, String tableName) {
-        DBTable dbTable = new DBTable(getDSLContext()).setTableName(tableName).setSchema(schema);
+        DBTable dbTable =
+                new DBTable(getPersistenceContext()).setTableName(tableName).setSchema(schema);
         return dbTable.getColumnMap();
     }
 
     // NOTE: maybe code not sync by database
+
+    /**
+     * NOTE: this method is development platform.
+     *
+     * <p>now `columnMqp` is code generator info ,after change runtime table info
+     */
     default Map<String, Field<?>> getColumnMap(@Nonnull Table<?> table) {
         Field<?>[] fields = table.fields();
 
@@ -28,19 +37,12 @@ public interface IPersistenceOperations extends IPersistenceProvider {
         return columnMap;
     }
 
-    default DSLContext dsl() {
-        return getDSLContext();
+    // core method all is ·xxxCtx·
+    default PersistenceContext persistenceCtx() {
+        return getPersistenceContext();
     }
 
-    default void run(Consumer<DSLContext> queryFunction) {
-        queryFunction.accept(getDSLContext());
-    }
-
-    default <T> T get(Function<DSLContext, T> queryFunction) {
-        return queryFunction.apply(getDSLContext());
-    }
-
-    default void transaction(Consumer<DSLContext> queryFunction) {
-        getDSLContext().transaction(queryFunction);
+    default void transaction(Consumer<PersistenceContext> queryFunction) {
+        getPersistenceContext().transaction(queryFunction);
     }
 }

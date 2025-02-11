@@ -9,7 +9,7 @@ import org.jboss.logging.Logger;
 import org.jooq.DSLContext;
 
 /**
- * Produces DSLContext
+ * Produces PersistenceContext
  *
  * @author <a href="mailto:leo.tu.taipei@gmail.com">Leo Tu</a>
  */

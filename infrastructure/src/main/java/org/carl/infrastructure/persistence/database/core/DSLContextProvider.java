@@ -8,13 +8,13 @@ import jakarta.inject.Provider;
 import org.carl.infrastructure.persistence.engine.runtime.DslContextFactory;
 
 @ApplicationScoped
-public class DSLContextProvider implements Provider<DSLContext> {
+public class DSLContextProvider implements Provider<PersistenceContext> {
     @Inject AgroalDataSource dataSource;
 
     @Produces
     @ApplicationScoped
     @Override
-    public DSLContext get() {
-        return DSLContext.create(DslContextFactory.create(dataSource));
+    public PersistenceContext get() {
+        return PersistenceContext.create(DslContextFactory.create(dataSource));
     }
 }

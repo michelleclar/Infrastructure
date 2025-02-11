@@ -17,16 +17,16 @@ import org.jooq.impl.TableImpl;
  * only increase update delete insert
  * select don't change
  */
-public class DSLContext {
-    private static final Logger log = Logger.getLogger(DSLContext.class);
+public class PersistenceContext {
+    private static final Logger log = Logger.getLogger(PersistenceContext.class);
 
-    public static DSLContext create(org.jooq.DSLContext dslContext) {
-        return new DSLContext(dslContext);
+    public static PersistenceContext create(org.jooq.DSLContext dslContext) {
+        return new PersistenceContext(dslContext);
     }
 
     private final org.jooq.DSLContext dslContext;
 
-    DSLContext(org.jooq.DSLContext dslContext) {
+    PersistenceContext(org.jooq.DSLContext dslContext) {
         this.dslContext = dslContext;
     }
 
@@ -102,12 +102,12 @@ public class DSLContext {
     }
 
     @Deprecated
-    public <T> T get(Function<DSLContext, T> queryFunction) {
+    public <T> T get(Function<PersistenceContext, T> queryFunction) {
         return queryFunction.apply(this);
     }
 
     @Deprecated
-    public void run(Consumer<DSLContext> queryFunction) {
+    public void run(Consumer<PersistenceContext> queryFunction) {
         queryFunction.accept(this);
     }
 
@@ -128,12 +128,12 @@ public class DSLContext {
         dslContext.transaction(transactional);
     }
 
-    public void transaction(Consumer<DSLContext> queryFunction) {
+    public void transaction(Consumer<PersistenceContext> queryFunction) {
         long start = System.currentTimeMillis();
         log.debugf("Transaction execution start time :{}", start);
         dslContext.transaction(
                 trx -> {
-                    DSLContext context = DSLContext.create(trx.dsl());
+                    PersistenceContext context = PersistenceContext.create(trx.dsl());
                     queryFunction.accept(context);
                 });
         log.debugf("Transaction duration: {}", System.currentTimeMillis() - start);

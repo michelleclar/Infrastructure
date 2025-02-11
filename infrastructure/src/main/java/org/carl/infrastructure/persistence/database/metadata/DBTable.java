@@ -5,16 +5,17 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 import org.carl.infrastructure.persistence.database.builder.TableBase;
-import org.carl.infrastructure.persistence.database.core.DSLContext;
+import org.carl.infrastructure.persistence.database.core.PersistenceContext;
+
 @Deprecated
 public class DBTable extends TableBase {
-    private DSLContext dsl;
+    private PersistenceContext dsl;
 
     private Map<String, DBColumn> columnMap;
 
     private List<DBIndex> indexList;
 
-    public DBTable(DSLContext dsl) {
+    public DBTable(PersistenceContext dsl) {
         this.dsl = dsl;
     }
 

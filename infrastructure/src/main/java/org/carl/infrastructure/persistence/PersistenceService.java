@@ -5,13 +5,13 @@ import jakarta.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-import org.carl.infrastructure.persistence.database.core.PersistenceProvider;
+import org.carl.infrastructure.persistence.database.core.PersistenceStd;
 import org.jboss.logging.Logger;
 import org.jooq.Configuration;
 
 @Singleton
 @IfBuildProperty(name = "quarkus.plugins.persistence.enable", stringValue = "true")
-public class PersistenceService extends PersistenceProvider implements IPersistenceOperations {
+public class PersistenceService extends PersistenceStd implements IPersistenceOperations {
     private static final Logger log = Logger.getLogger(PersistenceService.class);
 
     static Map<String, Object> dtoFactory = new HashMap<>();
@@ -19,7 +19,7 @@ public class PersistenceService extends PersistenceProvider implements IPersiste
     @Deprecated
     @SuppressWarnings("unchecked")
     public <T> T dto(Function<Configuration, T> function) {
-        Configuration conf = dsl().configuration();
+        Configuration conf = persistenceCtx().configuration();
         String key = function.getClass().getSimpleName().split("[$]")[0];
         Object o = dtoFactory.get(key);
         if (o == null) {
