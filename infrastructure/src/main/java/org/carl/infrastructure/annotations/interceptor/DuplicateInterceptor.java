@@ -22,6 +22,7 @@ import org.jboss.logging.Logger;
 @PreventDuplicateValidator
 @Priority(1000)
 @Vetoed
+// TODO: wait cache model
 public class DuplicateInterceptor {
     private final Logger log = Logger.getLogger(DuplicateInterceptor.class);
     @Inject HttpServerRequest request;

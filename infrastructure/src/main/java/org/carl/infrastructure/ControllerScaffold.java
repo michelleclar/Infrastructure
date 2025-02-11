@@ -1,31 +1,31 @@
 package org.carl.infrastructure;
 
-import io.vertx.core.eventbus.EventBus;
 import io.vertx.ext.web.RoutingContext;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
 
+import org.carl.infrastructure.broadcast.IBroadcastOperations;
 import org.carl.infrastructure.core.ability.IBroadcastAbility;
-import org.carl.infrastructure.core.ability.IPersistenceAbility;
 import org.carl.infrastructure.core.ability.IRuntimeAbility;
 import org.carl.infrastructure.core.ability.ISearchAbility;
-import org.carl.infrastructure.core.ability.ITableCreateAbility;
-import org.carl.infrastructure.broadcast.IBroadcastOperations;
-import org.carl.infrastructure.persistence.IPersistenceOperations;
 import org.carl.infrastructure.search.ISearchOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** why use set inject bean because I think better copy by this write */
-public abstract class Scaffold
-        implements IRuntimeAbility, ISearchAbility, IBroadcastAbility, IPersistenceAbility {
+/**
+ * why use set inject bean because I think better copy by this write
+ *
+ * <p>this is platform sport controller scaffold
+ *
+ * <p>serchAbility , broadcast,runtime ctx
+ */
+public abstract class ControllerScaffold
+        implements IRuntimeAbility, ISearchAbility, IBroadcastAbility {
 
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private IPersistenceOperations persistenceOperations;
     private ISearchOperations searchOperations;
-    private EventBus eventBus;
     private RoutingContext routingContext;
 
     @Inject
@@ -34,29 +34,14 @@ public abstract class Scaffold
     }
 
     @Inject
-    public void setPersistenceOperations(IPersistenceOperations databaseOperations) {
-        this.persistenceOperations = databaseOperations;
-    }
-
-    @Inject
-    public void setEventBus(EventBus eventBus) {
-        this.eventBus = eventBus;
-    }
-
-    @Inject
     public void setSearchOperations(ISearchOperations searchOperations) {
         this.searchOperations = searchOperations;
     }
 
-    public EventBus getEventBus() {
-        return eventBus;
-    }
+    protected void beforeInit() {}
 
     @PostConstruct
     protected void init() {
-        if (this instanceof ITableCreateAbility ability) {
-            ability.create(getPersistenceOperations());
-        }
         afterInit();
         logger.info("{} initialized", this.getClass().getSimpleName());
     }

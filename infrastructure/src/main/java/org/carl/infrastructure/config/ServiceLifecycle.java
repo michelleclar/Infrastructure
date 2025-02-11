@@ -17,13 +17,13 @@ import org.jboss.logging.Logger;
 public class ServiceLifecycle {
 
     @ConfigProperty(name = "quarkus.application.name")
-    private String appName;
+    String appName;
 
     private int port;
 
-    private Logger logger;
-    private Instance<ConsulClient> consulClient;
-    private ScheduledExecutorService executor;
+    private final Logger logger;
+    private final Instance<ConsulClient> consulClient;
+    private final ScheduledExecutorService executor;
 
     public ServiceLifecycle(
             Logger logger, Instance<ConsulClient> consulClient, ScheduledExecutorService executor) {

@@ -1,4 +1,4 @@
-package org.carl.infrastructure.ability;
+package org.carl.infrastructure.core.ability;
 
 import io.vertx.ext.web.RoutingContext;
 import org.carl.infrastructure.config.IProfile;
