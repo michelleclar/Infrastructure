@@ -28,6 +28,4 @@ public interface ElasticsearchClient extends SearchClient {
     default <T> T search(String query, Class<T> clazz) {
         return null;
     }
-
-
 }

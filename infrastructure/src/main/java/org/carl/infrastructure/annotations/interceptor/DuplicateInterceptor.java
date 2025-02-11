@@ -14,8 +14,8 @@ import java.util.stream.Collectors;
 import org.carl.infrastructure.annotations.PreventDuplicateValidator;
 import org.carl.infrastructure.cache.RemoteCacheService;
 import org.carl.infrastructure.config.StatusType;
-import org.carl.infrastructure.util.Utils;
 import org.carl.infrastructure.config.exception.DuplicationException;
+import org.carl.infrastructure.util.Utils;
 import org.jboss.logging.Logger;
 
 @Interceptor

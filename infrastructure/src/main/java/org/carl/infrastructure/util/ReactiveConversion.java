@@ -1,9 +1,7 @@
 package org.carl.infrastructure.util;
 
 import io.smallrye.mutiny.Uni;
-
 import java.util.function.Function;
-
 import org.carl.infrastructure.annotations.NotThreadSafe;
 import org.carl.infrastructure.core.ability.GsonAbility;
 import org.jboss.logging.Logger;

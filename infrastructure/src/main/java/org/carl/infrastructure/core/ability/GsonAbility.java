@@ -1,14 +1,11 @@
 package org.carl.infrastructure.core.ability;
 
 import com.google.gson.Gson;
-
-import java.util.function.Function;
-
-
 import com.google.gson.JsonObject;
+import java.util.function.Function;
 import org.carl.infrastructure.util.parse.json.GsonProvider;
 
-public interface GsonAbility{
+public interface GsonAbility {
 
     default String toJsonString(Object obj) {
         return run(o -> o.toJson(obj));
@@ -18,7 +15,7 @@ public interface GsonAbility{
         return run(o -> o.toJsonTree(obj).getAsJsonObject());
     }
 
-    default  <T> T fromJson(String json, Class<T> clazz) {
+    default <T> T fromJson(String json, Class<T> clazz) {
         return run(o -> o.fromJson(json, clazz));
     }
 

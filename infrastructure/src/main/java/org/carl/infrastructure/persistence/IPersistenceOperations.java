@@ -1,15 +1,13 @@
 package org.carl.infrastructure.persistence;
 
 import jakarta.annotation.Nonnull;
-
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Consumer;
 import org.carl.infrastructure.persistence.database.core.PersistenceContext;
 import org.carl.infrastructure.persistence.database.metadata.DBColumn;
 import org.carl.infrastructure.persistence.database.metadata.DBTable;
 import org.jooq.*;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Consumer;
 
 // core method all is ·xxxCtx·
 public interface IPersistenceOperations extends IPersistenceProvider {

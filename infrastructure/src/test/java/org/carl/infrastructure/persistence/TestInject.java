@@ -7,8 +7,7 @@ import org.junit.jupiter.api.Test;
 
 @QuarkusTest
 class TestInject {
-    @Inject
-    PersistenceStd provider;
+    @Inject PersistenceStd provider;
 
     @Test
     void inject() {

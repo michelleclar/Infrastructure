@@ -1,5 +1,3 @@
 package org.carl.infrastructure.search;
 
-public interface ISearchOperations extends ISearchProvider {
-
-}
+public interface ISearchOperations extends ISearchProvider {}

@@ -19,7 +19,7 @@ public interface JacksonAbility {
         return JacksonProvider.JACKSON.get().readValue(json, clazz);
     }
 
-    default ObjectNode createObjectNode(){
+    default ObjectNode createObjectNode() {
         return JacksonProvider.JACKSON.get().createObjectNode();
     }
 

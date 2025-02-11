@@ -1,11 +1,9 @@
 package org.carl.infrastructure.util;
 
 import jakarta.xml.bind.DatatypeConverter;
-
-import org.jboss.logging.Logger;
-
 import java.net.URISyntaxException;
 import java.security.MessageDigest;
+import org.jboss.logging.Logger;
 
 public class Utils {
     private static final Logger log = Logger.getLogger(Utils.class);
