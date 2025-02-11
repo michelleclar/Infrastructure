@@ -1,4 +1,4 @@
-package org.carl.infrastructure.ability;
+package org.carl.infrastructure.core.ability;
 
 import com.google.gson.Gson;
 
