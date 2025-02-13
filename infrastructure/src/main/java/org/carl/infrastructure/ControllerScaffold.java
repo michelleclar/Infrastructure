@@ -8,8 +8,7 @@ import org.carl.infrastructure.core.ability.IBroadcastAbility;
 import org.carl.infrastructure.core.ability.IRuntimeAbility;
 import org.carl.infrastructure.core.ability.ISearchAbility;
 import org.carl.infrastructure.search.ISearchOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jboss.logging.Logger;
 
 /**
  * why use set inject bean because I think better copy by this write
@@ -21,8 +20,7 @@ import org.slf4j.LoggerFactory;
 public abstract class ControllerScaffold
         implements IRuntimeAbility, ISearchAbility, IBroadcastAbility {
 
-    protected final Logger logger = LoggerFactory.getLogger(getClass());
-
+    static final Logger log = Logger.getLogger(ControllerScaffold.class);
     private ISearchOperations searchOperations;
     private RoutingContext routingContext;
 
@@ -41,7 +39,7 @@ public abstract class ControllerScaffold
     @PostConstruct
     protected void init() {
         afterInit();
-        logger.info("{} initialized", this.getClass().getSimpleName());
+        log.infof("{} initialized", this.getClass().getSimpleName());
     }
 
     protected void afterInit() {}
