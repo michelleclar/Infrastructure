@@ -10,6 +10,7 @@ import org.carl.infrastructure.persistence.database.metadata.DBTable;
 /**
  * use database or file only provider original tool current only database and database support pg
  * <>provide database default read all schema</>
+ *
  */
 public interface IPersistenceProvider {
     // persistence context,because after replace,use `Decorator`,inner use JOOQ PersistenceContext

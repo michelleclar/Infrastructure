@@ -18,6 +18,11 @@ public abstract class PersistenceScaffold implements IPersistenceAbility {
         this.persistenceOperations = databaseOperations;
     }
 
+    @Override
+    public IPersistenceOperations getPersistenceOperations() {
+        return persistenceOperations;
+    }
+
     @PostConstruct
     protected void init() {
         if (this instanceof ITableCreateAbility ability) {
