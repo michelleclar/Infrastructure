@@ -1,4 +1,12 @@
 services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.1.2
+    ports:
+      - "1080:8080"
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: root
+      KC_BOOTSTRAP_ADMIN_PASSWORD: root
+    command: start-dev
   consul:
     image: hashicorp/consul:1.20
     container_name: consul-scaffold
@@ -7,30 +15,30 @@ services:
     volumes:
       - ./data:/consul/data
       - ./consul.d/:/consul/config:rw
-#    command: >
-#      consul agent -server
-#      -bootstrap-expect=1
-#      -ui
-#      -client=0.0.0.0
-#      -data-dir=/consul/data
-#      --config-dir=/consul/config
-#      -bind '{{ GetPrivateInterfaces | include "network" "172.27.0.0/16" | attr "address" }}'
+    #    command: >
+    #      consul agent -server
+    #      -bootstrap-expect=1
+    #      -ui
+    #      -client=0.0.0.0
+    #      -data-dir=/consul/data
+    #      --config-dir=/consul/config
+    #      -bind '{{ GetPrivateInterfaces | include "network" "172.27.0.0/16" | attr "address" }}'
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:8500/ui/dc1/services/consul" ]
       interval: 30s
       timeout: 10s
       retries: 3
-#  neo4j:
-#    image: neo4j:5.24.2
-#    container_name: neo4j-scaffold
-#    ports:
-#      - "17474:7474"   # Neo4j web ui
-#      - "17687:7687"   # Bolt
-#    volumes:
-#      - ./neo4j/data:/data
-#      - ./neo4j/logs:/logs
-#      - ./neo4j/config:/config
-#      - ./neo4j/plugins:/plugins
+  #  neo4j:
+  #    image: neo4j:5.24.2
+  #    container_name: neo4j-scaffold
+  #    ports:
+  #      - "17474:7474"   # Neo4j web ui
+  #      - "17687:7687"   # Bolt
+  #    volumes:
+  #      - ./neo4j/data:/data
+  #      - ./neo4j/logs:/logs
+  #      - ./neo4j/config:/config
+  #      - ./neo4j/plugins:/plugins
   redis:
     container_name: redis-scaffold
     image: redis:7-alpine
@@ -67,7 +75,7 @@ services:
     command: "bin/pulsar standalone"
     image: apachepulsar/pulsar:3.2.4
     ports:
-#      - "9080:8080"
+      #      - "9080:8080"
       - "6650:6650"
     tty: true
     restart: no
