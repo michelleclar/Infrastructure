@@ -4,7 +4,5 @@ public interface ISearchProvider {
 
     SearchClient getSearchClient();
 
-    void setDSLContext(SearchClient searchClient);
-
-    void resetDBInfo();
+    void setSearchDSLContext(SearchClient searchClient);
 }

@@ -1,31 +1,42 @@
 package org.carl.infrastructure.search;
 
+import jakarta.inject.Inject;
 import java.util.Map;
 
-public interface ElasticsearchClient extends SearchClient {
-    void indexMapping(String index, String type, String mapping);
+public class ElasticsearchClient implements SearchClient {
+
+    private co.elastic.clients.elasticsearch.ElasticsearchClient client;
+
+    @Inject
+    public void setClient(co.elastic.clients.elasticsearch.ElasticsearchClient client) {
+        this.client = client;
+    }
+
+    public co.elastic.clients.elasticsearch.ElasticsearchClient getClient() {
+        return client;
+    }
 
     @Override
-    default int insert(String query, Map<String, Object> parameters) {
+    public int insert(String query, Map<String, Object> parameters) {
         return 0;
     }
 
     @Override
-    default int update(String query, Map<String, Object> parameters) {
+    public int update(String query, Map<String, Object> parameters) {
         return 0;
     }
 
     @Override
-    default int delete(String query, Map<String, Object> parameters) {
+    public int delete(String query, Map<String, Object> parameters) {
         return 0;
     }
 
-    default <T> T search(String query, Map<String, Object> parameters) {
+    public <T> T search(String query, Map<String, Object> parameters) {
         return null;
     }
 
     @Override
-    default <T> T search(String query, Class<T> clazz) {
+    public <T> T search(String query, Class<T> clazz) {
         return null;
     }
 }
