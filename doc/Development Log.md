@@ -28,6 +28,7 @@ platform support ability
 - task flow
 
 package manage
+
 ```shell
 ├─annotations
 ├─broadcast
@@ -41,11 +42,26 @@ package manage
 └─util
 ```
 
-```mermaid
-
-```
-
 ```puml
+@startuml
+
+interface IPersistenceProvider {
+}
+
+interface IPersistenceOperations {
+}
+
+class PersistenceContext {
+}
+
+class PersistenceService {
+}
+
+PersistenceContext --> IPersistenceProvider : provides
+IPersistenceOperations <|-- IPersistenceProvider : enhanced
+PersistenceService ..|> IPersistenceOperations : implements
+
+@enduml
 
 ```
 
