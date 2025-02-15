@@ -1,7 +1,7 @@
 package org.carl.infrastructure.core.ability;
 
 import java.util.Objects;
-import org.carl.infrastructure.persistence.database.metadata.DBInfo;
+import org.carl.infrastructure.persistence.metadata.DBInfo;
 import org.jooq.Schema;
 import org.jooq.Table;
 

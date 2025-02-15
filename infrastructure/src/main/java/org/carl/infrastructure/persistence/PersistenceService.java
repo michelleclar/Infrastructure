@@ -5,7 +5,6 @@ import jakarta.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-import org.carl.infrastructure.persistence.database.core.PersistenceStd;
 import org.jboss.logging.Logger;
 import org.jooq.Configuration;
 

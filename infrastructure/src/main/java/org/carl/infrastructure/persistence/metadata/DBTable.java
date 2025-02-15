@@ -1,11 +1,11 @@
-package org.carl.infrastructure.persistence.database.metadata;
+package org.carl.infrastructure.persistence.metadata;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import org.carl.infrastructure.persistence.database.builder.TableBase;
-import org.carl.infrastructure.persistence.database.core.PersistenceContext;
+import org.carl.infrastructure.persistence.builder.TableBase;
+import org.carl.infrastructure.persistence.core.PersistenceContext;
 
 @Deprecated
 public class DBTable extends TableBase {

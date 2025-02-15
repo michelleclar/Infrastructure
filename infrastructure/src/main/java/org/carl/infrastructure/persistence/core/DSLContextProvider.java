@@ -1,4 +1,4 @@
-package org.carl.infrastructure.persistence.database.core;
+package org.carl.infrastructure.persistence.core;
 
 import io.agroal.api.AgroalDataSource;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -7,7 +7,6 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import org.carl.infrastructure.persistence.engine.runtime.DslContextFactory;
 
-@ApplicationScoped
 public class DSLContextProvider implements Provider<PersistenceContext> {
     @Inject AgroalDataSource dataSource;
 

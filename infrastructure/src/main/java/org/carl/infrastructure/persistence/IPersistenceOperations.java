@@ -4,9 +4,9 @@ import jakarta.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
-import org.carl.infrastructure.persistence.database.core.PersistenceContext;
-import org.carl.infrastructure.persistence.database.metadata.DBColumn;
-import org.carl.infrastructure.persistence.database.metadata.DBTable;
+import org.carl.infrastructure.persistence.core.PersistenceContext;
+import org.carl.infrastructure.persistence.metadata.DBColumn;
+import org.carl.infrastructure.persistence.metadata.DBTable;
 import org.jooq.*;
 
 // core method all is ·xxxCtx·

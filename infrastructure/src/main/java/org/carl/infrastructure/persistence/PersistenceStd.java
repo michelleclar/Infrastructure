@@ -1,7 +1,7 @@
-package org.carl.infrastructure.persistence.database.core;
+package org.carl.infrastructure.persistence;
 
 import jakarta.inject.Inject;
-import org.carl.infrastructure.persistence.IPersistenceProvider;
+import org.carl.infrastructure.persistence.core.PersistenceContext;
 
 public class PersistenceStd implements IPersistenceProvider {
 

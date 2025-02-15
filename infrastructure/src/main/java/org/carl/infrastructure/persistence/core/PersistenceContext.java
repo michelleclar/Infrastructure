@@ -1,4 +1,4 @@
-package org.carl.infrastructure.persistence.database.core;
+package org.carl.infrastructure.persistence.core;
 
 import jakarta.annotation.Nullable;
 import java.util.Arrays;

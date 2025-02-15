@@ -1,4 +1,4 @@
-package org.carl.infrastructure.persistence.database.metadata;
+package org.carl.infrastructure.persistence.metadata;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

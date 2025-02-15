@@ -2,10 +2,10 @@ package org.carl.infrastructure.persistence;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
-import org.carl.infrastructure.persistence.database.core.PersistenceContext;
-import org.carl.infrastructure.persistence.database.metadata.DBInfo;
-import org.carl.infrastructure.persistence.database.metadata.DBSchema;
-import org.carl.infrastructure.persistence.database.metadata.DBTable;
+import org.carl.infrastructure.persistence.core.PersistenceContext;
+import org.carl.infrastructure.persistence.metadata.DBInfo;
+import org.carl.infrastructure.persistence.metadata.DBSchema;
+import org.carl.infrastructure.persistence.metadata.DBTable;
 
 /**
  * use database or file only provider original tool current only database and database support pg

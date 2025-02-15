@@ -1,4 +1,4 @@
-package org.carl.infrastructure.persistence.database.builder;
+package org.carl.infrastructure.persistence.builder;
 @Deprecated
 public class TableBase {
     protected String schema;

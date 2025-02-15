@@ -1,4 +1,4 @@
-package org.carl.infrastructure.persistence.database.metadata;
+package org.carl.infrastructure.persistence.metadata;
 
 import java.util.HashMap;
 import java.util.Map;
