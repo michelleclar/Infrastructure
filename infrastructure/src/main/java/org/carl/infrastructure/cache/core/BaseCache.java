@@ -1,9 +1,9 @@
-package org.carl.infrastructure.cache;
+package org.carl.infrastructure.cache.core;
 
 import io.smallrye.mutiny.Uni;
 import java.util.List;
 
-interface BaseCache {
+public interface BaseCache {
     Uni<Object> get(String key);
 
     Uni<Void> del(String key);
