@@ -14,7 +14,7 @@ public class Mapping {
         return new Mapping();
     }
 
-    Properties properties() {
+    public Properties properties() {
         return new Properties(this);
     }
 
@@ -64,7 +64,3 @@ class Properties {
     }
 }
 
-enum PropertyType {
-    KEYWORD,
-    TEXT
-}
