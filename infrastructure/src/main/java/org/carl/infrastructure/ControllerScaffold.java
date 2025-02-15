@@ -7,7 +7,7 @@ import org.carl.infrastructure.broadcast.IBroadcastOperations;
 import org.carl.infrastructure.core.ability.IBroadcastAbility;
 import org.carl.infrastructure.core.ability.IRuntimeAbility;
 import org.carl.infrastructure.core.ability.ISearchAbility;
-import org.carl.infrastructure.search.ISearchOperations;
+import org.carl.infrastructure.search.plugins.es.IESOperations;
 import org.jboss.logging.Logger;
 
 /**
@@ -21,7 +21,7 @@ public abstract class ControllerScaffold
         implements IRuntimeAbility, ISearchAbility, IBroadcastAbility {
 
     static final Logger log = Logger.getLogger(ControllerScaffold.class);
-    private ISearchOperations searchOperations;
+    private IESOperations searchOperations;
     private RoutingContext routingContext;
 
     @Inject
@@ -30,7 +30,7 @@ public abstract class ControllerScaffold
     }
 
     @Inject
-    public void setSearchOperations(ISearchOperations searchOperations) {
+    public void setSearchOperations(IESOperations searchOperations) {
         this.searchOperations = searchOperations;
     }
 
@@ -55,7 +55,7 @@ public abstract class ControllerScaffold
     }
 
     @Override
-    public ISearchOperations getSearchOperations() {
+    public IESOperations getSearchOperations() {
         return searchOperations;
     }
 }
