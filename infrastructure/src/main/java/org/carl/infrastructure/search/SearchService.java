@@ -22,7 +22,7 @@ import org.jboss.logging.Logger;
 
 // TODO: use json query to search ?
 @ApplicationScoped
-public class SearchService {
+public class SearchService extends SearchStd implements ISearchOperations {
     @Inject ElasticsearchClient esClient;
     static final Logger log = Logger.getLogger(SearchService.class);
 
