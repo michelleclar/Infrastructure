@@ -1,19 +1,20 @@
 package org.carl.infrastructure.search.plugins;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import jakarta.inject.Inject;
 import java.util.Map;
 import org.carl.infrastructure.search.SearchClient;
 
-public class ElasticsearchClient implements SearchClient {
+public class ESClient implements SearchClient {
 
-    private co.elastic.clients.elasticsearch.ElasticsearchClient client;
+    private ElasticsearchClient client;
 
     @Inject
-    public void setClient(co.elastic.clients.elasticsearch.ElasticsearchClient client) {
+    public void setClient(ElasticsearchClient client) {
         this.client = client;
     }
 
-    public co.elastic.clients.elasticsearch.ElasticsearchClient getClient() {
+    public ElasticsearchClient getClient() {
         return client;
     }
 

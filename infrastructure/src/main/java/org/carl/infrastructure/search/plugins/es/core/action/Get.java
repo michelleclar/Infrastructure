@@ -1,4 +1,4 @@
-package org.carl.infrastructure.search.core.action;
+package org.carl.infrastructure.search.plugins.es.core.action;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.GetRequest;

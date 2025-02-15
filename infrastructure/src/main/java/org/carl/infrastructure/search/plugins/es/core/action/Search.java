@@ -1,4 +1,4 @@
-package org.carl.infrastructure.search.core.action;
+package org.carl.infrastructure.search.plugins.es.core.action;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
@@ -8,7 +8,7 @@ import co.elastic.clients.util.ObjectBuilder;
 import java.io.IOException;
 import java.util.List;
 import java.util.function.Function;
-import org.carl.infrastructure.search.core.utils.ElasticsearchClientToolUtils;
+import org.carl.infrastructure.search.plugins.es.core.utils.ElasticsearchClientToolUtils;
 
 /**
  * search command

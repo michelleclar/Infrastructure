@@ -11,12 +11,12 @@ import co.elastic.clients.elasticsearch.indices.ElasticsearchIndicesClient;
 
 import jakarta.inject.Inject;
 
-import org.carl.infrastructure.search.core.action.Delete;
-import org.carl.infrastructure.search.core.action.Get;
-import org.carl.infrastructure.search.core.action.Index;
-import org.carl.infrastructure.search.core.action.Indices;
-import org.carl.infrastructure.search.core.action.Search;
-import org.carl.infrastructure.search.core.action.Update;
+import org.carl.infrastructure.search.plugins.es.core.action.Delete;
+import org.carl.infrastructure.search.plugins.es.core.action.Get;
+import org.carl.infrastructure.search.plugins.es.core.action.Index;
+import org.carl.infrastructure.search.plugins.es.core.action.Indices;
+import org.carl.infrastructure.search.plugins.es.core.action.Search;
+import org.carl.infrastructure.search.plugins.es.core.action.Update;
 import org.jboss.logging.Logger;
 
 // TODO: use json query to search ?

@@ -6,7 +6,7 @@ import java.io.StringReader;
 import org.junit.jupiter.api.Test;
 
 class SearchServiceTest {
-    //    @Inject ElasticsearchClient client;
+    //    @Inject ESClient client;
     StringReader query =
             new StringReader(
                     """
