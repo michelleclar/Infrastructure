@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
+import org.carl.infrastructure.persistence.sql.SqlLoggerListener;
 import org.jboss.logging.Logger;
 import org.jooq.Configuration;
 import org.jooq.ExecuteListenerProvider;

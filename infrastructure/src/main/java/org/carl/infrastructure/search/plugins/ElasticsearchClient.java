@@ -1,7 +1,8 @@
-package org.carl.infrastructure.search;
+package org.carl.infrastructure.search.plugins;
 
 import jakarta.inject.Inject;
 import java.util.Map;
+import org.carl.infrastructure.search.SearchClient;
 
 public class ElasticsearchClient implements SearchClient {
 

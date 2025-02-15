@@ -1,8 +1,5 @@
-package org.carl.infrastructure.persistence.engine.runtime;
+package org.carl.infrastructure.persistence.sql;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.Arrays;
 import org.jboss.logging.Logger;
 import org.jooq.Configuration;
 import org.jooq.ExecuteContext;
@@ -13,12 +10,16 @@ import org.jooq.VisitContext;
 import org.jooq.VisitListener;
 import org.jooq.VisitListenerProvider;
 import org.jooq.impl.DSL;
-import org.jooq.impl.DefaultVisitListener;
 import org.jooq.impl.DefaultVisitListenerProvider;
 import org.jooq.tools.LoggerListener;
 import org.jooq.tools.StringUtils;
 
-/** Logger (package) name is 'io.quarkiverse.jooq.sql' */
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.Objects;
+
+/** Logger (package) name is 'org.carl.infrastructure.persistence.sql' */
 @SuppressWarnings("serial")
 public class SqlLoggerListener extends LoggerListener {
     private static final Logger log = Logger.getLogger(SqlLoggerListener.class);
@@ -65,7 +66,7 @@ public class SqlLoggerListener extends LoggerListener {
                 // [#1278] DEBUG log also SQL with inlined bind values, if
                 // that is not the same as the actual SQL passed to JDBC
                 String inlined = DSL.using(configuration).renderInlined(ctx.query());
-                if (!ctx.sql().equals(inlined)) {
+                if (!Objects.equals(ctx.sql(), inlined)) {
                     sqlLog.debug("<<SQL>>", newline + inlined);
                 } else {
                     // Actual SQL passed to JDBC
@@ -78,7 +79,7 @@ public class SqlLoggerListener extends LoggerListener {
 
                 String inlined = DSL.using(configuration).renderInlined(ctx.routine());
 
-                if (!ctx.sql().equals(inlined)) {
+                if (!Objects.equals(ctx.sql(), inlined)) {
                     sqlLog.debug("<<SQL:routine>>", newline + inlined);
                 } else {
                     sqlLog.debug("<<SQL:routine>>", newline + ctx.sql());
@@ -116,7 +117,7 @@ public class SqlLoggerListener extends LoggerListener {
 
     private static final int maxLength = 2000;
 
-    private static class BindValueAbbreviator extends DefaultVisitListener {
+    private static class BindValueAbbreviator implements VisitListener {
 
         private boolean anyAbbreviations = false;
 
@@ -125,8 +126,7 @@ public class SqlLoggerListener extends LoggerListener {
             if (context.renderContext() != null) {
                 QueryPart part = context.queryPart();
 
-                if (part instanceof Param<?>) {
-                    Param<?> param = (Param<?>) part;
+                if (part instanceof Param<?> param) {
                     Object value = param.getValue();
 
                     if (value instanceof String && ((String) value).length() > maxLength) {
