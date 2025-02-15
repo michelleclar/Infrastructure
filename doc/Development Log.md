@@ -88,6 +88,7 @@ PersistenceService ..|> IPersistenceOperations : implements
 
 #### **ORM Framework**
 
+> chosen ORM framework, original sql or APT dsl
 > **JOOQ** is currently used, but a replacement is planned because it is **partially open-source
 **.  
 > JOOQ was chosen for its **type safety** and **fluent API** for writing SQL.
