@@ -20,7 +20,8 @@ search,cache,broadcast definition one rule
 es,solr... implement rule
 
 platform support ability
-
+search broadcast 
+api provider
 - persistence
 - broadcast
 - cache
@@ -41,7 +42,7 @@ package manage
 ├─search
 └─util
 ```
-
+> base design
 ```puml
 @startuml
 
