@@ -118,14 +118,14 @@ dependencyResolutionManagement {
             // NOTE: valid
             library('valid', 'io.quarkus', 'quarkus-hibernate-validator').versionRef('quarkus')
             // NOTE: share
-            bundle('share', ['quarkusArc','jackson'])
+            bundle('share', ['quarkusArc','rest'])
 //            bundle('share', ['quarkusArc', 'configYaml'])
             // NOTE: base
             bundle('base', [
                     'gson',
+                    'jackson',
                     'quarkusSmallryeOpenapi',
                     'xml',
-                    'rest',
                     'routes',
                     'vertx'
             ])
@@ -168,3 +168,5 @@ dependencyResolutionManagement {
 }
 rootProject.name = 'scaffold'
 include 'infrastructure'
+include 'demo'
+

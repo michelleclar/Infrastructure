@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import org.carl.infrastructure.annotations.PreventDuplicateValidator;
+import org.carl.infrastructure.cache.CacheService;
 import org.carl.infrastructure.config.StatusType;
 import org.carl.infrastructure.config.exception.DuplicationException;
 import org.carl.infrastructure.util.Utils;
@@ -27,7 +28,7 @@ public class DuplicateInterceptor {
     @Inject HttpServerRequest request;
 
     // TODO: need remote cache
-    @Inject RemoteCacheService remoteCacheService;
+    @Inject CacheService cacheService;
 
     @AroundInvoke
     Object duplicateInterceptor(InvocationContext ctx) throws Exception {
@@ -79,7 +80,12 @@ public class DuplicateInterceptor {
 
     public void deduplicateRequestByRedisKey(String key, long expiredTime) {
 
-        if (remoteCacheService.setExpireAfterWrite(key, expiredTime, key)) {
+        if (cacheService
+                .getCacheContext()
+                .remoteCacheContext
+                .setExpireAfterWrite(key, expiredTime, key)
+                .await()
+                .indefinitely()) {
             log.info(
                     String.format(
                             "[PreventDuplicateRequestAspect] key: %s has set successfully !!!",

@@ -1,13 +1,18 @@
 plugins {
     id 'java'
     id "com.diffplug.spotless"
-
+    alias(libs.plugins.quarkusPlugin)
+    id 'nu.studer.jooq'
+    id 'java-library'
 }
 subprojects {
     apply {
         plugin('com.diffplug.spotless')
         plugin('java')
         plugin('idea')
+        plugin 'io.quarkus'
+        plugin 'java-library'
+        plugin 'nu.studer.jooq'
     }
     group = 'org.carl'
     version = '1.0-BATE'
@@ -173,6 +178,13 @@ subprojects {
     if (!name.startsWith('infrastructure')) {
         dependencies {
             implementation project(':infrastructure')
+        }
+
+        quarkusBuild {
+            nativeArgs {
+                containerBuild = true
+                builderImage = "quay.io/quarkus/ubi-quarkus-mandrel-builder-image:jdk-21"
+            }
         }
     }
 }

@@ -2,17 +2,14 @@ package org.carl.infrastructure.cache.core;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-
 import io.quarkus.cache.CacheManager;
 import io.quarkus.redis.datasource.ReactiveRedisDataSource;
 import io.quarkus.redis.datasource.keys.ReactiveKeyCommands;
 import io.quarkus.redis.datasource.value.ReactiveValueCommands;
 import io.smallrye.mutiny.Uni;
-
 import java.util.ArrayList;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-
 import java.util.List;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 public class CacheContext {
     ReactiveRedisDataSource reactiveRedisDataSource;
@@ -28,7 +25,7 @@ public class CacheContext {
         this.localCacheContext = new LocalCacheContext();
     }
 
-    static class LocalCacheContext implements BaseCache {
+    public static class LocalCacheContext implements BaseCache {
         Cache<String, Object> localCache;
 
         LocalCacheContext() {
@@ -66,7 +63,7 @@ public class CacheContext {
         }
     }
 
-    static class RemoteCacheContext implements BaseCache {
+    public static class RemoteCacheContext implements BaseCache {
         private final ReactiveKeyCommands<String> reactiveKeyCommands;
 
         private final ReactiveValueCommands<String, Object> reactiveValueCommands;
@@ -99,7 +96,7 @@ public class CacheContext {
             return reactiveValueCommands.set(_key, value).replaceWithVoid();
         }
 
-        public Uni<Boolean> setExpireAfterWrite1(String key, long seconds, Object value) {
+        public Uni<Boolean> setExpireAfterWrite(String key, long seconds, Object value) {
             String _key = prefix + ":" + key;
             return reactiveValueCommands
                     .setnx(_key, value)

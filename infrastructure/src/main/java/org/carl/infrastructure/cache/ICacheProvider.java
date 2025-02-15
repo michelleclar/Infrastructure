@@ -1,3 +1,7 @@
 package org.carl.infrastructure.cache;
 
-public interface ICacheProvider {}
+import org.carl.infrastructure.cache.core.CacheContext;
+
+public interface ICacheProvider {
+    CacheContext getCacheContext();
+}
