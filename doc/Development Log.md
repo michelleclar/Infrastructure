@@ -79,10 +79,32 @@ PersistenceService ..|> IPersistenceOperations : implements
 #### member
 
 > oidc
-
+> oauth2,openID
 #### data Permissions
 
 > ReBAC
+
+```puml
++----------+      关系定义      +------------+       策略定义       +---------------+
+|  主体 (Subject) | <------------> | 关系类型 (Relationship Type) | <---------------> | 策略 (Policy) |
++----------+                   +------------+                    +---------------+
+     |                                  ^                                   |
+     |  主体-资源关系实例 (Relationship Instance)     策略规则 (Policy Rule)      |
+     |                                  |                                   |
+     V                                  |                                   V
++----------+                           |                             +---------------+
+|  资源 (Resource) | -----------------------+-----------------------------> | 权限评估引擎 (Policy Engine) |
++----------+                                                             +---------------+
+                                                                                   |
+                                                                                   V
+                                                                           +---------------+
+                                                                           | 访问决策 (Access Decision) |
+                                                                           +---------------+
+                                                                               (Allow / Deny)
+
+图例说明:
+
+```
 
 ### **Search Service**
 

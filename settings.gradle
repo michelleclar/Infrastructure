@@ -48,6 +48,7 @@ dependencyResolutionManagement {
             library('websocket', 'io.quarkus', 'quarkus-websockets-client').versionRef('quarkus')
             // NOTE: auth
             library('oidc', 'io.quarkus', 'quarkus-oidc').versionRef('quarkus')
+            library('keycloak', 'io.quarkus', 'quarkus-keycloak-authorization').versionRef('quarkus')
             library('vault', 'io.quarkiverse', 'quarkus-vault').versionRef('quarkus')
             // NOTE: cached
             library('cache', 'io.quarkus', 'quarkus-cache').versionRef('quarkus')
@@ -105,7 +106,7 @@ dependencyResolutionManagement {
             library('testcontainersJunitJupiter', 'org.testcontainers', 'junit-jupiter').versionRef('testcontainers')
             library('quarkusJunit5', 'io.quarkus', 'quarkus-junit5').versionRef('quarkus')
             library('assured', 'io.rest-assured', 'rest-assured').versionRef('quarkus')
-            library('dockerJava','com.github.docker-java','docker-java').version('3.4.0')
+            library('dockerJava', 'com.github.docker-java', 'docker-java').version('3.4.0')
 
             // NOTE: jwt
             library('jwt', 'io.quarkus', 'quarkus-smallrye-jwt').versionRef('quarkus')
@@ -118,7 +119,7 @@ dependencyResolutionManagement {
             // NOTE: valid
             library('valid', 'io.quarkus', 'quarkus-hibernate-validator').versionRef('quarkus')
             // NOTE: share
-            bundle('share', ['quarkusArc','rest'])
+            bundle('share', ['quarkusArc', 'rest'])
 //            bundle('share', ['quarkusArc', 'configYaml'])
             // NOTE: base
             bundle('base', [
@@ -129,6 +130,8 @@ dependencyResolutionManagement {
                     'routes',
                     'vertx'
             ])
+            // NOTE: auth
+            bundle('auth', ['oidc', 'keycloak'])
             bundle('registerCenterConsul', ['consul', 'consulStork', 'consulClient'])
 //            bundle('registerCenterConsul', [ 'consulStork', 'consulClient'])
             // NOTE: persistence
@@ -158,10 +161,10 @@ dependencyResolutionManagement {
 //                    'testcontainersNeo4j',
 //                    'testcontainersElasticsearch',
 //                    'testcontainersMilvus',
-                    'dockerJava',
-                    'flyway',
-                    'assured',
-                    'quarkusJunit5'
+'dockerJava',
+'flyway',
+'assured',
+'quarkusJunit5'
             ])
         }
     }

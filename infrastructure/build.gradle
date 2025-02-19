@@ -1,6 +1,7 @@
 dependencies {
     implementation libs.bundles.persistence
     jooqGenerator libs.quarkusJdbcPostgreSQL
+    implementation libs.bundles.auth
     implementation libs.bundles.search
     implementation libs.bundles.protocol
     implementation libs.bundles.mq
