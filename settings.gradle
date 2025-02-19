@@ -150,8 +150,8 @@ dependencyResolutionManagement {
             bundle('protocol', ['grpc', 'websocket'])
 
             bundle('test', [
-                    'testcontainersJunitJupiter',
-                    'testcontainers',
+//                    'testcontainersJunitJupiter',
+//                    'testcontainers',
 //                    'testcontainersPg',
 //                    'testcontainersPulsar',
 //                    'testcontainersConsul',

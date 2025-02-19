@@ -1,5 +1,4 @@
 dependencies {
-    implementation enforcedPlatform(libs.quarkusPlatform)
     implementation libs.bundles.persistence
     jooqGenerator libs.quarkusJdbcPostgreSQL
     implementation libs.bundles.search

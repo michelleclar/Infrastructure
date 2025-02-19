@@ -174,7 +174,9 @@ subprojects {
             sourceDirs.addAll(file(mainSrc))
         }
     }
-
+    dependencies {
+        implementation enforcedPlatform(libs.quarkusPlatform)
+    }
     if (!name.startsWith('infrastructure')) {
         dependencies {
             implementation project(':infrastructure')
