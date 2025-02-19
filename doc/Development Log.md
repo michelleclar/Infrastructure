@@ -1,6 +1,7 @@
 # **Fundamental Service Platform Construction Principles**
 
 > **Cloud-Native Platform**  
+> SASS
 > Emphasizes type-safe development practices.  
 > Supports multiple programming languages, but Java remains the primary language for business
 > logic.  
@@ -20,8 +21,9 @@ search,cache,broadcast definition one rule
 es,solr... implement rule
 
 platform support ability
-search broadcast 
+search broadcast
 api provider
+
 - persistence
 - broadcast
 - cache
@@ -42,7 +44,9 @@ package manage
 ├─search
 └─util
 ```
+
 > base design
+
 ```puml
 @startuml
 
@@ -70,6 +74,16 @@ PersistenceService ..|> IPersistenceOperations : implements
 
 ## **Fundamental Service Selection**
 
+### **auth**
+
+#### member
+
+> oidc
+
+#### data Permissions
+
+> ReBAC
+
 ### **Search Service**
 
 > searchCtx
@@ -90,8 +104,9 @@ PersistenceService ..|> IPersistenceOperations : implements
 #### **ORM Framework**
 
 > chosen ORM framework, original sql or APT dsl
-> **JOOQ** is currently used, but a replacement is planned because it is **partially open-source
-**.  
+> **JOOQ** is currently used, but a replacement is planned because it is **partially open-source**
+> planned replace JOOQ
+> need see original sql and execute sql and bind parma,many datasource support  
 > JOOQ was chosen for its **type safety** and **fluent API** for writing SQL.
 
 ### **Caching**
