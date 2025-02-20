@@ -11,26 +11,23 @@ import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Priorities;
+import java.util.Optional;
 import org.carl.infrastructure.config.ScaffoldConfig;
-import org.carl.infrastructure.constant.Constants;
-import org.carl.infrastructure.model.ApiRequest;
 import org.carl.infrastructure.config.runtime.IRuntimeProvider;
 import org.carl.infrastructure.config.runtime.IRuntimeUser;
+import org.carl.infrastructure.constant.Constants;
+import org.carl.infrastructure.model.ApiRequest;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-
-import java.util.Optional;
 
 @ApplicationScoped
 public class RootFilter {
 
-    @ConfigProperty(name = "quarkus.rest.path",defaultValue = "/api")
+    @ConfigProperty(name = "quarkus.rest.path", defaultValue = "/api")
     String restPath;
 
-    @Inject
-    ScaffoldConfig config;
+    @Inject ScaffoldConfig config;
 
-    @Inject
-    Instance<IRuntimeProvider> runtimeProvider;
+    @Inject Instance<IRuntimeProvider> runtimeProvider;
 
     private SessionHandler sessionHandler;
 
@@ -38,7 +35,9 @@ public class RootFilter {
         if (config.useSession()) {
             int hour = config.sessionTimeoutHour();
             long timeOut = (long) hour * 60 * 60 * 1000;
-            sessionHandler = SessionHandler.create(LocalSessionStore.create(vertx)).setSessionTimeout(timeOut);
+            sessionHandler =
+                    SessionHandler.create(LocalSessionStore.create(vertx))
+                            .setSessionTimeout(timeOut);
         }
     }
 
@@ -63,6 +62,7 @@ public class RootFilter {
 
     @RouteFilter(Priorities.HEADER_DECORATOR)
     void apiRequestFilter(RoutingContext context) {
+
         IRuntimeUser runtimeUser = context.get(Constants.Fields.RUNTIME_USER);
 
         if (runtimeProvider.isResolvable()) {
@@ -91,5 +91,4 @@ public class RootFilter {
 
         return IRuntimeUser.WHITE;
     }
-
 }

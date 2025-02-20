@@ -57,10 +57,6 @@ subprojects {
         ratchetFrom 'origin/main'
 
         java {
-            target fileTree('.') {
-                include '**/*.java'
-                exclude '**/build/**', '**/build-*/**'
-            }
             importOrder()
             cleanthat()
             googleJavaFormat().aosp().reflowLongStrings().formatJavadoc(false).reorderImports(false).groupArtifact("com.google.googlejavaformat:google-java-format")
