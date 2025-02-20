@@ -1,15 +1,14 @@
 package org.carl.infrastructure.broadcast.core;
 
 import io.vertx.mutiny.core.eventbus.EventBus;
-
-import org.apache.pulsar.client.api.PulsarClient;
+import org.apache.pulsar.client.api.ClientBuilder;
 
 public class BroadcastContext {
-    PulsarClient pulsarClient;
+    ClientBuilder pulsarClientBuilder;
     EventBus eventBus;
 
-    public BroadcastContext(PulsarClient pulsarClient, EventBus eventBus) {
+    public BroadcastContext(ClientBuilder builder, EventBus eventBus) {
         this.eventBus = eventBus;
-        this.pulsarClient = pulsarClient;
+        this.pulsarClientBuilder = builder;
     }
 }
