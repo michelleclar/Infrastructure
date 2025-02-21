@@ -1,25 +1,31 @@
-dependencies {
-    implementation libs.bundles.persistence
-    jooqGenerator libs.quarkusJdbcPostgreSQL
-    implementation libs.bundles.auth
-    implementation libs.bundles.search
-    implementation libs.bundles.protocol
-    implementation libs.bundles.mq
-    implementation libs.bundles.utils
-    implementation libs.bundles.cache
-    implementation libs.bundles.base
-    implementation libs.bundles.registerCenterConsul
-    def applicationEnv = new Properties()
-    def envPropertiesFile = file('src/main/resources/application.properties')
-    if (envPropertiesFile.exists()) {
-        envPropertiesFile.withReader('UTF-8') { reader ->
-            applicationEnv.load(reader)
+subprojects {
+    //    implementation libs.bundles.persistence
+    //    jooqGenerator libs.quarkusJdbcPostgreSQL
+    //    implementation libs.bundles.auth
+    //    implementation libs.bundles.search
+    //    implementation libs.bundles.mq
+    //    implementation libs.bundles.cache
+    dependencies {
+
+        implementation libs.bundles.base
+        implementation libs.bundles.protocol
+        implementation libs.bundles.utils
+        implementation libs.bundles.registerCenterConsul
+        api libs.bundles.share
+        if(!name.startsWith('comment')){
+            api project(':infrastructure:comment')
+        }
+        testImplementation libs.bundles.test
+        def applicationEnv = new Properties()
+        def envPropertiesFile = file('src/main/resources/application.properties')
+        if (envPropertiesFile.exists()) {
+            envPropertiesFile.withReader('UTF-8') { reader ->
+                applicationEnv.load(reader)
+            }
+        }
+        if ("prod" != applicationEnv.getProperty('quarkus.profile')) {
+            implementation libs.jooqMeta
+            implementation libs.jooqCodegen
         }
     }
-    if ("prod" != applicationEnv.getProperty('quarkus.profile')){
-        implementation libs.jooqMeta
-        implementation libs.jooqCodegen
-    }
-    api libs.bundles.share
-    testImplementation libs.bundles.test
 }

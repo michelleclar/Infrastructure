@@ -173,11 +173,13 @@ subprojects {
     dependencies {
         implementation enforcedPlatform(libs.quarkusPlatform)
     }
-    if (!name.startsWith('infrastructure')) {
+    if (!project.toString().contains('infrastructure')) {
         dependencies {
-            implementation project(':infrastructure')
+            implementation project(':infrastructure:boot')
         }
-
+        quarkus {
+            quarkusBuildProperties.put("quarkus.grpc.codegen.proto-directory", "./protos")
+        }
         quarkusBuild {
             nativeArgs {
                 containerBuild = true
