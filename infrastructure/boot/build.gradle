@@ -1,0 +1,7 @@
+dependencies {
+    api project(':infrastructure:persistence')
+    api project(':infrastructure:authorization')
+    api project(':infrastructure:search')
+    api project(':infrastructure:cache')
+    api project(':infrastructure:broadcast')
+}
