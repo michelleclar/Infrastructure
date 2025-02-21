@@ -1,0 +1,29 @@
+package org.carl.infrastructure.testcontainers;
+
+import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
+import java.util.Map;
+import org.junit.ClassRule;
+import org.testcontainers.containers.PulsarContainer;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
+import org.testcontainers.utility.DockerImageName;
+
+public class PulsarTestResource implements QuarkusTestResourceLifecycleManager {
+
+    static String TAG = "apachepulsar/pulsar:3.2.4";
+
+    @ClassRule
+    public static PulsarContainer CONTAINER =
+            new PulsarContainer(DockerImageName.parse(TAG)).withReuse(true);
+
+    @Override
+    public Map<String, String> start() {
+        if (!CONTAINER.isRunning()) {
+            CONTAINER.start();
+        }
+        return ImmutableMap.of(
+                "mp.messaging.incoming.data.serviceUrl", CONTAINER.getHttpServiceUrl());
+    }
+
+    @Override
+    public void stop() {}
+}
