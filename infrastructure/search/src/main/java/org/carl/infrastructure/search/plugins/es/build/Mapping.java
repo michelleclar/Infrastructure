@@ -5,6 +5,7 @@ import static org.carl.infrastructure.util.JSON.JSON;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.Map.Entry;
+import java.util.function.Function;
 
 public class Mapping {
     ObjectNode json;
@@ -14,8 +15,12 @@ public class Mapping {
         return new Mapping();
     }
 
-    public Properties properties() {
+    Properties properties() {
         return new Properties(this);
+    }
+
+    public Mapping properties(Function<Properties, Mapping> f) {
+        return f.apply(properties());
     }
 
     Mapping addProperties(ObjectNode jsonNode) {
