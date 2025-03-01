@@ -1,24 +1,19 @@
 package main
 
 import (
-	"golang.org/x/net/context"
+	"context"
 	"log"
-	"oidc/core"
+	"oidc/db"
 )
 
 // TODO: read provider clientId/secret by `database`
 func init() {
-
 	ctx := context.Background()
-	provider, err := core.NewProvider(ctx, "https://accounts.google.com")
-
+	users, err := db.Ctx().User.Query().All(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
-	println(provider)
-	//oidcConfig := &core.Config{
-	//	ClientID: clientID,
-	//}
+	log.Println(users)
 }
 func main() {
 }
