@@ -11,6 +11,7 @@ import (
 
 	"oidc/ent/migrate"
 
+	"oidc/ent/oidcprovider"
 	"oidc/ent/pet"
 	"oidc/ent/user"
 
@@ -24,6 +25,8 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// OidcProvider is the client for interacting with the OidcProvider builders.
+	OidcProvider *OidcProviderClient
 	// Pet is the client for interacting with the Pet builders.
 	Pet *PetClient
 	// User is the client for interacting with the User builders.
@@ -39,6 +42,7 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.OidcProvider = NewOidcProviderClient(c.config)
 	c.Pet = NewPetClient(c.config)
 	c.User = NewUserClient(c.config)
 }
@@ -131,10 +135,11 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		Pet:    NewPetClient(cfg),
-		User:   NewUserClient(cfg),
+		ctx:          ctx,
+		config:       cfg,
+		OidcProvider: NewOidcProviderClient(cfg),
+		Pet:          NewPetClient(cfg),
+		User:         NewUserClient(cfg),
 	}, nil
 }
 
@@ -152,17 +157,18 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:    ctx,
-		config: cfg,
-		Pet:    NewPetClient(cfg),
-		User:   NewUserClient(cfg),
+		ctx:          ctx,
+		config:       cfg,
+		OidcProvider: NewOidcProviderClient(cfg),
+		Pet:          NewPetClient(cfg),
+		User:         NewUserClient(cfg),
 	}, nil
 }
 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		Pet.
+//		OidcProvider.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -184,6 +190,7 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
+	c.OidcProvider.Use(hooks...)
 	c.Pet.Use(hooks...)
 	c.User.Use(hooks...)
 }
@@ -191,6 +198,7 @@ func (c *Client) Use(hooks ...Hook) {
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
+	c.OidcProvider.Intercept(interceptors...)
 	c.Pet.Intercept(interceptors...)
 	c.User.Intercept(interceptors...)
 }
@@ -198,12 +206,147 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *OidcProviderMutation:
+		return c.OidcProvider.mutate(ctx, m)
 	case *PetMutation:
 		return c.Pet.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// OidcProviderClient is a client for the OidcProvider schema.
+type OidcProviderClient struct {
+	config
+}
+
+// NewOidcProviderClient returns a client for the OidcProvider from the given config.
+func NewOidcProviderClient(c config) *OidcProviderClient {
+	return &OidcProviderClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `oidcprovider.Hooks(f(g(h())))`.
+func (c *OidcProviderClient) Use(hooks ...Hook) {
+	c.hooks.OidcProvider = append(c.hooks.OidcProvider, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `oidcprovider.Intercept(f(g(h())))`.
+func (c *OidcProviderClient) Intercept(interceptors ...Interceptor) {
+	c.inters.OidcProvider = append(c.inters.OidcProvider, interceptors...)
+}
+
+// Create returns a builder for creating a OidcProvider entity.
+func (c *OidcProviderClient) Create() *OidcProviderCreate {
+	mutation := newOidcProviderMutation(c.config, OpCreate)
+	return &OidcProviderCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of OidcProvider entities.
+func (c *OidcProviderClient) CreateBulk(builders ...*OidcProviderCreate) *OidcProviderCreateBulk {
+	return &OidcProviderCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *OidcProviderClient) MapCreateBulk(slice any, setFunc func(*OidcProviderCreate, int)) *OidcProviderCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &OidcProviderCreateBulk{err: fmt.Errorf("calling to OidcProviderClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*OidcProviderCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &OidcProviderCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for OidcProvider.
+func (c *OidcProviderClient) Update() *OidcProviderUpdate {
+	mutation := newOidcProviderMutation(c.config, OpUpdate)
+	return &OidcProviderUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *OidcProviderClient) UpdateOne(op *OidcProvider) *OidcProviderUpdateOne {
+	mutation := newOidcProviderMutation(c.config, OpUpdateOne, withOidcProvider(op))
+	return &OidcProviderUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *OidcProviderClient) UpdateOneID(id int) *OidcProviderUpdateOne {
+	mutation := newOidcProviderMutation(c.config, OpUpdateOne, withOidcProviderID(id))
+	return &OidcProviderUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for OidcProvider.
+func (c *OidcProviderClient) Delete() *OidcProviderDelete {
+	mutation := newOidcProviderMutation(c.config, OpDelete)
+	return &OidcProviderDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *OidcProviderClient) DeleteOne(op *OidcProvider) *OidcProviderDeleteOne {
+	return c.DeleteOneID(op.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *OidcProviderClient) DeleteOneID(id int) *OidcProviderDeleteOne {
+	builder := c.Delete().Where(oidcprovider.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &OidcProviderDeleteOne{builder}
+}
+
+// Query returns a query builder for OidcProvider.
+func (c *OidcProviderClient) Query() *OidcProviderQuery {
+	return &OidcProviderQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeOidcProvider},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a OidcProvider entity by its id.
+func (c *OidcProviderClient) Get(ctx context.Context, id int) (*OidcProvider, error) {
+	return c.Query().Where(oidcprovider.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *OidcProviderClient) GetX(ctx context.Context, id int) *OidcProvider {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *OidcProviderClient) Hooks() []Hook {
+	return c.hooks.OidcProvider
+}
+
+// Interceptors returns the client interceptors.
+func (c *OidcProviderClient) Interceptors() []Interceptor {
+	return c.inters.OidcProvider
+}
+
+func (c *OidcProviderClient) mutate(ctx context.Context, m *OidcProviderMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&OidcProviderCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&OidcProviderUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&OidcProviderUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&OidcProviderDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown OidcProvider mutation op: %q", m.Op())
 	}
 }
 
@@ -401,7 +544,7 @@ func (c *UserClient) UpdateOne(u *User) *UserUpdateOne {
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *UserClient) UpdateOneID(id int16) *UserUpdateOne {
+func (c *UserClient) UpdateOneID(id int) *UserUpdateOne {
 	mutation := newUserMutation(c.config, OpUpdateOne, withUserID(id))
 	return &UserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
@@ -418,7 +561,7 @@ func (c *UserClient) DeleteOne(u *User) *UserDeleteOne {
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *UserClient) DeleteOneID(id int16) *UserDeleteOne {
+func (c *UserClient) DeleteOneID(id int) *UserDeleteOne {
 	builder := c.Delete().Where(user.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
@@ -435,12 +578,12 @@ func (c *UserClient) Query() *UserQuery {
 }
 
 // Get returns a User entity by its id.
-func (c *UserClient) Get(ctx context.Context, id int16) (*User, error) {
+func (c *UserClient) Get(ctx context.Context, id int) (*User, error) {
 	return c.Query().Where(user.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *UserClient) GetX(ctx context.Context, id int16) *User {
+func (c *UserClient) GetX(ctx context.Context, id int) *User {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -476,9 +619,9 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Pet, User []ent.Hook
+		OidcProvider, Pet, User []ent.Hook
 	}
 	inters struct {
-		Pet, User []ent.Interceptor
+		OidcProvider, Pet, User []ent.Interceptor
 	}
 )

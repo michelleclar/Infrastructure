@@ -8,6 +8,16 @@ import (
 )
 
 var (
+	// OidcProvidersColumns holds the columns for the "oidc_providers" table.
+	OidcProvidersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+	}
+	// OidcProvidersTable holds the schema information for the "oidc_providers" table.
+	OidcProvidersTable = &schema.Table{
+		Name:       "oidc_providers",
+		Columns:    OidcProvidersColumns,
+		PrimaryKey: []*schema.Column{OidcProvidersColumns[0]},
+	}
 	// PetsColumns holds the columns for the "pets" table.
 	PetsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -20,7 +30,8 @@ var (
 	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt16, Increment: true},
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "user_id", Type: field.TypeInt32, Unique: true},
 		{Name: "age", Type: field.TypeInt},
 		{Name: "name", Type: field.TypeString, Default: "unknown"},
 	}
@@ -32,6 +43,7 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		OidcProvidersTable,
 		PetsTable,
 		UsersTable,
 	}

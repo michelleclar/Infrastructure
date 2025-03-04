@@ -9,48 +9,53 @@ import (
 )
 
 // ID filters vertices based on their ID field.
-func ID(id int16) predicate.User {
+func ID(id int) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldID, id))
 }
 
 // IDEQ applies the EQ predicate on the ID field.
-func IDEQ(id int16) predicate.User {
+func IDEQ(id int) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldID, id))
 }
 
 // IDNEQ applies the NEQ predicate on the ID field.
-func IDNEQ(id int16) predicate.User {
+func IDNEQ(id int) predicate.User {
 	return predicate.User(sql.FieldNEQ(FieldID, id))
 }
 
 // IDIn applies the In predicate on the ID field.
-func IDIn(ids ...int16) predicate.User {
+func IDIn(ids ...int) predicate.User {
 	return predicate.User(sql.FieldIn(FieldID, ids...))
 }
 
 // IDNotIn applies the NotIn predicate on the ID field.
-func IDNotIn(ids ...int16) predicate.User {
+func IDNotIn(ids ...int) predicate.User {
 	return predicate.User(sql.FieldNotIn(FieldID, ids...))
 }
 
 // IDGT applies the GT predicate on the ID field.
-func IDGT(id int16) predicate.User {
+func IDGT(id int) predicate.User {
 	return predicate.User(sql.FieldGT(FieldID, id))
 }
 
 // IDGTE applies the GTE predicate on the ID field.
-func IDGTE(id int16) predicate.User {
+func IDGTE(id int) predicate.User {
 	return predicate.User(sql.FieldGTE(FieldID, id))
 }
 
 // IDLT applies the LT predicate on the ID field.
-func IDLT(id int16) predicate.User {
+func IDLT(id int) predicate.User {
 	return predicate.User(sql.FieldLT(FieldID, id))
 }
 
 // IDLTE applies the LTE predicate on the ID field.
-func IDLTE(id int16) predicate.User {
+func IDLTE(id int) predicate.User {
 	return predicate.User(sql.FieldLTE(FieldID, id))
+}
+
+// UserID applies equality check predicate on the "user_id" field. It's identical to UserIDEQ.
+func UserID(v int32) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldUserID, v))
 }
 
 // Age applies equality check predicate on the "age" field. It's identical to AgeEQ.
@@ -61,6 +66,46 @@ func Age(v int) predicate.User {
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
 func Name(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldName, v))
+}
+
+// UserIDEQ applies the EQ predicate on the "user_id" field.
+func UserIDEQ(v int32) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldUserID, v))
+}
+
+// UserIDNEQ applies the NEQ predicate on the "user_id" field.
+func UserIDNEQ(v int32) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldUserID, v))
+}
+
+// UserIDIn applies the In predicate on the "user_id" field.
+func UserIDIn(vs ...int32) predicate.User {
+	return predicate.User(sql.FieldIn(FieldUserID, vs...))
+}
+
+// UserIDNotIn applies the NotIn predicate on the "user_id" field.
+func UserIDNotIn(vs ...int32) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldUserID, vs...))
+}
+
+// UserIDGT applies the GT predicate on the "user_id" field.
+func UserIDGT(v int32) predicate.User {
+	return predicate.User(sql.FieldGT(FieldUserID, v))
+}
+
+// UserIDGTE applies the GTE predicate on the "user_id" field.
+func UserIDGTE(v int32) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldUserID, v))
+}
+
+// UserIDLT applies the LT predicate on the "user_id" field.
+func UserIDLT(v int32) predicate.User {
+	return predicate.User(sql.FieldLT(FieldUserID, v))
+}
+
+// UserIDLTE applies the LTE predicate on the "user_id" field.
+func UserIDLTE(v int32) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldUserID, v))
 }
 
 // AgeEQ applies the EQ predicate on the "age" field.

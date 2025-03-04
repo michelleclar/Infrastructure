@@ -25,3 +25,8 @@ func TestCreateTable(t *testing.T) {
 		log.Fatal("failed creating schema resources", err)
 	}
 }
+func TestSearch(t *testing.T) {
+	ctx := context.Background()
+	Ctx().User.Query().Select()
+	Ctx().User.Query().Where(U).First(ctx)
+}

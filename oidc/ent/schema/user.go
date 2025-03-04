@@ -2,6 +2,8 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/dialect/entsql"
+	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/field"
 )
 
@@ -10,9 +12,15 @@ type User struct {
 	ent.Schema
 }
 
+func (User) Annotations() []schema.Annotation {
+	return []schema.Annotation{
+		entsql.Schema("db3"),
+	}
+}
+
 // Fields of the User.
 func (User) Fields() []ent.Field {
-	return []ent.Field{field.Int16("id").Unique(), field.Int("age").Positive(), field.String("name").Default("unknown")}
+	return []ent.Field{field.Int32("user_id").Unique(), field.Int("age").Positive(), field.String("name").Default("unknown")}
 }
 
 // Edges of the User.

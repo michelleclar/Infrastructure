@@ -27,6 +27,27 @@ func (uu *UserUpdate) Where(ps ...predicate.User) *UserUpdate {
 	return uu
 }
 
+// SetUserID sets the "user_id" field.
+func (uu *UserUpdate) SetUserID(i int32) *UserUpdate {
+	uu.mutation.ResetUserID()
+	uu.mutation.SetUserID(i)
+	return uu
+}
+
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableUserID(i *int32) *UserUpdate {
+	if i != nil {
+		uu.SetUserID(*i)
+	}
+	return uu
+}
+
+// AddUserID adds i to the "user_id" field.
+func (uu *UserUpdate) AddUserID(i int32) *UserUpdate {
+	uu.mutation.AddUserID(i)
+	return uu
+}
+
 // SetAge sets the "age" field.
 func (uu *UserUpdate) SetAge(i int) *UserUpdate {
 	uu.mutation.ResetAge()
@@ -108,13 +129,19 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if err := uu.check(); err != nil {
 		return n, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(user.Table, user.Columns, sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt16))
+	_spec := sqlgraph.NewUpdateSpec(user.Table, user.Columns, sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt))
 	if ps := uu.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := uu.mutation.UserID(); ok {
+		_spec.SetField(user.FieldUserID, field.TypeInt32, value)
+	}
+	if value, ok := uu.mutation.AddedUserID(); ok {
+		_spec.AddField(user.FieldUserID, field.TypeInt32, value)
 	}
 	if value, ok := uu.mutation.Age(); ok {
 		_spec.SetField(user.FieldAge, field.TypeInt, value)
@@ -143,6 +170,27 @@ type UserUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *UserMutation
+}
+
+// SetUserID sets the "user_id" field.
+func (uuo *UserUpdateOne) SetUserID(i int32) *UserUpdateOne {
+	uuo.mutation.ResetUserID()
+	uuo.mutation.SetUserID(i)
+	return uuo
+}
+
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableUserID(i *int32) *UserUpdateOne {
+	if i != nil {
+		uuo.SetUserID(*i)
+	}
+	return uuo
+}
+
+// AddUserID adds i to the "user_id" field.
+func (uuo *UserUpdateOne) AddUserID(i int32) *UserUpdateOne {
+	uuo.mutation.AddUserID(i)
+	return uuo
 }
 
 // SetAge sets the "age" field.
@@ -239,7 +287,7 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if err := uuo.check(); err != nil {
 		return _node, err
 	}
-	_spec := sqlgraph.NewUpdateSpec(user.Table, user.Columns, sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt16))
+	_spec := sqlgraph.NewUpdateSpec(user.Table, user.Columns, sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt))
 	id, ok := uuo.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "User.id" for update`)}
@@ -263,6 +311,12 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := uuo.mutation.UserID(); ok {
+		_spec.SetField(user.FieldUserID, field.TypeInt32, value)
+	}
+	if value, ok := uuo.mutation.AddedUserID(); ok {
+		_spec.AddField(user.FieldUserID, field.TypeInt32, value)
 	}
 	if value, ok := uuo.mutation.Age(); ok {
 		_spec.SetField(user.FieldAge, field.TypeInt, value)
