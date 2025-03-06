@@ -40,6 +40,8 @@ func ValidColumn(column string) bool {
 }
 
 var (
+	// DefaultUserID holds the default value on creation for the "user_id" field.
+	DefaultUserID func() int64
 	// AgeValidator is a validator for the "age" field. It is called by the builders before save.
 	AgeValidator func(int) error
 	// DefaultName holds the default value on creation for the "name" field.

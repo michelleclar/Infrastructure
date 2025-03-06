@@ -13,9 +13,11 @@ import (
 
 // Pet is the model entity for the Pet schema.
 type Pet struct {
-	config
+	config `json:"-"`
 	// ID of the ent.
-	ID           int `json:"id,omitempty"`
+	ID int `json:"id,omitempty"`
+	// PetID holds the value of the "pet_id" field.
+	PetID        int32 `json:"pet_id,omitempty"`
 	selectValues sql.SelectValues
 }
 
@@ -24,7 +26,7 @@ func (*Pet) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case pet.FieldID:
+		case pet.FieldID, pet.FieldPetID:
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -47,6 +49,12 @@ func (pe *Pet) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			pe.ID = int(value.Int64)
+		case pet.FieldPetID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field pet_id", values[i])
+			} else if value.Valid {
+				pe.PetID = int32(value.Int64)
+			}
 		default:
 			pe.selectValues.Set(columns[i], values[i])
 		}
@@ -82,7 +90,9 @@ func (pe *Pet) Unwrap() *Pet {
 func (pe *Pet) String() string {
 	var builder strings.Builder
 	builder.WriteString("Pet(")
-	builder.WriteString(fmt.Sprintf("id=%v", pe.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", pe.ID))
+	builder.WriteString("pet_id=")
+	builder.WriteString(fmt.Sprintf("%v", pe.PetID))
 	builder.WriteByte(')')
 	return builder.String()
 }

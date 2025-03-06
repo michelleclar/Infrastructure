@@ -11,16 +11,33 @@ var (
 	// OidcProvidersColumns holds the columns for the "oidc_providers" table.
 	OidcProvidersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "oidc_provider_id", Type: field.TypeInt64, Unique: true},
+		{Name: "oidc_provider_name", Type: field.TypeString, Default: "unknown"},
+		{Name: "oidc_provider_description", Type: field.TypeString, Nullable: true},
+		{Name: "issuer", Type: field.TypeString},
+		{Name: "proxy_url", Type: field.TypeString, Nullable: true},
+		{Name: "client_id", Type: field.TypeString},
+		{Name: "client_secret", Type: field.TypeString},
+		{Name: "redirect_uri", Type: field.TypeString},
+		{Name: "endpoints", Type: field.TypeJSON, Nullable: true},
 	}
 	// OidcProvidersTable holds the schema information for the "oidc_providers" table.
 	OidcProvidersTable = &schema.Table{
 		Name:       "oidc_providers",
 		Columns:    OidcProvidersColumns,
 		PrimaryKey: []*schema.Column{OidcProvidersColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "oidcprovider_oidc_provider_id",
+				Unique:  true,
+				Columns: []*schema.Column{OidcProvidersColumns[1]},
+			},
+		},
 	}
 	// PetsColumns holds the columns for the "pets" table.
 	PetsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "pet_id", Type: field.TypeInt32, Unique: true},
 	}
 	// PetsTable holds the schema information for the "pets" table.
 	PetsTable = &schema.Table{
@@ -31,7 +48,7 @@ var (
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "user_id", Type: field.TypeInt32, Unique: true},
+		{Name: "user_id", Type: field.TypeInt64, Unique: true},
 		{Name: "age", Type: field.TypeInt},
 		{Name: "name", Type: field.TypeString, Default: "unknown"},
 	}

@@ -6,6 +6,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"oidc/ent/oidcprovider"
+	"oidc/ent/pet"
 	"oidc/ent/predicate"
 	"oidc/ent/user"
 	"sync"
@@ -31,13 +33,24 @@ const (
 // OidcProviderMutation represents an operation that mutates the OidcProvider nodes in the graph.
 type OidcProviderMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*OidcProvider, error)
-	predicates    []predicate.OidcProvider
+	op                        Op
+	typ                       string
+	id                        *int
+	oidc_provider_id          *int64
+	addoidc_provider_id       *int64
+	oidc_provider_name        *string
+	oidc_provider_description *string
+	issuer                    *string
+	proxy_url                 *string
+	client_id                 *string
+	client_secret             *string
+	redirect_uri              *string
+	endpoints                 *[]string
+	appendendpoints           []string
+	clearedFields             map[string]struct{}
+	done                      bool
+	oldValue                  func(context.Context) (*OidcProvider, error)
+	predicates                []predicate.OidcProvider
 }
 
 var _ ent.Mutation = (*OidcProviderMutation)(nil)
@@ -138,6 +151,405 @@ func (m *OidcProviderMutation) IDs(ctx context.Context) ([]int, error) {
 	}
 }
 
+// SetOidcProviderID sets the "oidc_provider_id" field.
+func (m *OidcProviderMutation) SetOidcProviderID(i int64) {
+	m.oidc_provider_id = &i
+	m.addoidc_provider_id = nil
+}
+
+// OidcProviderID returns the value of the "oidc_provider_id" field in the mutation.
+func (m *OidcProviderMutation) OidcProviderID() (r int64, exists bool) {
+	v := m.oidc_provider_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOidcProviderID returns the old "oidc_provider_id" field's value of the OidcProvider entity.
+// If the OidcProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OidcProviderMutation) OldOidcProviderID(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOidcProviderID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOidcProviderID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOidcProviderID: %w", err)
+	}
+	return oldValue.OidcProviderID, nil
+}
+
+// AddOidcProviderID adds i to the "oidc_provider_id" field.
+func (m *OidcProviderMutation) AddOidcProviderID(i int64) {
+	if m.addoidc_provider_id != nil {
+		*m.addoidc_provider_id += i
+	} else {
+		m.addoidc_provider_id = &i
+	}
+}
+
+// AddedOidcProviderID returns the value that was added to the "oidc_provider_id" field in this mutation.
+func (m *OidcProviderMutation) AddedOidcProviderID() (r int64, exists bool) {
+	v := m.addoidc_provider_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetOidcProviderID resets all changes to the "oidc_provider_id" field.
+func (m *OidcProviderMutation) ResetOidcProviderID() {
+	m.oidc_provider_id = nil
+	m.addoidc_provider_id = nil
+}
+
+// SetOidcProviderName sets the "oidc_provider_name" field.
+func (m *OidcProviderMutation) SetOidcProviderName(s string) {
+	m.oidc_provider_name = &s
+}
+
+// OidcProviderName returns the value of the "oidc_provider_name" field in the mutation.
+func (m *OidcProviderMutation) OidcProviderName() (r string, exists bool) {
+	v := m.oidc_provider_name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOidcProviderName returns the old "oidc_provider_name" field's value of the OidcProvider entity.
+// If the OidcProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OidcProviderMutation) OldOidcProviderName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOidcProviderName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOidcProviderName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOidcProviderName: %w", err)
+	}
+	return oldValue.OidcProviderName, nil
+}
+
+// ResetOidcProviderName resets all changes to the "oidc_provider_name" field.
+func (m *OidcProviderMutation) ResetOidcProviderName() {
+	m.oidc_provider_name = nil
+}
+
+// SetOidcProviderDescription sets the "oidc_provider_description" field.
+func (m *OidcProviderMutation) SetOidcProviderDescription(s string) {
+	m.oidc_provider_description = &s
+}
+
+// OidcProviderDescription returns the value of the "oidc_provider_description" field in the mutation.
+func (m *OidcProviderMutation) OidcProviderDescription() (r string, exists bool) {
+	v := m.oidc_provider_description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOidcProviderDescription returns the old "oidc_provider_description" field's value of the OidcProvider entity.
+// If the OidcProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OidcProviderMutation) OldOidcProviderDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOidcProviderDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOidcProviderDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOidcProviderDescription: %w", err)
+	}
+	return oldValue.OidcProviderDescription, nil
+}
+
+// ClearOidcProviderDescription clears the value of the "oidc_provider_description" field.
+func (m *OidcProviderMutation) ClearOidcProviderDescription() {
+	m.oidc_provider_description = nil
+	m.clearedFields[oidcprovider.FieldOidcProviderDescription] = struct{}{}
+}
+
+// OidcProviderDescriptionCleared returns if the "oidc_provider_description" field was cleared in this mutation.
+func (m *OidcProviderMutation) OidcProviderDescriptionCleared() bool {
+	_, ok := m.clearedFields[oidcprovider.FieldOidcProviderDescription]
+	return ok
+}
+
+// ResetOidcProviderDescription resets all changes to the "oidc_provider_description" field.
+func (m *OidcProviderMutation) ResetOidcProviderDescription() {
+	m.oidc_provider_description = nil
+	delete(m.clearedFields, oidcprovider.FieldOidcProviderDescription)
+}
+
+// SetIssuer sets the "issuer" field.
+func (m *OidcProviderMutation) SetIssuer(s string) {
+	m.issuer = &s
+}
+
+// Issuer returns the value of the "issuer" field in the mutation.
+func (m *OidcProviderMutation) Issuer() (r string, exists bool) {
+	v := m.issuer
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldIssuer returns the old "issuer" field's value of the OidcProvider entity.
+// If the OidcProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OidcProviderMutation) OldIssuer(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldIssuer is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldIssuer requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldIssuer: %w", err)
+	}
+	return oldValue.Issuer, nil
+}
+
+// ResetIssuer resets all changes to the "issuer" field.
+func (m *OidcProviderMutation) ResetIssuer() {
+	m.issuer = nil
+}
+
+// SetProxyURL sets the "proxy_url" field.
+func (m *OidcProviderMutation) SetProxyURL(s string) {
+	m.proxy_url = &s
+}
+
+// ProxyURL returns the value of the "proxy_url" field in the mutation.
+func (m *OidcProviderMutation) ProxyURL() (r string, exists bool) {
+	v := m.proxy_url
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProxyURL returns the old "proxy_url" field's value of the OidcProvider entity.
+// If the OidcProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OidcProviderMutation) OldProxyURL(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProxyURL is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProxyURL requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProxyURL: %w", err)
+	}
+	return oldValue.ProxyURL, nil
+}
+
+// ClearProxyURL clears the value of the "proxy_url" field.
+func (m *OidcProviderMutation) ClearProxyURL() {
+	m.proxy_url = nil
+	m.clearedFields[oidcprovider.FieldProxyURL] = struct{}{}
+}
+
+// ProxyURLCleared returns if the "proxy_url" field was cleared in this mutation.
+func (m *OidcProviderMutation) ProxyURLCleared() bool {
+	_, ok := m.clearedFields[oidcprovider.FieldProxyURL]
+	return ok
+}
+
+// ResetProxyURL resets all changes to the "proxy_url" field.
+func (m *OidcProviderMutation) ResetProxyURL() {
+	m.proxy_url = nil
+	delete(m.clearedFields, oidcprovider.FieldProxyURL)
+}
+
+// SetClientID sets the "client_id" field.
+func (m *OidcProviderMutation) SetClientID(s string) {
+	m.client_id = &s
+}
+
+// ClientID returns the value of the "client_id" field in the mutation.
+func (m *OidcProviderMutation) ClientID() (r string, exists bool) {
+	v := m.client_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClientID returns the old "client_id" field's value of the OidcProvider entity.
+// If the OidcProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OidcProviderMutation) OldClientID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClientID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClientID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClientID: %w", err)
+	}
+	return oldValue.ClientID, nil
+}
+
+// ResetClientID resets all changes to the "client_id" field.
+func (m *OidcProviderMutation) ResetClientID() {
+	m.client_id = nil
+}
+
+// SetClientSecret sets the "client_secret" field.
+func (m *OidcProviderMutation) SetClientSecret(s string) {
+	m.client_secret = &s
+}
+
+// ClientSecret returns the value of the "client_secret" field in the mutation.
+func (m *OidcProviderMutation) ClientSecret() (r string, exists bool) {
+	v := m.client_secret
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClientSecret returns the old "client_secret" field's value of the OidcProvider entity.
+// If the OidcProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OidcProviderMutation) OldClientSecret(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClientSecret is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClientSecret requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClientSecret: %w", err)
+	}
+	return oldValue.ClientSecret, nil
+}
+
+// ResetClientSecret resets all changes to the "client_secret" field.
+func (m *OidcProviderMutation) ResetClientSecret() {
+	m.client_secret = nil
+}
+
+// SetRedirectURI sets the "redirect_uri" field.
+func (m *OidcProviderMutation) SetRedirectURI(s string) {
+	m.redirect_uri = &s
+}
+
+// RedirectURI returns the value of the "redirect_uri" field in the mutation.
+func (m *OidcProviderMutation) RedirectURI() (r string, exists bool) {
+	v := m.redirect_uri
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRedirectURI returns the old "redirect_uri" field's value of the OidcProvider entity.
+// If the OidcProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OidcProviderMutation) OldRedirectURI(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRedirectURI is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRedirectURI requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRedirectURI: %w", err)
+	}
+	return oldValue.RedirectURI, nil
+}
+
+// ResetRedirectURI resets all changes to the "redirect_uri" field.
+func (m *OidcProviderMutation) ResetRedirectURI() {
+	m.redirect_uri = nil
+}
+
+// SetEndpoints sets the "endpoints" field.
+func (m *OidcProviderMutation) SetEndpoints(s []string) {
+	m.endpoints = &s
+	m.appendendpoints = nil
+}
+
+// Endpoints returns the value of the "endpoints" field in the mutation.
+func (m *OidcProviderMutation) Endpoints() (r []string, exists bool) {
+	v := m.endpoints
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEndpoints returns the old "endpoints" field's value of the OidcProvider entity.
+// If the OidcProvider object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *OidcProviderMutation) OldEndpoints(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEndpoints is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEndpoints requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEndpoints: %w", err)
+	}
+	return oldValue.Endpoints, nil
+}
+
+// AppendEndpoints adds s to the "endpoints" field.
+func (m *OidcProviderMutation) AppendEndpoints(s []string) {
+	m.appendendpoints = append(m.appendendpoints, s...)
+}
+
+// AppendedEndpoints returns the list of values that were appended to the "endpoints" field in this mutation.
+func (m *OidcProviderMutation) AppendedEndpoints() ([]string, bool) {
+	if len(m.appendendpoints) == 0 {
+		return nil, false
+	}
+	return m.appendendpoints, true
+}
+
+// ClearEndpoints clears the value of the "endpoints" field.
+func (m *OidcProviderMutation) ClearEndpoints() {
+	m.endpoints = nil
+	m.appendendpoints = nil
+	m.clearedFields[oidcprovider.FieldEndpoints] = struct{}{}
+}
+
+// EndpointsCleared returns if the "endpoints" field was cleared in this mutation.
+func (m *OidcProviderMutation) EndpointsCleared() bool {
+	_, ok := m.clearedFields[oidcprovider.FieldEndpoints]
+	return ok
+}
+
+// ResetEndpoints resets all changes to the "endpoints" field.
+func (m *OidcProviderMutation) ResetEndpoints() {
+	m.endpoints = nil
+	m.appendendpoints = nil
+	delete(m.clearedFields, oidcprovider.FieldEndpoints)
+}
+
 // Where appends a list predicates to the OidcProviderMutation builder.
 func (m *OidcProviderMutation) Where(ps ...predicate.OidcProvider) {
 	m.predicates = append(m.predicates, ps...)
@@ -172,7 +584,34 @@ func (m *OidcProviderMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *OidcProviderMutation) Fields() []string {
-	fields := make([]string, 0, 0)
+	fields := make([]string, 0, 9)
+	if m.oidc_provider_id != nil {
+		fields = append(fields, oidcprovider.FieldOidcProviderID)
+	}
+	if m.oidc_provider_name != nil {
+		fields = append(fields, oidcprovider.FieldOidcProviderName)
+	}
+	if m.oidc_provider_description != nil {
+		fields = append(fields, oidcprovider.FieldOidcProviderDescription)
+	}
+	if m.issuer != nil {
+		fields = append(fields, oidcprovider.FieldIssuer)
+	}
+	if m.proxy_url != nil {
+		fields = append(fields, oidcprovider.FieldProxyURL)
+	}
+	if m.client_id != nil {
+		fields = append(fields, oidcprovider.FieldClientID)
+	}
+	if m.client_secret != nil {
+		fields = append(fields, oidcprovider.FieldClientSecret)
+	}
+	if m.redirect_uri != nil {
+		fields = append(fields, oidcprovider.FieldRedirectURI)
+	}
+	if m.endpoints != nil {
+		fields = append(fields, oidcprovider.FieldEndpoints)
+	}
 	return fields
 }
 
@@ -180,6 +619,26 @@ func (m *OidcProviderMutation) Fields() []string {
 // return value indicates that this field was not set, or was not defined in the
 // schema.
 func (m *OidcProviderMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case oidcprovider.FieldOidcProviderID:
+		return m.OidcProviderID()
+	case oidcprovider.FieldOidcProviderName:
+		return m.OidcProviderName()
+	case oidcprovider.FieldOidcProviderDescription:
+		return m.OidcProviderDescription()
+	case oidcprovider.FieldIssuer:
+		return m.Issuer()
+	case oidcprovider.FieldProxyURL:
+		return m.ProxyURL()
+	case oidcprovider.FieldClientID:
+		return m.ClientID()
+	case oidcprovider.FieldClientSecret:
+		return m.ClientSecret()
+	case oidcprovider.FieldRedirectURI:
+		return m.RedirectURI()
+	case oidcprovider.FieldEndpoints:
+		return m.Endpoints()
+	}
 	return nil, false
 }
 
@@ -187,6 +646,26 @@ func (m *OidcProviderMutation) Field(name string) (ent.Value, bool) {
 // returned if the mutation operation is not UpdateOne, or the query to the
 // database failed.
 func (m *OidcProviderMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case oidcprovider.FieldOidcProviderID:
+		return m.OldOidcProviderID(ctx)
+	case oidcprovider.FieldOidcProviderName:
+		return m.OldOidcProviderName(ctx)
+	case oidcprovider.FieldOidcProviderDescription:
+		return m.OldOidcProviderDescription(ctx)
+	case oidcprovider.FieldIssuer:
+		return m.OldIssuer(ctx)
+	case oidcprovider.FieldProxyURL:
+		return m.OldProxyURL(ctx)
+	case oidcprovider.FieldClientID:
+		return m.OldClientID(ctx)
+	case oidcprovider.FieldClientSecret:
+		return m.OldClientSecret(ctx)
+	case oidcprovider.FieldRedirectURI:
+		return m.OldRedirectURI(ctx)
+	case oidcprovider.FieldEndpoints:
+		return m.OldEndpoints(ctx)
+	}
 	return nil, fmt.Errorf("unknown OidcProvider field %s", name)
 }
 
@@ -195,6 +674,69 @@ func (m *OidcProviderMutation) OldField(ctx context.Context, name string) (ent.V
 // type.
 func (m *OidcProviderMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case oidcprovider.FieldOidcProviderID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOidcProviderID(v)
+		return nil
+	case oidcprovider.FieldOidcProviderName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOidcProviderName(v)
+		return nil
+	case oidcprovider.FieldOidcProviderDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOidcProviderDescription(v)
+		return nil
+	case oidcprovider.FieldIssuer:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetIssuer(v)
+		return nil
+	case oidcprovider.FieldProxyURL:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProxyURL(v)
+		return nil
+	case oidcprovider.FieldClientID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClientID(v)
+		return nil
+	case oidcprovider.FieldClientSecret:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClientSecret(v)
+		return nil
+	case oidcprovider.FieldRedirectURI:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRedirectURI(v)
+		return nil
+	case oidcprovider.FieldEndpoints:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEndpoints(v)
+		return nil
 	}
 	return fmt.Errorf("unknown OidcProvider field %s", name)
 }
@@ -202,13 +744,21 @@ func (m *OidcProviderMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *OidcProviderMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	if m.addoidc_provider_id != nil {
+		fields = append(fields, oidcprovider.FieldOidcProviderID)
+	}
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *OidcProviderMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case oidcprovider.FieldOidcProviderID:
+		return m.AddedOidcProviderID()
+	}
 	return nil, false
 }
 
@@ -216,13 +766,32 @@ func (m *OidcProviderMutation) AddedField(name string) (ent.Value, bool) {
 // the field is not defined in the schema, or if the type mismatched the field
 // type.
 func (m *OidcProviderMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case oidcprovider.FieldOidcProviderID:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddOidcProviderID(v)
+		return nil
+	}
 	return fmt.Errorf("unknown OidcProvider numeric field %s", name)
 }
 
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *OidcProviderMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(oidcprovider.FieldOidcProviderDescription) {
+		fields = append(fields, oidcprovider.FieldOidcProviderDescription)
+	}
+	if m.FieldCleared(oidcprovider.FieldProxyURL) {
+		fields = append(fields, oidcprovider.FieldProxyURL)
+	}
+	if m.FieldCleared(oidcprovider.FieldEndpoints) {
+		fields = append(fields, oidcprovider.FieldEndpoints)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -235,12 +804,52 @@ func (m *OidcProviderMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *OidcProviderMutation) ClearField(name string) error {
+	switch name {
+	case oidcprovider.FieldOidcProviderDescription:
+		m.ClearOidcProviderDescription()
+		return nil
+	case oidcprovider.FieldProxyURL:
+		m.ClearProxyURL()
+		return nil
+	case oidcprovider.FieldEndpoints:
+		m.ClearEndpoints()
+		return nil
+	}
 	return fmt.Errorf("unknown OidcProvider nullable field %s", name)
 }
 
 // ResetField resets all changes in the mutation for the field with the given name.
 // It returns an error if the field is not defined in the schema.
 func (m *OidcProviderMutation) ResetField(name string) error {
+	switch name {
+	case oidcprovider.FieldOidcProviderID:
+		m.ResetOidcProviderID()
+		return nil
+	case oidcprovider.FieldOidcProviderName:
+		m.ResetOidcProviderName()
+		return nil
+	case oidcprovider.FieldOidcProviderDescription:
+		m.ResetOidcProviderDescription()
+		return nil
+	case oidcprovider.FieldIssuer:
+		m.ResetIssuer()
+		return nil
+	case oidcprovider.FieldProxyURL:
+		m.ResetProxyURL()
+		return nil
+	case oidcprovider.FieldClientID:
+		m.ResetClientID()
+		return nil
+	case oidcprovider.FieldClientSecret:
+		m.ResetClientSecret()
+		return nil
+	case oidcprovider.FieldRedirectURI:
+		m.ResetRedirectURI()
+		return nil
+	case oidcprovider.FieldEndpoints:
+		m.ResetEndpoints()
+		return nil
+	}
 	return fmt.Errorf("unknown OidcProvider field %s", name)
 }
 
@@ -298,6 +907,8 @@ type PetMutation struct {
 	op            Op
 	typ           string
 	id            *int
+	pet_id        *int32
+	addpet_id     *int32
 	clearedFields map[string]struct{}
 	done          bool
 	oldValue      func(context.Context) (*Pet, error)
@@ -402,6 +1013,62 @@ func (m *PetMutation) IDs(ctx context.Context) ([]int, error) {
 	}
 }
 
+// SetPetID sets the "pet_id" field.
+func (m *PetMutation) SetPetID(i int32) {
+	m.pet_id = &i
+	m.addpet_id = nil
+}
+
+// PetID returns the value of the "pet_id" field in the mutation.
+func (m *PetMutation) PetID() (r int32, exists bool) {
+	v := m.pet_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPetID returns the old "pet_id" field's value of the Pet entity.
+// If the Pet object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *PetMutation) OldPetID(ctx context.Context) (v int32, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPetID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPetID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPetID: %w", err)
+	}
+	return oldValue.PetID, nil
+}
+
+// AddPetID adds i to the "pet_id" field.
+func (m *PetMutation) AddPetID(i int32) {
+	if m.addpet_id != nil {
+		*m.addpet_id += i
+	} else {
+		m.addpet_id = &i
+	}
+}
+
+// AddedPetID returns the value that was added to the "pet_id" field in this mutation.
+func (m *PetMutation) AddedPetID() (r int32, exists bool) {
+	v := m.addpet_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPetID resets all changes to the "pet_id" field.
+func (m *PetMutation) ResetPetID() {
+	m.pet_id = nil
+	m.addpet_id = nil
+}
+
 // Where appends a list predicates to the PetMutation builder.
 func (m *PetMutation) Where(ps ...predicate.Pet) {
 	m.predicates = append(m.predicates, ps...)
@@ -436,7 +1103,10 @@ func (m *PetMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *PetMutation) Fields() []string {
-	fields := make([]string, 0, 0)
+	fields := make([]string, 0, 1)
+	if m.pet_id != nil {
+		fields = append(fields, pet.FieldPetID)
+	}
 	return fields
 }
 
@@ -444,6 +1114,10 @@ func (m *PetMutation) Fields() []string {
 // return value indicates that this field was not set, or was not defined in the
 // schema.
 func (m *PetMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case pet.FieldPetID:
+		return m.PetID()
+	}
 	return nil, false
 }
 
@@ -451,6 +1125,10 @@ func (m *PetMutation) Field(name string) (ent.Value, bool) {
 // returned if the mutation operation is not UpdateOne, or the query to the
 // database failed.
 func (m *PetMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case pet.FieldPetID:
+		return m.OldPetID(ctx)
+	}
 	return nil, fmt.Errorf("unknown Pet field %s", name)
 }
 
@@ -459,6 +1137,13 @@ func (m *PetMutation) OldField(ctx context.Context, name string) (ent.Value, err
 // type.
 func (m *PetMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case pet.FieldPetID:
+		v, ok := value.(int32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPetID(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Pet field %s", name)
 }
@@ -466,13 +1151,21 @@ func (m *PetMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *PetMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	if m.addpet_id != nil {
+		fields = append(fields, pet.FieldPetID)
+	}
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *PetMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case pet.FieldPetID:
+		return m.AddedPetID()
+	}
 	return nil, false
 }
 
@@ -480,6 +1173,15 @@ func (m *PetMutation) AddedField(name string) (ent.Value, bool) {
 // the field is not defined in the schema, or if the type mismatched the field
 // type.
 func (m *PetMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case pet.FieldPetID:
+		v, ok := value.(int32)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPetID(v)
+		return nil
+	}
 	return fmt.Errorf("unknown Pet numeric field %s", name)
 }
 
@@ -505,6 +1207,11 @@ func (m *PetMutation) ClearField(name string) error {
 // ResetField resets all changes in the mutation for the field with the given name.
 // It returns an error if the field is not defined in the schema.
 func (m *PetMutation) ResetField(name string) error {
+	switch name {
+	case pet.FieldPetID:
+		m.ResetPetID()
+		return nil
+	}
 	return fmt.Errorf("unknown Pet field %s", name)
 }
 
@@ -562,8 +1269,8 @@ type UserMutation struct {
 	op            Op
 	typ           string
 	id            *int
-	user_id       *int32
-	adduser_id    *int32
+	user_id       *int64
+	adduser_id    *int64
 	age           *int
 	addage        *int
 	name          *string
@@ -672,13 +1379,13 @@ func (m *UserMutation) IDs(ctx context.Context) ([]int, error) {
 }
 
 // SetUserID sets the "user_id" field.
-func (m *UserMutation) SetUserID(i int32) {
+func (m *UserMutation) SetUserID(i int64) {
 	m.user_id = &i
 	m.adduser_id = nil
 }
 
 // UserID returns the value of the "user_id" field in the mutation.
-func (m *UserMutation) UserID() (r int32, exists bool) {
+func (m *UserMutation) UserID() (r int64, exists bool) {
 	v := m.user_id
 	if v == nil {
 		return
@@ -689,7 +1396,7 @@ func (m *UserMutation) UserID() (r int32, exists bool) {
 // OldUserID returns the old "user_id" field's value of the User entity.
 // If the User object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UserMutation) OldUserID(ctx context.Context) (v int32, err error) {
+func (m *UserMutation) OldUserID(ctx context.Context) (v int64, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
 	}
@@ -704,7 +1411,7 @@ func (m *UserMutation) OldUserID(ctx context.Context) (v int32, err error) {
 }
 
 // AddUserID adds i to the "user_id" field.
-func (m *UserMutation) AddUserID(i int32) {
+func (m *UserMutation) AddUserID(i int64) {
 	if m.adduser_id != nil {
 		*m.adduser_id += i
 	} else {
@@ -713,7 +1420,7 @@ func (m *UserMutation) AddUserID(i int32) {
 }
 
 // AddedUserID returns the value that was added to the "user_id" field in this mutation.
-func (m *UserMutation) AddedUserID() (r int32, exists bool) {
+func (m *UserMutation) AddedUserID() (r int64, exists bool) {
 	v := m.adduser_id
 	if v == nil {
 		return
@@ -902,7 +1609,7 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 func (m *UserMutation) SetField(name string, value ent.Value) error {
 	switch name {
 	case user.FieldUserID:
-		v, ok := value.(int32)
+		v, ok := value.(int64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -958,7 +1665,7 @@ func (m *UserMutation) AddedField(name string) (ent.Value, bool) {
 func (m *UserMutation) AddField(name string, value ent.Value) error {
 	switch name {
 	case user.FieldUserID:
-		v, ok := value.(int32)
+		v, ok := value.(int64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}

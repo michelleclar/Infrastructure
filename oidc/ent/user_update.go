@@ -17,8 +17,9 @@ import (
 // UserUpdate is the builder for updating User entities.
 type UserUpdate struct {
 	config
-	hooks    []Hook
-	mutation *UserMutation
+	hooks     []Hook
+	mutation  *UserMutation
+	modifiers []func(*sql.UpdateBuilder)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -28,14 +29,14 @@ func (uu *UserUpdate) Where(ps ...predicate.User) *UserUpdate {
 }
 
 // SetUserID sets the "user_id" field.
-func (uu *UserUpdate) SetUserID(i int32) *UserUpdate {
+func (uu *UserUpdate) SetUserID(i int64) *UserUpdate {
 	uu.mutation.ResetUserID()
 	uu.mutation.SetUserID(i)
 	return uu
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (uu *UserUpdate) SetNillableUserID(i *int32) *UserUpdate {
+func (uu *UserUpdate) SetNillableUserID(i *int64) *UserUpdate {
 	if i != nil {
 		uu.SetUserID(*i)
 	}
@@ -43,7 +44,7 @@ func (uu *UserUpdate) SetNillableUserID(i *int32) *UserUpdate {
 }
 
 // AddUserID adds i to the "user_id" field.
-func (uu *UserUpdate) AddUserID(i int32) *UserUpdate {
+func (uu *UserUpdate) AddUserID(i int64) *UserUpdate {
 	uu.mutation.AddUserID(i)
 	return uu
 }
@@ -125,6 +126,12 @@ func (uu *UserUpdate) check() error {
 	return nil
 }
 
+// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
+func (uu *UserUpdate) Modify(modifiers ...func(u *sql.UpdateBuilder)) *UserUpdate {
+	uu.modifiers = append(uu.modifiers, modifiers...)
+	return uu
+}
+
 func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if err := uu.check(); err != nil {
 		return n, err
@@ -138,10 +145,10 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 	}
 	if value, ok := uu.mutation.UserID(); ok {
-		_spec.SetField(user.FieldUserID, field.TypeInt32, value)
+		_spec.SetField(user.FieldUserID, field.TypeInt64, value)
 	}
 	if value, ok := uu.mutation.AddedUserID(); ok {
-		_spec.AddField(user.FieldUserID, field.TypeInt32, value)
+		_spec.AddField(user.FieldUserID, field.TypeInt64, value)
 	}
 	if value, ok := uu.mutation.Age(); ok {
 		_spec.SetField(user.FieldAge, field.TypeInt, value)
@@ -152,6 +159,7 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := uu.mutation.Name(); ok {
 		_spec.SetField(user.FieldName, field.TypeString, value)
 	}
+	_spec.AddModifiers(uu.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -167,20 +175,21 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 // UserUpdateOne is the builder for updating a single User entity.
 type UserUpdateOne struct {
 	config
-	fields   []string
-	hooks    []Hook
-	mutation *UserMutation
+	fields    []string
+	hooks     []Hook
+	mutation  *UserMutation
+	modifiers []func(*sql.UpdateBuilder)
 }
 
 // SetUserID sets the "user_id" field.
-func (uuo *UserUpdateOne) SetUserID(i int32) *UserUpdateOne {
+func (uuo *UserUpdateOne) SetUserID(i int64) *UserUpdateOne {
 	uuo.mutation.ResetUserID()
 	uuo.mutation.SetUserID(i)
 	return uuo
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (uuo *UserUpdateOne) SetNillableUserID(i *int32) *UserUpdateOne {
+func (uuo *UserUpdateOne) SetNillableUserID(i *int64) *UserUpdateOne {
 	if i != nil {
 		uuo.SetUserID(*i)
 	}
@@ -188,7 +197,7 @@ func (uuo *UserUpdateOne) SetNillableUserID(i *int32) *UserUpdateOne {
 }
 
 // AddUserID adds i to the "user_id" field.
-func (uuo *UserUpdateOne) AddUserID(i int32) *UserUpdateOne {
+func (uuo *UserUpdateOne) AddUserID(i int64) *UserUpdateOne {
 	uuo.mutation.AddUserID(i)
 	return uuo
 }
@@ -283,6 +292,12 @@ func (uuo *UserUpdateOne) check() error {
 	return nil
 }
 
+// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
+func (uuo *UserUpdateOne) Modify(modifiers ...func(u *sql.UpdateBuilder)) *UserUpdateOne {
+	uuo.modifiers = append(uuo.modifiers, modifiers...)
+	return uuo
+}
+
 func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	if err := uuo.check(); err != nil {
 		return _node, err
@@ -313,10 +328,10 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 		}
 	}
 	if value, ok := uuo.mutation.UserID(); ok {
-		_spec.SetField(user.FieldUserID, field.TypeInt32, value)
+		_spec.SetField(user.FieldUserID, field.TypeInt64, value)
 	}
 	if value, ok := uuo.mutation.AddedUserID(); ok {
-		_spec.AddField(user.FieldUserID, field.TypeInt32, value)
+		_spec.AddField(user.FieldUserID, field.TypeInt64, value)
 	}
 	if value, ok := uuo.mutation.Age(); ok {
 		_spec.SetField(user.FieldAge, field.TypeInt, value)
@@ -327,6 +342,7 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if value, ok := uuo.mutation.Name(); ok {
 		_spec.SetField(user.FieldName, field.TypeString, value)
 	}
+	_spec.AddModifiers(uuo.modifiers...)
 	_node = &User{config: uuo.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues

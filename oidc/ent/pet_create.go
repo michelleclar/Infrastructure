@@ -4,9 +4,11 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"oidc/ent/pet"
 
+	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 )
@@ -16,6 +18,13 @@ type PetCreate struct {
 	config
 	mutation *PetMutation
 	hooks    []Hook
+	conflict []sql.ConflictOption
+}
+
+// SetPetID sets the "pet_id" field.
+func (pc *PetCreate) SetPetID(i int32) *PetCreate {
+	pc.mutation.SetPetID(i)
+	return pc
 }
 
 // Mutation returns the PetMutation object of the builder.
@@ -52,6 +61,9 @@ func (pc *PetCreate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (pc *PetCreate) check() error {
+	if _, ok := pc.mutation.PetID(); !ok {
+		return &ValidationError{Name: "pet_id", err: errors.New(`ent: missing required field "Pet.pet_id"`)}
+	}
 	return nil
 }
 
@@ -78,7 +90,173 @@ func (pc *PetCreate) createSpec() (*Pet, *sqlgraph.CreateSpec) {
 		_node = &Pet{config: pc.config}
 		_spec = sqlgraph.NewCreateSpec(pet.Table, sqlgraph.NewFieldSpec(pet.FieldID, field.TypeInt))
 	)
+	_spec.OnConflict = pc.conflict
+	if value, ok := pc.mutation.PetID(); ok {
+		_spec.SetField(pet.FieldPetID, field.TypeInt32, value)
+		_node.PetID = value
+	}
 	return _node, _spec
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Pet.Create().
+//		SetPetID(v).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.PetUpsert) {
+//			SetPetID(v+v).
+//		}).
+//		Exec(ctx)
+func (pc *PetCreate) OnConflict(opts ...sql.ConflictOption) *PetUpsertOne {
+	pc.conflict = opts
+	return &PetUpsertOne{
+		create: pc,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Pet.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (pc *PetCreate) OnConflictColumns(columns ...string) *PetUpsertOne {
+	pc.conflict = append(pc.conflict, sql.ConflictColumns(columns...))
+	return &PetUpsertOne{
+		create: pc,
+	}
+}
+
+type (
+	// PetUpsertOne is the builder for "upsert"-ing
+	//  one Pet node.
+	PetUpsertOne struct {
+		create *PetCreate
+	}
+
+	// PetUpsert is the "OnConflict" setter.
+	PetUpsert struct {
+		*sql.UpdateSet
+	}
+)
+
+// SetPetID sets the "pet_id" field.
+func (u *PetUpsert) SetPetID(v int32) *PetUpsert {
+	u.Set(pet.FieldPetID, v)
+	return u
+}
+
+// UpdatePetID sets the "pet_id" field to the value that was provided on create.
+func (u *PetUpsert) UpdatePetID() *PetUpsert {
+	u.SetExcluded(pet.FieldPetID)
+	return u
+}
+
+// AddPetID adds v to the "pet_id" field.
+func (u *PetUpsert) AddPetID(v int32) *PetUpsert {
+	u.Add(pet.FieldPetID, v)
+	return u
+}
+
+// UpdateNewValues updates the mutable fields using the new values that were set on create.
+// Using this option is equivalent to using:
+//
+//	client.Pet.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *PetUpsertOne) UpdateNewValues() *PetUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Pet.Create().
+//	    OnConflict(sql.ResolveWithIgnore()).
+//	    Exec(ctx)
+func (u *PetUpsertOne) Ignore() *PetUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *PetUpsertOne) DoNothing() *PetUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the PetCreate.OnConflict
+// documentation for more info.
+func (u *PetUpsertOne) Update(set func(*PetUpsert)) *PetUpsertOne {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&PetUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetPetID sets the "pet_id" field.
+func (u *PetUpsertOne) SetPetID(v int32) *PetUpsertOne {
+	return u.Update(func(s *PetUpsert) {
+		s.SetPetID(v)
+	})
+}
+
+// AddPetID adds v to the "pet_id" field.
+func (u *PetUpsertOne) AddPetID(v int32) *PetUpsertOne {
+	return u.Update(func(s *PetUpsert) {
+		s.AddPetID(v)
+	})
+}
+
+// UpdatePetID sets the "pet_id" field to the value that was provided on create.
+func (u *PetUpsertOne) UpdatePetID() *PetUpsertOne {
+	return u.Update(func(s *PetUpsert) {
+		s.UpdatePetID()
+	})
+}
+
+// Exec executes the query.
+func (u *PetUpsertOne) Exec(ctx context.Context) error {
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for PetCreate.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *PetUpsertOne) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// Exec executes the UPSERT query and returns the inserted/updated ID.
+func (u *PetUpsertOne) ID(ctx context.Context) (id int, err error) {
+	node, err := u.create.Save(ctx)
+	if err != nil {
+		return id, err
+	}
+	return node.ID, nil
+}
+
+// IDX is like ID, but panics if an error occurs.
+func (u *PetUpsertOne) IDX(ctx context.Context) int {
+	id, err := u.ID(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return id
 }
 
 // PetCreateBulk is the builder for creating many Pet entities in bulk.
@@ -86,6 +264,7 @@ type PetCreateBulk struct {
 	config
 	err      error
 	builders []*PetCreate
+	conflict []sql.ConflictOption
 }
 
 // Save creates the Pet entities in the database.
@@ -114,6 +293,7 @@ func (pcb *PetCreateBulk) Save(ctx context.Context) ([]*Pet, error) {
 					_, err = mutators[i+1].Mutate(root, pcb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
+					spec.OnConflict = pcb.conflict
 					// Invoke the actual operation on the latest mutation in the chain.
 					if err = sqlgraph.BatchCreate(ctx, pcb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
@@ -164,6 +344,131 @@ func (pcb *PetCreateBulk) Exec(ctx context.Context) error {
 // ExecX is like Exec, but panics if an error occurs.
 func (pcb *PetCreateBulk) ExecX(ctx context.Context) {
 	if err := pcb.Exec(ctx); err != nil {
+		panic(err)
+	}
+}
+
+// OnConflict allows configuring the `ON CONFLICT` / `ON DUPLICATE KEY` clause
+// of the `INSERT` statement. For example:
+//
+//	client.Pet.CreateBulk(builders...).
+//		OnConflict(
+//			// Update the row with the new values
+//			// the was proposed for insertion.
+//			sql.ResolveWithNewValues(),
+//		).
+//		// Override some of the fields with custom
+//		// update values.
+//		Update(func(u *ent.PetUpsert) {
+//			SetPetID(v+v).
+//		}).
+//		Exec(ctx)
+func (pcb *PetCreateBulk) OnConflict(opts ...sql.ConflictOption) *PetUpsertBulk {
+	pcb.conflict = opts
+	return &PetUpsertBulk{
+		create: pcb,
+	}
+}
+
+// OnConflictColumns calls `OnConflict` and configures the columns
+// as conflict target. Using this option is equivalent to using:
+//
+//	client.Pet.Create().
+//		OnConflict(sql.ConflictColumns(columns...)).
+//		Exec(ctx)
+func (pcb *PetCreateBulk) OnConflictColumns(columns ...string) *PetUpsertBulk {
+	pcb.conflict = append(pcb.conflict, sql.ConflictColumns(columns...))
+	return &PetUpsertBulk{
+		create: pcb,
+	}
+}
+
+// PetUpsertBulk is the builder for "upsert"-ing
+// a bulk of Pet nodes.
+type PetUpsertBulk struct {
+	create *PetCreateBulk
+}
+
+// UpdateNewValues updates the mutable fields using the new values that
+// were set on create. Using this option is equivalent to using:
+//
+//	client.Pet.Create().
+//		OnConflict(
+//			sql.ResolveWithNewValues(),
+//		).
+//		Exec(ctx)
+func (u *PetUpsertBulk) UpdateNewValues() *PetUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	return u
+}
+
+// Ignore sets each column to itself in case of conflict.
+// Using this option is equivalent to using:
+//
+//	client.Pet.Create().
+//		OnConflict(sql.ResolveWithIgnore()).
+//		Exec(ctx)
+func (u *PetUpsertBulk) Ignore() *PetUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWithIgnore())
+	return u
+}
+
+// DoNothing configures the conflict_action to `DO NOTHING`.
+// Supported only by SQLite and PostgreSQL.
+func (u *PetUpsertBulk) DoNothing() *PetUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.DoNothing())
+	return u
+}
+
+// Update allows overriding fields `UPDATE` values. See the PetCreateBulk.OnConflict
+// documentation for more info.
+func (u *PetUpsertBulk) Update(set func(*PetUpsert)) *PetUpsertBulk {
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(update *sql.UpdateSet) {
+		set(&PetUpsert{UpdateSet: update})
+	}))
+	return u
+}
+
+// SetPetID sets the "pet_id" field.
+func (u *PetUpsertBulk) SetPetID(v int32) *PetUpsertBulk {
+	return u.Update(func(s *PetUpsert) {
+		s.SetPetID(v)
+	})
+}
+
+// AddPetID adds v to the "pet_id" field.
+func (u *PetUpsertBulk) AddPetID(v int32) *PetUpsertBulk {
+	return u.Update(func(s *PetUpsert) {
+		s.AddPetID(v)
+	})
+}
+
+// UpdatePetID sets the "pet_id" field to the value that was provided on create.
+func (u *PetUpsertBulk) UpdatePetID() *PetUpsertBulk {
+	return u.Update(func(s *PetUpsert) {
+		s.UpdatePetID()
+	})
+}
+
+// Exec executes the query.
+func (u *PetUpsertBulk) Exec(ctx context.Context) error {
+	if u.create.err != nil {
+		return u.create.err
+	}
+	for i, b := range u.create.builders {
+		if len(b.conflict) != 0 {
+			return fmt.Errorf("ent: OnConflict was set for builder %d. Set it on the PetCreateBulk instead", i)
+		}
+	}
+	if len(u.create.conflict) == 0 {
+		return errors.New("ent: missing options for PetCreateBulk.OnConflict")
+	}
+	return u.create.Exec(ctx)
+}
+
+// ExecX is like Exec, but panics if an error occurs.
+func (u *PetUpsertBulk) ExecX(ctx context.Context) {
+	if err := u.create.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

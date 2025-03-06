@@ -53,6 +53,51 @@ func IDLTE(id int) predicate.Pet {
 	return predicate.Pet(sql.FieldLTE(FieldID, id))
 }
 
+// PetID applies equality check predicate on the "pet_id" field. It's identical to PetIDEQ.
+func PetID(v int32) predicate.Pet {
+	return predicate.Pet(sql.FieldEQ(FieldPetID, v))
+}
+
+// PetIDEQ applies the EQ predicate on the "pet_id" field.
+func PetIDEQ(v int32) predicate.Pet {
+	return predicate.Pet(sql.FieldEQ(FieldPetID, v))
+}
+
+// PetIDNEQ applies the NEQ predicate on the "pet_id" field.
+func PetIDNEQ(v int32) predicate.Pet {
+	return predicate.Pet(sql.FieldNEQ(FieldPetID, v))
+}
+
+// PetIDIn applies the In predicate on the "pet_id" field.
+func PetIDIn(vs ...int32) predicate.Pet {
+	return predicate.Pet(sql.FieldIn(FieldPetID, vs...))
+}
+
+// PetIDNotIn applies the NotIn predicate on the "pet_id" field.
+func PetIDNotIn(vs ...int32) predicate.Pet {
+	return predicate.Pet(sql.FieldNotIn(FieldPetID, vs...))
+}
+
+// PetIDGT applies the GT predicate on the "pet_id" field.
+func PetIDGT(v int32) predicate.Pet {
+	return predicate.Pet(sql.FieldGT(FieldPetID, v))
+}
+
+// PetIDGTE applies the GTE predicate on the "pet_id" field.
+func PetIDGTE(v int32) predicate.Pet {
+	return predicate.Pet(sql.FieldGTE(FieldPetID, v))
+}
+
+// PetIDLT applies the LT predicate on the "pet_id" field.
+func PetIDLT(v int32) predicate.Pet {
+	return predicate.Pet(sql.FieldLT(FieldPetID, v))
+}
+
+// PetIDLTE applies the LTE predicate on the "pet_id" field.
+func PetIDLTE(v int32) predicate.Pet {
+	return predicate.Pet(sql.FieldLTE(FieldPetID, v))
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Pet) predicate.Pet {
 	return predicate.Pet(sql.AndPredicates(predicates...))

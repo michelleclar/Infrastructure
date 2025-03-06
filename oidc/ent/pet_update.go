@@ -17,13 +17,35 @@ import (
 // PetUpdate is the builder for updating Pet entities.
 type PetUpdate struct {
 	config
-	hooks    []Hook
-	mutation *PetMutation
+	hooks     []Hook
+	mutation  *PetMutation
+	modifiers []func(*sql.UpdateBuilder)
 }
 
 // Where appends a list predicates to the PetUpdate builder.
 func (pu *PetUpdate) Where(ps ...predicate.Pet) *PetUpdate {
 	pu.mutation.Where(ps...)
+	return pu
+}
+
+// SetPetID sets the "pet_id" field.
+func (pu *PetUpdate) SetPetID(i int32) *PetUpdate {
+	pu.mutation.ResetPetID()
+	pu.mutation.SetPetID(i)
+	return pu
+}
+
+// SetNillablePetID sets the "pet_id" field if the given value is not nil.
+func (pu *PetUpdate) SetNillablePetID(i *int32) *PetUpdate {
+	if i != nil {
+		pu.SetPetID(*i)
+	}
+	return pu
+}
+
+// AddPetID adds i to the "pet_id" field.
+func (pu *PetUpdate) AddPetID(i int32) *PetUpdate {
+	pu.mutation.AddPetID(i)
 	return pu
 }
 
@@ -59,6 +81,12 @@ func (pu *PetUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
+func (pu *PetUpdate) Modify(modifiers ...func(u *sql.UpdateBuilder)) *PetUpdate {
+	pu.modifiers = append(pu.modifiers, modifiers...)
+	return pu
+}
+
 func (pu *PetUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	_spec := sqlgraph.NewUpdateSpec(pet.Table, pet.Columns, sqlgraph.NewFieldSpec(pet.FieldID, field.TypeInt))
 	if ps := pu.mutation.predicates; len(ps) > 0 {
@@ -68,6 +96,13 @@ func (pu *PetUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := pu.mutation.PetID(); ok {
+		_spec.SetField(pet.FieldPetID, field.TypeInt32, value)
+	}
+	if value, ok := pu.mutation.AddedPetID(); ok {
+		_spec.AddField(pet.FieldPetID, field.TypeInt32, value)
+	}
+	_spec.AddModifiers(pu.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, pu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{pet.Label}
@@ -83,9 +118,31 @@ func (pu *PetUpdate) sqlSave(ctx context.Context) (n int, err error) {
 // PetUpdateOne is the builder for updating a single Pet entity.
 type PetUpdateOne struct {
 	config
-	fields   []string
-	hooks    []Hook
-	mutation *PetMutation
+	fields    []string
+	hooks     []Hook
+	mutation  *PetMutation
+	modifiers []func(*sql.UpdateBuilder)
+}
+
+// SetPetID sets the "pet_id" field.
+func (puo *PetUpdateOne) SetPetID(i int32) *PetUpdateOne {
+	puo.mutation.ResetPetID()
+	puo.mutation.SetPetID(i)
+	return puo
+}
+
+// SetNillablePetID sets the "pet_id" field if the given value is not nil.
+func (puo *PetUpdateOne) SetNillablePetID(i *int32) *PetUpdateOne {
+	if i != nil {
+		puo.SetPetID(*i)
+	}
+	return puo
+}
+
+// AddPetID adds i to the "pet_id" field.
+func (puo *PetUpdateOne) AddPetID(i int32) *PetUpdateOne {
+	puo.mutation.AddPetID(i)
+	return puo
 }
 
 // Mutation returns the PetMutation object of the builder.
@@ -133,6 +190,12 @@ func (puo *PetUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// Modify adds a statement modifier for attaching custom logic to the UPDATE statement.
+func (puo *PetUpdateOne) Modify(modifiers ...func(u *sql.UpdateBuilder)) *PetUpdateOne {
+	puo.modifiers = append(puo.modifiers, modifiers...)
+	return puo
+}
+
 func (puo *PetUpdateOne) sqlSave(ctx context.Context) (_node *Pet, err error) {
 	_spec := sqlgraph.NewUpdateSpec(pet.Table, pet.Columns, sqlgraph.NewFieldSpec(pet.FieldID, field.TypeInt))
 	id, ok := puo.mutation.ID()
@@ -159,6 +222,13 @@ func (puo *PetUpdateOne) sqlSave(ctx context.Context) (_node *Pet, err error) {
 			}
 		}
 	}
+	if value, ok := puo.mutation.PetID(); ok {
+		_spec.SetField(pet.FieldPetID, field.TypeInt32, value)
+	}
+	if value, ok := puo.mutation.AddedPetID(); ok {
+		_spec.AddField(pet.FieldPetID, field.TypeInt32, value)
+	}
+	_spec.AddModifiers(puo.modifiers...)
 	_node = &Pet{config: puo.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues

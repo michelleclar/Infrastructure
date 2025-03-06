@@ -22,6 +22,7 @@ type PetQuery struct {
 	order      []pet.OrderOption
 	inters     []Interceptor
 	predicates []predicate.Pet
+	modifiers  []func(*sql.Selector)
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -251,13 +252,26 @@ func (pq *PetQuery) Clone() *PetQuery {
 		inters:     append([]Interceptor{}, pq.inters...),
 		predicates: append([]predicate.Pet{}, pq.predicates...),
 		// clone intermediate query.
-		sql:  pq.sql.Clone(),
-		path: pq.path,
+		sql:       pq.sql.Clone(),
+		path:      pq.path,
+		modifiers: append([]func(*sql.Selector){}, pq.modifiers...),
 	}
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
+//
+// Example:
+//
+//	var v []struct {
+//		PetID int32 `json:"pet_id,omitempty"`
+//		Count int `json:"count,omitempty"`
+//	}
+//
+//	client.Pet.Query().
+//		GroupBy(pet.FieldPetID).
+//		Aggregate(ent.Count()).
+//		Scan(ctx, &v)
 func (pq *PetQuery) GroupBy(field string, fields ...string) *PetGroupBy {
 	pq.ctx.Fields = append([]string{field}, fields...)
 	grbuild := &PetGroupBy{build: pq}
@@ -269,6 +283,16 @@ func (pq *PetQuery) GroupBy(field string, fields ...string) *PetGroupBy {
 
 // Select allows the selection one or more fields/columns for the given query,
 // instead of selecting all fields in the entity.
+//
+// Example:
+//
+//	var v []struct {
+//		PetID int32 `json:"pet_id,omitempty"`
+//	}
+//
+//	client.Pet.Query().
+//		Select(pet.FieldPetID).
+//		Scan(ctx, &v)
 func (pq *PetQuery) Select(fields ...string) *PetSelect {
 	pq.ctx.Fields = append(pq.ctx.Fields, fields...)
 	sbuild := &PetSelect{PetQuery: pq}
@@ -321,6 +345,9 @@ func (pq *PetQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Pet, err
 		nodes = append(nodes, node)
 		return node.assignValues(columns, values)
 	}
+	if len(pq.modifiers) > 0 {
+		_spec.Modifiers = pq.modifiers
+	}
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
@@ -335,6 +362,9 @@ func (pq *PetQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Pet, err
 
 func (pq *PetQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := pq.querySpec()
+	if len(pq.modifiers) > 0 {
+		_spec.Modifiers = pq.modifiers
+	}
 	_spec.Node.Columns = pq.ctx.Fields
 	if len(pq.ctx.Fields) > 0 {
 		_spec.Unique = pq.ctx.Unique != nil && *pq.ctx.Unique
@@ -397,6 +427,9 @@ func (pq *PetQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	if pq.ctx.Unique != nil && *pq.ctx.Unique {
 		selector.Distinct()
 	}
+	for _, m := range pq.modifiers {
+		m(selector)
+	}
 	for _, p := range pq.predicates {
 		p(selector)
 	}
@@ -412,6 +445,12 @@ func (pq *PetQuery) sqlQuery(ctx context.Context) *sql.Selector {
 		selector.Limit(*limit)
 	}
 	return selector
+}
+
+// Modify adds a query modifier for attaching custom logic to queries.
+func (pq *PetQuery) Modify(modifiers ...func(s *sql.Selector)) *PetSelect {
+	pq.modifiers = append(pq.modifiers, modifiers...)
+	return pq.Select()
 }
 
 // PetGroupBy is the group-by builder for Pet entities.
@@ -502,4 +541,10 @@ func (ps *PetSelect) sqlScan(ctx context.Context, root *PetQuery, v any) error {
 	}
 	defer rows.Close()
 	return sql.ScanSlice(rows, v)
+}
+
+// Modify adds a query modifier for attaching custom logic to queries.
+func (ps *PetSelect) Modify(modifiers ...func(s *sql.Selector)) *PetSelect {
+	ps.modifiers = append(ps.modifiers, modifiers...)
+	return ps
 }

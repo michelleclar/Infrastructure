@@ -54,7 +54,7 @@ func IDLTE(id int) predicate.User {
 }
 
 // UserID applies equality check predicate on the "user_id" field. It's identical to UserIDEQ.
-func UserID(v int32) predicate.User {
+func UserID(v int64) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldUserID, v))
 }
 
@@ -69,42 +69,42 @@ func Name(v string) predicate.User {
 }
 
 // UserIDEQ applies the EQ predicate on the "user_id" field.
-func UserIDEQ(v int32) predicate.User {
+func UserIDEQ(v int64) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldUserID, v))
 }
 
 // UserIDNEQ applies the NEQ predicate on the "user_id" field.
-func UserIDNEQ(v int32) predicate.User {
+func UserIDNEQ(v int64) predicate.User {
 	return predicate.User(sql.FieldNEQ(FieldUserID, v))
 }
 
 // UserIDIn applies the In predicate on the "user_id" field.
-func UserIDIn(vs ...int32) predicate.User {
+func UserIDIn(vs ...int64) predicate.User {
 	return predicate.User(sql.FieldIn(FieldUserID, vs...))
 }
 
 // UserIDNotIn applies the NotIn predicate on the "user_id" field.
-func UserIDNotIn(vs ...int32) predicate.User {
+func UserIDNotIn(vs ...int64) predicate.User {
 	return predicate.User(sql.FieldNotIn(FieldUserID, vs...))
 }
 
 // UserIDGT applies the GT predicate on the "user_id" field.
-func UserIDGT(v int32) predicate.User {
+func UserIDGT(v int64) predicate.User {
 	return predicate.User(sql.FieldGT(FieldUserID, v))
 }
 
 // UserIDGTE applies the GTE predicate on the "user_id" field.
-func UserIDGTE(v int32) predicate.User {
+func UserIDGTE(v int64) predicate.User {
 	return predicate.User(sql.FieldGTE(FieldUserID, v))
 }
 
 // UserIDLT applies the LT predicate on the "user_id" field.
-func UserIDLT(v int32) predicate.User {
+func UserIDLT(v int64) predicate.User {
 	return predicate.User(sql.FieldLT(FieldUserID, v))
 }
 
 // UserIDLTE applies the LTE predicate on the "user_id" field.
-func UserIDLTE(v int32) predicate.User {
+func UserIDLTE(v int64) predicate.User {
 	return predicate.User(sql.FieldLTE(FieldUserID, v))
 }
 
