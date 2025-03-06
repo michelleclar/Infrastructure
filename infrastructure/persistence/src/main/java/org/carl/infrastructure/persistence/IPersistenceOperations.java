@@ -43,4 +43,8 @@ public interface IPersistenceOperations extends IPersistenceProvider {
     default void transaction(Consumer<PersistenceContext> queryFunction) {
         getPersistenceContext().transaction(queryFunction);
     }
+
+    default void execute(String sql) {
+        getPersistenceContext().execute(sql);
+    }
 }

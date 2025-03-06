@@ -7,10 +7,10 @@ import org.jooq.Table;
 
 /** runtime get metadata */
 public interface IMetadataAbility extends IPersistenceAbility {
-    Table<?> getMainTable();
+    String getMainTable();
 
-    default Schema getSchema() {
-        return getMainTable().getSchema();
+    default String getSchema() {
+        return "public";
     }
 
     default DBInfo getDBInfo() {
@@ -18,7 +18,8 @@ public interface IMetadataAbility extends IPersistenceAbility {
     }
 
     default String getPK() {
-        return Objects.requireNonNull(getMainTable().getPrimaryKey(), "table primary key is null")
-                .getName();
+        return "id";
+//        return Objects.requireNonNull(getMainTable().getPrimaryKey(), "table primary key is null")
+//                .getName();
     }
 }

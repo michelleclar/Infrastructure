@@ -11,7 +11,7 @@ public interface ITableCreateAbility extends IMetadataAbility {
 
     @Transactional
     default void create(IPersistenceOperations db) {
-        String mainTable = getMainTable().getName();
+        String mainTable = getMainTable();
         if (!mainTable.toLowerCase().equals(mainTable)) {
             throw new RuntimeException("%s need Up Case table name".formatted(mainTable));
         }
