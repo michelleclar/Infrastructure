@@ -61,10 +61,6 @@ func ClientContext(ctx context.Context, client *http.Client) context.Context {
 
 func getClient(ctx context.Context) *http.Client {
 	if c, ok := ctx.Value(oauth2.HTTPClient).(*http.Client); ok {
-		proxyUrl, err := url.Parse("socks://127.0.0.1:10808")
-		if err != nil {
-			c.Transport.(*http.Transport).Proxy = http.ProxyURL(proxyUrl)
-		}
 		return c
 	}
 	return nil
@@ -95,6 +91,14 @@ func doRequest(ctx context.Context, req *http.Request) (*http.Response, error) {
 	if c := getClient(ctx); c != nil {
 		client = c
 	}
+	if ctx.Value("proxy") != nil {
+		proxyUrl := ctx.Value("proxy").(*url.URL)
+		transport, ok := client.Transport.(*http.Transport)
+		if !ok && transport == nil {
+			client.Transport = http.DefaultTransport
+		}
+		client.Transport.(*http.Transport).Proxy = http.ProxyURL(proxyUrl)
+	}
 	return client.Do(req.WithContext(ctx))
 }
 
@@ -107,6 +111,7 @@ type Provider struct {
 	userInfoURL   string
 	jwksURL       string
 	algorithms    []string
+	scopes        []string
 
 	// Raw claims returned by the server.
 	rawClaims []byte
@@ -142,6 +147,7 @@ type providerJSON struct {
 	JWKSURL       string   `json:"jwks_uri"`
 	UserInfoURL   string   `json:"userinfo_endpoint"`
 	Algorithms    []string `json:"id_token_signing_alg_values_supported"`
+	Scopes        []string `json:"scopes_supported"`
 }
 
 // supportedAlgorithms is a list of algorithms explicitly supported by this
@@ -288,9 +294,10 @@ func NewProvider(ctx context.Context, issuer string) (*Provider, error) {
 		deviceAuthURL: p.DeviceAuthURL,
 		userInfoURL:   p.UserInfoURL,
 		jwksURL:       p.JWKSURL,
-		algorithms:    algs,
-		rawClaims:     body,
-		client:        getClient(ctx),
+		//scopes:        p.Scopes,
+		algorithms: algs,
+		rawClaims:  body,
+		client:     getClient(ctx),
 	}, nil
 }
 
@@ -404,6 +411,10 @@ func (p *Provider) UserInfo(ctx context.Context, tokenSource oauth2.TokenSource)
 		EmailVerified: bool(userInfo.EmailVerified),
 		claims:        body,
 	}, nil
+}
+
+func (p *Provider) Scopes() []string {
+	return p.scopes
 }
 
 // IDToken is an OpenID Connect extension that provides a predictable representation

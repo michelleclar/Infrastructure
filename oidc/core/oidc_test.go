@@ -303,7 +303,6 @@ func TestNewProvider(t *testing.T) {
 			if test.issuerURLOverride != "" {
 				ctx = InsecureIssuerURLContext(ctx, test.issuerURLOverride)
 			}
-
 			p, err := NewProvider(ctx, issuer)
 			if err != nil {
 				if !test.wantErr {
