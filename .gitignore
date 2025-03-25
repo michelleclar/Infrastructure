@@ -39,3 +39,7 @@ bin/
 .DS_Store
 /.env
 /src/test/
+/oidc/vendor/
+
+/im/vendor/
+!/im/ent/schema/**
