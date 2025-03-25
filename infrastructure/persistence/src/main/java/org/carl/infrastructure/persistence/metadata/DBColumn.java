@@ -13,9 +13,8 @@ public class DBColumn {
     private boolean primaryKey;
     private boolean sequence;
 
-    // 使用正则表达式来匹配单引号之间的内容
-    private static String regex = "'([^']*)'";
-    private static Pattern pattern = Pattern.compile(regex);
+    private static final String regex = "'([^']*)'";
+    private static final Pattern pattern = Pattern.compile(regex);
 
     public String getName() {
         return name;
@@ -100,10 +99,9 @@ public class DBColumn {
         }
 
         Matcher matcher = pattern.matcher(input);
-        // 查找并返回匹配的内容
         if (matcher.find()) {
-            return matcher.group(1); // 返回第一个括号中的匹配结果
+            return matcher.group(1);
         }
-        return input; // 如果没有匹配的内容，返回 null
+        return input;
     }
 }

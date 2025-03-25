@@ -4,10 +4,12 @@ import jakarta.annotation.Priority;
 import jakarta.interceptor.AroundInvoke;
 import jakarta.interceptor.Interceptor;
 import jakarta.interceptor.InvocationContext;
+import org.carl.infrastructure.annotations.Logged;
 import org.jboss.logging.Logger;
 
 @Priority(2020)
 @Interceptor
+@Logged
 public class LoggingInterceptor {
 
     private final Logger log = Logger.getLogger(LoggingInterceptor.class);
