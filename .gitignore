@@ -43,3 +43,4 @@ bin/
 
 /im/vendor/
 !/im/ent/schema/**
+/im/ent/
