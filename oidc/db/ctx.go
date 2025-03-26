@@ -19,7 +19,7 @@ var (
 	//databaseUsername = os.Getenv("DATABASE_USERNAME")
 	//databasePassword = os.Getenv("DATABASE_PASSWORD")
 	//databaseDbname   = os.Getenv("DATABASE_DBNAME")
-	databaseUrl = If(os.Getenv("DATABASE_URL") == "", "postgresql://root:root@192.168.111.34:15432/db", os.Getenv("DATABASE_URL")).(string) //postgresql://user:password@127.0.0.1/database
+	databaseUrl = If(os.Getenv("DATABASE_URL") == "", "postgresql://root:root@127.0.0.1:15432/db", os.Getenv("DATABASE_URL")).(string) //postgresql://user:password@127.0.0.1/database
 )
 
 func If(condition bool, trueVal, falseVal interface{}) interface{} {
