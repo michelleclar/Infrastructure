@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"oidc/ent/internal"
 	"oidc/ent/oidcprovider"
 	"oidc/ent/predicate"
 
@@ -41,6 +42,8 @@ func (opd *OidcProviderDelete) ExecX(ctx context.Context) int {
 
 func (opd *OidcProviderDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(oidcprovider.Table, sqlgraph.NewFieldSpec(oidcprovider.FieldID, field.TypeInt))
+	_spec.Node.Schema = opd.schemaConfig.OidcProvider
+	ctx = internal.NewSchemaConfigContext(ctx, opd.schemaConfig)
 	if ps := opd.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {

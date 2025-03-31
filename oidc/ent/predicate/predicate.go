@@ -8,9 +8,3 @@ import (
 
 // OidcProvider is the predicate function for oidcprovider builders.
 type OidcProvider func(*sql.Selector)
-
-// Pet is the predicate function for pet builders.
-type Pet func(*sql.Selector)
-
-// User is the predicate function for user builders.
-type User func(*sql.Selector)

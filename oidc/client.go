@@ -4,16 +4,18 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
-	"golang.org/x/net/context"
-	"golang.org/x/oauth2"
 	"io"
 	"net/http"
 	"oidc/core"
 	"oidc/db"
-	log "oidc/log"
 	"oidc/utils"
 	"strings"
 	"time"
+
+	"golang.org/x/net/context"
+	"golang.org/x/oauth2"
+
+	log "oidc/log"
 )
 
 // 1:context 2: oidc provider 3: verifier 4: auth2 client
@@ -48,7 +50,6 @@ func init() {
 		}
 		// create oidc provider
 		provider, err := core.NewProvider(_ctx, oidc.Issuer)
-
 		if err != nil {
 			log.Warn(ctx).Err(err).Msgf("init failed %v error detail %v", oidc.Issuer, err)
 			continue
@@ -62,7 +63,7 @@ func init() {
 		if err := provider.Claims(&p); err != nil {
 			log.Info(ctx).Msgf("Failed to fetch claims for %s: %v", oidc.Issuer, err)
 		}
-		//TODO: `ip port` read by env
+		// TODO: `ip port` read by env
 		redirectUrl := "http://127.0.0.1:5556/oidc/callback" + "?platform=" + oidc.OidcProviderName
 		config := oauth2.Config{
 			ClientID:     oidc.ClientID,
@@ -79,7 +80,6 @@ func init() {
 			config:   &config,
 		}
 	}
-
 }
 
 func randString(nByte int) (string, error) {
@@ -88,7 +88,7 @@ func randString(nByte int) (string, error) {
 		return "", err
 	}
 	return fmt.Sprintf("%x", b), nil
-	//return base64.RawURLEncoding.EncodeToString(b), nil
+	// return base64.RawURLEncoding.EncodeToString(b), nil
 }
 
 func setCallbackCookie(w http.ResponseWriter, r *http.Request, name, value string) {
@@ -104,7 +104,6 @@ func setCallbackCookie(w http.ResponseWriter, r *http.Request, name, value strin
 }
 
 func main() {
-
 	http.HandleFunc("/oidc", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
@@ -220,5 +219,5 @@ func main() {
 
 	log.Info(context.Background()).Msgf("listening on http://%s/", "127.0.0.1:5556")
 	log.Fatal(context.Background()).Err(http.ListenAndServe("127.0.0.1:5556", nil))
-	//log.Fatal(http.ListenAndServeTLS("127.0.0.1:5556", "server.crt", "server.key", nil))
+	// log.Fatal(http.ListenAndServeTLS("127.0.0.1:5556", "server.crt", "server.key", nil))
 }

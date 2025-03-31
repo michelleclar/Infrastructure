@@ -135,54 +135,6 @@ func (f OidcProviderMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mu
 	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.OidcProviderMutation", m)
 }
 
-// The PetQueryRuleFunc type is an adapter to allow the use of ordinary
-// functions as a query rule.
-type PetQueryRuleFunc func(context.Context, *ent.PetQuery) error
-
-// EvalQuery return f(ctx, q).
-func (f PetQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
-	if q, ok := q.(*ent.PetQuery); ok {
-		return f(ctx, q)
-	}
-	return Denyf("ent/privacy: unexpected query type %T, expect *ent.PetQuery", q)
-}
-
-// The PetMutationRuleFunc type is an adapter to allow the use of ordinary
-// functions as a mutation rule.
-type PetMutationRuleFunc func(context.Context, *ent.PetMutation) error
-
-// EvalMutation calls f(ctx, m).
-func (f PetMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
-	if m, ok := m.(*ent.PetMutation); ok {
-		return f(ctx, m)
-	}
-	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.PetMutation", m)
-}
-
-// The UserQueryRuleFunc type is an adapter to allow the use of ordinary
-// functions as a query rule.
-type UserQueryRuleFunc func(context.Context, *ent.UserQuery) error
-
-// EvalQuery return f(ctx, q).
-func (f UserQueryRuleFunc) EvalQuery(ctx context.Context, q ent.Query) error {
-	if q, ok := q.(*ent.UserQuery); ok {
-		return f(ctx, q)
-	}
-	return Denyf("ent/privacy: unexpected query type %T, expect *ent.UserQuery", q)
-}
-
-// The UserMutationRuleFunc type is an adapter to allow the use of ordinary
-// functions as a mutation rule.
-type UserMutationRuleFunc func(context.Context, *ent.UserMutation) error
-
-// EvalMutation calls f(ctx, m).
-func (f UserMutationRuleFunc) EvalMutation(ctx context.Context, m ent.Mutation) error {
-	if m, ok := m.(*ent.UserMutation); ok {
-		return f(ctx, m)
-	}
-	return Denyf("ent/privacy: unexpected mutation type %T, expect *ent.UserMutation", m)
-}
-
 type (
 	// Filter is the interface that wraps the Where function
 	// for filtering nodes in queries and mutations.
@@ -220,10 +172,6 @@ func queryFilter(q ent.Query) (Filter, error) {
 	switch q := q.(type) {
 	case *ent.OidcProviderQuery:
 		return q.Filter(), nil
-	case *ent.PetQuery:
-		return q.Filter(), nil
-	case *ent.UserQuery:
-		return q.Filter(), nil
 	default:
 		return nil, Denyf("ent/privacy: unexpected query type %T for query filter", q)
 	}
@@ -232,10 +180,6 @@ func queryFilter(q ent.Query) (Filter, error) {
 func mutationFilter(m ent.Mutation) (Filter, error) {
 	switch m := m.(type) {
 	case *ent.OidcProviderMutation:
-		return m.Filter(), nil
-	case *ent.PetMutation:
-		return m.Filter(), nil
-	case *ent.UserMutation:
 		return m.Filter(), nil
 	default:
 		return nil, Denyf("ent/privacy: unexpected mutation type %T for mutation filter", m)

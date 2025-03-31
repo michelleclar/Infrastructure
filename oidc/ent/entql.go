@@ -4,8 +4,6 @@ package ent
 
 import (
 	"oidc/ent/oidcprovider"
-	"oidc/ent/pet"
-	"oidc/ent/user"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -15,7 +13,7 @@ import (
 
 // schemaGraph holds a representation of ent/schema at runtime.
 var schemaGraph = func() *sqlgraph.Schema {
-	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 3)}
+	graph := &sqlgraph.Schema{Nodes: make([]*sqlgraph.Node, 1)}
 	graph.Nodes[0] = &sqlgraph.Node{
 		NodeSpec: sqlgraph.NodeSpec{
 			Table:   oidcprovider.Table,
@@ -36,36 +34,6 @@ var schemaGraph = func() *sqlgraph.Schema {
 			oidcprovider.FieldClientSecret:            {Type: field.TypeString, Column: oidcprovider.FieldClientSecret},
 			oidcprovider.FieldRedirectURI:             {Type: field.TypeString, Column: oidcprovider.FieldRedirectURI},
 			oidcprovider.FieldEndpoints:               {Type: field.TypeJSON, Column: oidcprovider.FieldEndpoints},
-		},
-	}
-	graph.Nodes[1] = &sqlgraph.Node{
-		NodeSpec: sqlgraph.NodeSpec{
-			Table:   pet.Table,
-			Columns: pet.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: pet.FieldID,
-			},
-		},
-		Type: "Pet",
-		Fields: map[string]*sqlgraph.FieldSpec{
-			pet.FieldPetID: {Type: field.TypeInt32, Column: pet.FieldPetID},
-		},
-	}
-	graph.Nodes[2] = &sqlgraph.Node{
-		NodeSpec: sqlgraph.NodeSpec{
-			Table:   user.Table,
-			Columns: user.Columns,
-			ID: &sqlgraph.FieldSpec{
-				Type:   field.TypeInt,
-				Column: user.FieldID,
-			},
-		},
-		Type: "User",
-		Fields: map[string]*sqlgraph.FieldSpec{
-			user.FieldUserID: {Type: field.TypeInt64, Column: user.FieldUserID},
-			user.FieldAge:    {Type: field.TypeInt, Column: user.FieldAge},
-			user.FieldName:   {Type: field.TypeString, Column: user.FieldName},
 		},
 	}
 	return graph
@@ -160,104 +128,4 @@ func (f *OidcProviderFilter) WhereRedirectURI(p entql.StringP) {
 // WhereEndpoints applies the entql json.RawMessage predicate on the endpoints field.
 func (f *OidcProviderFilter) WhereEndpoints(p entql.BytesP) {
 	f.Where(p.Field(oidcprovider.FieldEndpoints))
-}
-
-// addPredicate implements the predicateAdder interface.
-func (pq *PetQuery) addPredicate(pred func(s *sql.Selector)) {
-	pq.predicates = append(pq.predicates, pred)
-}
-
-// Filter returns a Filter implementation to apply filters on the PetQuery builder.
-func (pq *PetQuery) Filter() *PetFilter {
-	return &PetFilter{config: pq.config, predicateAdder: pq}
-}
-
-// addPredicate implements the predicateAdder interface.
-func (m *PetMutation) addPredicate(pred func(s *sql.Selector)) {
-	m.predicates = append(m.predicates, pred)
-}
-
-// Filter returns an entql.Where implementation to apply filters on the PetMutation builder.
-func (m *PetMutation) Filter() *PetFilter {
-	return &PetFilter{config: m.config, predicateAdder: m}
-}
-
-// PetFilter provides a generic filtering capability at runtime for PetQuery.
-type PetFilter struct {
-	predicateAdder
-	config
-}
-
-// Where applies the entql predicate on the query filter.
-func (f *PetFilter) Where(p entql.P) {
-	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[1].Type, p, s); err != nil {
-			s.AddError(err)
-		}
-	})
-}
-
-// WhereID applies the entql int predicate on the id field.
-func (f *PetFilter) WhereID(p entql.IntP) {
-	f.Where(p.Field(pet.FieldID))
-}
-
-// WherePetID applies the entql int32 predicate on the pet_id field.
-func (f *PetFilter) WherePetID(p entql.Int32P) {
-	f.Where(p.Field(pet.FieldPetID))
-}
-
-// addPredicate implements the predicateAdder interface.
-func (uq *UserQuery) addPredicate(pred func(s *sql.Selector)) {
-	uq.predicates = append(uq.predicates, pred)
-}
-
-// Filter returns a Filter implementation to apply filters on the UserQuery builder.
-func (uq *UserQuery) Filter() *UserFilter {
-	return &UserFilter{config: uq.config, predicateAdder: uq}
-}
-
-// addPredicate implements the predicateAdder interface.
-func (m *UserMutation) addPredicate(pred func(s *sql.Selector)) {
-	m.predicates = append(m.predicates, pred)
-}
-
-// Filter returns an entql.Where implementation to apply filters on the UserMutation builder.
-func (m *UserMutation) Filter() *UserFilter {
-	return &UserFilter{config: m.config, predicateAdder: m}
-}
-
-// UserFilter provides a generic filtering capability at runtime for UserQuery.
-type UserFilter struct {
-	predicateAdder
-	config
-}
-
-// Where applies the entql predicate on the query filter.
-func (f *UserFilter) Where(p entql.P) {
-	f.addPredicate(func(s *sql.Selector) {
-		if err := schemaGraph.EvalP(schemaGraph.Nodes[2].Type, p, s); err != nil {
-			s.AddError(err)
-		}
-	})
-}
-
-// WhereID applies the entql int predicate on the id field.
-func (f *UserFilter) WhereID(p entql.IntP) {
-	f.Where(p.Field(user.FieldID))
-}
-
-// WhereUserID applies the entql int64 predicate on the user_id field.
-func (f *UserFilter) WhereUserID(p entql.Int64P) {
-	f.Where(p.Field(user.FieldUserID))
-}
-
-// WhereAge applies the entql int predicate on the age field.
-func (f *UserFilter) WhereAge(p entql.IntP) {
-	f.Where(p.Field(user.FieldAge))
-}
-
-// WhereName applies the entql string predicate on the name field.
-func (f *UserFilter) WhereName(p entql.StringP) {
-	f.Where(p.Field(user.FieldName))
 }

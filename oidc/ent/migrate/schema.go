@@ -3,68 +3,46 @@
 package migrate
 
 import (
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/dialect/sql/schema"
 	"entgo.io/ent/schema/field"
 )
 
 var (
-	// OidcProvidersColumns holds the columns for the "oidc_providers" table.
-	OidcProvidersColumns = []*schema.Column{
+	// OidcProviderColumns holds the columns for the "oidc provider" table.
+	OidcProviderColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "oidc_provider_id", Type: field.TypeInt64, Unique: true},
-		{Name: "oidc_provider_name", Type: field.TypeString, Default: "unknown"},
-		{Name: "oidc_provider_description", Type: field.TypeString, Nullable: true},
-		{Name: "issuer", Type: field.TypeString},
-		{Name: "proxy_url", Type: field.TypeString, Nullable: true},
-		{Name: "client_id", Type: field.TypeString},
-		{Name: "client_secret", Type: field.TypeString},
-		{Name: "redirect_uri", Type: field.TypeString},
-		{Name: "endpoints", Type: field.TypeJSON, Nullable: true},
+		{Name: "oidc_provider_id", Type: field.TypeInt64, Unique: true, Comment: "OidcProvider ID"},
+		{Name: "oidc_provider_name", Type: field.TypeString, Comment: "OidcProvider Name", Default: "unknown"},
+		{Name: "oidc_provider_description", Type: field.TypeString, Nullable: true, Comment: "OidcProvider Description"},
+		{Name: "issuer", Type: field.TypeString, Comment: "issuer"},
+		{Name: "proxy_url", Type: field.TypeString, Nullable: true, Comment: "proxy URL"},
+		{Name: "client_id", Type: field.TypeString, Comment: "Client ID"},
+		{Name: "client_secret", Type: field.TypeString, Comment: "Client Secret"},
+		{Name: "redirect_uri", Type: field.TypeString, Comment: "Redirect URI"},
+		{Name: "endpoints", Type: field.TypeJSON, Nullable: true, Comment: "OidcProvider Endpoints"},
 	}
-	// OidcProvidersTable holds the schema information for the "oidc_providers" table.
-	OidcProvidersTable = &schema.Table{
-		Name:       "oidc_providers",
-		Columns:    OidcProvidersColumns,
-		PrimaryKey: []*schema.Column{OidcProvidersColumns[0]},
+	// OidcProviderTable holds the schema information for the "oidc provider" table.
+	OidcProviderTable = &schema.Table{
+		Name:       "oidc provider",
+		Columns:    OidcProviderColumns,
+		PrimaryKey: []*schema.Column{OidcProviderColumns[0]},
 		Indexes: []*schema.Index{
 			{
 				Name:    "oidcprovider_oidc_provider_id",
 				Unique:  true,
-				Columns: []*schema.Column{OidcProvidersColumns[1]},
+				Columns: []*schema.Column{OidcProviderColumns[1]},
 			},
 		},
 	}
-	// PetsColumns holds the columns for the "pets" table.
-	PetsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "pet_id", Type: field.TypeInt32, Unique: true},
-	}
-	// PetsTable holds the schema information for the "pets" table.
-	PetsTable = &schema.Table{
-		Name:       "pets",
-		Columns:    PetsColumns,
-		PrimaryKey: []*schema.Column{PetsColumns[0]},
-	}
-	// UsersColumns holds the columns for the "users" table.
-	UsersColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "user_id", Type: field.TypeInt64, Unique: true},
-		{Name: "age", Type: field.TypeInt},
-		{Name: "name", Type: field.TypeString, Default: "unknown"},
-	}
-	// UsersTable holds the schema information for the "users" table.
-	UsersTable = &schema.Table{
-		Name:       "users",
-		Columns:    UsersColumns,
-		PrimaryKey: []*schema.Column{UsersColumns[0]},
-	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
-		OidcProvidersTable,
-		PetsTable,
-		UsersTable,
+		OidcProviderTable,
 	}
 )
 
 func init() {
+	OidcProviderTable.Annotation = &entsql.Annotation{
+		Table: "oidc provider",
+	}
 }

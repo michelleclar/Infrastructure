@@ -2,13 +2,14 @@ package db
 
 import (
 	"database/sql"
-	"entgo.io/ent/dialect"
-	entsql "entgo.io/ent/dialect/sql"
 	"fmt"
-	_ "github.com/jackc/pgx/v5/stdlib"
 	"oidc/ent"
 	"os"
 	"time"
+
+	"entgo.io/ent/dialect"
+	entsql "entgo.io/ent/dialect/sql"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 var db *sql.DB
@@ -50,7 +51,10 @@ func getDB() *sql.DB {
 func getClient() *ent.Client {
 	db := getDB()
 	drv := entsql.OpenDB(dialect.Postgres, db)
-	return ent.NewClient(ent.Driver(drv))
+	schema := ent.AlternateSchema(ent.SchemaConfig{
+		OidcProvider: "oidc",
+	})
+	return ent.NewClient(ent.Driver(drv), schema)
 }
 
 func Ctx() *ent.Client {
@@ -58,22 +62,3 @@ func Ctx() *ent.Client {
 	return client.Debug()
 	//return client
 }
-
-//
-//func ProcessString(str string, vars interface{}) string {
-//	tmpl, err := template.New("tmpl").Parse(str)
-//
-//	if err != nil {
-//		panic(err)
-//	}
-//	return process(tmpl, vars)
-//}
-//func process(t *template.Template, vars interface{}) string {
-//	var tmplBytes bytes.Buffer
-//
-//	err := t.Execute(&tmplBytes, vars)
-//	if err != nil {
-//		panic(err)
-//	}
-//	return tmplBytes.String()
-//}

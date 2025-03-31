@@ -1,10 +1,13 @@
 package schema
 
 import (
+	"time"
+
 	"entgo.io/ent"
+	"entgo.io/ent/dialect/entsql"
+	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
-	"time"
 )
 
 // OidcProvider holds the schema definition for the OidcProvider entity.
@@ -28,6 +31,15 @@ func (OidcProvider) Fields() []ent.Field {
 		// TODO: need sport many redirect
 		field.String("redirect_uri").Comment("Redirect URI"),
 		field.Strings("endpoints").Comment("OidcProvider Endpoints").Optional(),
+	}
+}
+
+// Annotations of the OidcProvider.
+func (OidcProvider) Annotations() []schema.Annotation {
+	return []schema.Annotation{
+		entsql.Annotation{Table: "oidc provider", Schema: "oidc"},
+		entsql.Schema("oidc"),
+		entsql.WithComments(true),
 	}
 }
 

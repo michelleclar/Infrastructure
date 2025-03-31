@@ -22,7 +22,7 @@ public class LimitInterceptor extends CacheStd {
     @Inject HttpServerRequest request;
 
     @AroundInvoke
-    Object limitingInvocation(InvocationContext ctx) {
+    Object limitingInvocation(InvocationContext ctx) throws InterruptedException {
         String host = request.remoteAddress().host();
         if (!"127.0.0.1".equals(host)) {
             Object ifPresent = getCacheContext().localCacheContext.get(host).await().indefinitely();
@@ -30,7 +30,7 @@ public class LimitInterceptor extends CacheStd {
             if (!Objects.isNull(ifPresent)) {
                 return Uni.createFrom().item(Response.status(StatusType.ERROR_DUPLICATE).build());
             }
-            getCacheContext().localCacheContext.set(host, host);
+            getCacheContext().localCacheContext.set(host, host).subscribe().wait();
         }
 
         try {

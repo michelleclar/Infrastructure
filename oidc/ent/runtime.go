@@ -5,7 +5,6 @@ package ent
 import (
 	"oidc/ent/oidcprovider"
 	"oidc/ent/schema"
-	"oidc/ent/user"
 )
 
 // The init function reads all schema descriptors with runtime code
@@ -26,18 +25,4 @@ func init() {
 	oidcproviderDescIssuer := oidcproviderFields[3].Descriptor()
 	// oidcprovider.IssuerValidator is a validator for the "issuer" field. It is called by the builders before save.
 	oidcprovider.IssuerValidator = oidcproviderDescIssuer.Validators[0].(func(string) error)
-	userFields := schema.User{}.Fields()
-	_ = userFields
-	// userDescUserID is the schema descriptor for user_id field.
-	userDescUserID := userFields[0].Descriptor()
-	// user.DefaultUserID holds the default value on creation for the user_id field.
-	user.DefaultUserID = userDescUserID.Default.(func() int64)
-	// userDescAge is the schema descriptor for age field.
-	userDescAge := userFields[1].Descriptor()
-	// user.AgeValidator is a validator for the "age" field. It is called by the builders before save.
-	user.AgeValidator = userDescAge.Validators[0].(func(int) error)
-	// userDescName is the schema descriptor for name field.
-	userDescName := userFields[2].Descriptor()
-	// user.DefaultName holds the default value on creation for the name field.
-	user.DefaultName = userDescName.Default.(string)
 }

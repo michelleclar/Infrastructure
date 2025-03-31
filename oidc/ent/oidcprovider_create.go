@@ -203,6 +203,7 @@ func (opc *OidcProviderCreate) createSpec() (*OidcProvider, *sqlgraph.CreateSpec
 		_node = &OidcProvider{config: opc.config}
 		_spec = sqlgraph.NewCreateSpec(oidcprovider.Table, sqlgraph.NewFieldSpec(oidcprovider.FieldID, field.TypeInt))
 	)
+	_spec.Schema = opc.schemaConfig.OidcProvider
 	_spec.OnConflict = opc.conflict
 	if value, ok := opc.mutation.OidcProviderID(); ok {
 		_spec.SetField(oidcprovider.FieldOidcProviderID, field.TypeInt64, value)
@@ -291,24 +292,6 @@ type (
 		*sql.UpdateSet
 	}
 )
-
-// SetOidcProviderID sets the "oidc_provider_id" field.
-func (u *OidcProviderUpsert) SetOidcProviderID(v int64) *OidcProviderUpsert {
-	u.Set(oidcprovider.FieldOidcProviderID, v)
-	return u
-}
-
-// UpdateOidcProviderID sets the "oidc_provider_id" field to the value that was provided on create.
-func (u *OidcProviderUpsert) UpdateOidcProviderID() *OidcProviderUpsert {
-	u.SetExcluded(oidcprovider.FieldOidcProviderID)
-	return u
-}
-
-// AddOidcProviderID adds v to the "oidc_provider_id" field.
-func (u *OidcProviderUpsert) AddOidcProviderID(v int64) *OidcProviderUpsert {
-	u.Add(oidcprovider.FieldOidcProviderID, v)
-	return u
-}
 
 // SetOidcProviderName sets the "oidc_provider_name" field.
 func (u *OidcProviderUpsert) SetOidcProviderName(v string) *OidcProviderUpsert {
@@ -434,6 +417,11 @@ func (u *OidcProviderUpsert) ClearEndpoints() *OidcProviderUpsert {
 //		Exec(ctx)
 func (u *OidcProviderUpsertOne) UpdateNewValues() *OidcProviderUpsertOne {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		if _, exists := u.create.mutation.OidcProviderID(); exists {
+			s.SetIgnore(oidcprovider.FieldOidcProviderID)
+		}
+	}))
 	return u
 }
 
@@ -462,27 +450,6 @@ func (u *OidcProviderUpsertOne) Update(set func(*OidcProviderUpsert)) *OidcProvi
 		set(&OidcProviderUpsert{UpdateSet: update})
 	}))
 	return u
-}
-
-// SetOidcProviderID sets the "oidc_provider_id" field.
-func (u *OidcProviderUpsertOne) SetOidcProviderID(v int64) *OidcProviderUpsertOne {
-	return u.Update(func(s *OidcProviderUpsert) {
-		s.SetOidcProviderID(v)
-	})
-}
-
-// AddOidcProviderID adds v to the "oidc_provider_id" field.
-func (u *OidcProviderUpsertOne) AddOidcProviderID(v int64) *OidcProviderUpsertOne {
-	return u.Update(func(s *OidcProviderUpsert) {
-		s.AddOidcProviderID(v)
-	})
-}
-
-// UpdateOidcProviderID sets the "oidc_provider_id" field to the value that was provided on create.
-func (u *OidcProviderUpsertOne) UpdateOidcProviderID() *OidcProviderUpsertOne {
-	return u.Update(func(s *OidcProviderUpsert) {
-		s.UpdateOidcProviderID()
-	})
 }
 
 // SetOidcProviderName sets the "oidc_provider_name" field.
@@ -792,6 +759,13 @@ type OidcProviderUpsertBulk struct {
 //		Exec(ctx)
 func (u *OidcProviderUpsertBulk) UpdateNewValues() *OidcProviderUpsertBulk {
 	u.create.conflict = append(u.create.conflict, sql.ResolveWithNewValues())
+	u.create.conflict = append(u.create.conflict, sql.ResolveWith(func(s *sql.UpdateSet) {
+		for _, b := range u.create.builders {
+			if _, exists := b.mutation.OidcProviderID(); exists {
+				s.SetIgnore(oidcprovider.FieldOidcProviderID)
+			}
+		}
+	}))
 	return u
 }
 
@@ -820,27 +794,6 @@ func (u *OidcProviderUpsertBulk) Update(set func(*OidcProviderUpsert)) *OidcProv
 		set(&OidcProviderUpsert{UpdateSet: update})
 	}))
 	return u
-}
-
-// SetOidcProviderID sets the "oidc_provider_id" field.
-func (u *OidcProviderUpsertBulk) SetOidcProviderID(v int64) *OidcProviderUpsertBulk {
-	return u.Update(func(s *OidcProviderUpsert) {
-		s.SetOidcProviderID(v)
-	})
-}
-
-// AddOidcProviderID adds v to the "oidc_provider_id" field.
-func (u *OidcProviderUpsertBulk) AddOidcProviderID(v int64) *OidcProviderUpsertBulk {
-	return u.Update(func(s *OidcProviderUpsert) {
-		s.AddOidcProviderID(v)
-	})
-}
-
-// UpdateOidcProviderID sets the "oidc_provider_id" field to the value that was provided on create.
-func (u *OidcProviderUpsertBulk) UpdateOidcProviderID() *OidcProviderUpsertBulk {
-	return u.Update(func(s *OidcProviderUpsert) {
-		s.UpdateOidcProviderID()
-	})
 }
 
 // SetOidcProviderName sets the "oidc_provider_name" field.

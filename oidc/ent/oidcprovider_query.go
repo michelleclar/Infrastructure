@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"oidc/ent/internal"
 	"oidc/ent/oidcprovider"
 	"oidc/ent/predicate"
 
@@ -345,6 +346,8 @@ func (opq *OidcProviderQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 		nodes = append(nodes, node)
 		return node.assignValues(columns, values)
 	}
+	_spec.Node.Schema = opq.schemaConfig.OidcProvider
+	ctx = internal.NewSchemaConfigContext(ctx, opq.schemaConfig)
 	if len(opq.modifiers) > 0 {
 		_spec.Modifiers = opq.modifiers
 	}
@@ -362,6 +365,8 @@ func (opq *OidcProviderQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 
 func (opq *OidcProviderQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := opq.querySpec()
+	_spec.Node.Schema = opq.schemaConfig.OidcProvider
+	ctx = internal.NewSchemaConfigContext(ctx, opq.schemaConfig)
 	if len(opq.modifiers) > 0 {
 		_spec.Modifiers = opq.modifiers
 	}
@@ -427,6 +432,9 @@ func (opq *OidcProviderQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	if opq.ctx.Unique != nil && *opq.ctx.Unique {
 		selector.Distinct()
 	}
+	t1.Schema(opq.schemaConfig.OidcProvider)
+	ctx = internal.NewSchemaConfigContext(ctx, opq.schemaConfig)
+	selector.WithContext(ctx)
 	for _, m := range opq.modifiers {
 		m(selector)
 	}

@@ -7,8 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"oidc/ent/oidcprovider"
-	"oidc/ent/pet"
-	"oidc/ent/user"
 	"reflect"
 	"sync"
 
@@ -76,8 +74,6 @@ func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			oidcprovider.Table: oidcprovider.ValidColumn,
-			pet.Table:          pet.ValidColumn,
-			user.Table:         user.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

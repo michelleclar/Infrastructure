@@ -12,12 +12,12 @@ import (
 	"oidc/ent/migrate"
 
 	"oidc/ent/oidcprovider"
-	"oidc/ent/pet"
-	"oidc/ent/user"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
+
+	"oidc/ent/internal"
 )
 
 // Client is the client that holds all ent builders.
@@ -27,10 +27,6 @@ type Client struct {
 	Schema *migrate.Schema
 	// OidcProvider is the client for interacting with the OidcProvider builders.
 	OidcProvider *OidcProviderClient
-	// Pet is the client for interacting with the Pet builders.
-	Pet *PetClient
-	// User is the client for interacting with the User builders.
-	User *UserClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -43,8 +39,6 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.OidcProvider = NewOidcProviderClient(c.config)
-	c.Pet = NewPetClient(c.config)
-	c.User = NewUserClient(c.config)
 }
 
 type (
@@ -60,6 +54,8 @@ type (
 		hooks *hooks
 		// interceptors to execute on queries.
 		inters *inters
+		// schemaConfig contains alternative names for all tables.
+		schemaConfig SchemaConfig
 	}
 	// Option function to configure the client.
 	Option func(*config)
@@ -68,6 +64,7 @@ type (
 // newConfig creates a new config for the client.
 func newConfig(opts ...Option) config {
 	cfg := config{log: log.Println, hooks: &hooks{}, inters: &inters{}}
+	cfg.schemaConfig = DefaultSchemaConfig
 	cfg.options(opts...)
 	return cfg
 }
@@ -138,8 +135,6 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ctx:          ctx,
 		config:       cfg,
 		OidcProvider: NewOidcProviderClient(cfg),
-		Pet:          NewPetClient(cfg),
-		User:         NewUserClient(cfg),
 	}, nil
 }
 
@@ -160,8 +155,6 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ctx:          ctx,
 		config:       cfg,
 		OidcProvider: NewOidcProviderClient(cfg),
-		Pet:          NewPetClient(cfg),
-		User:         NewUserClient(cfg),
 	}, nil
 }
 
@@ -191,16 +184,12 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	c.OidcProvider.Use(hooks...)
-	c.Pet.Use(hooks...)
-	c.User.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	c.OidcProvider.Intercept(interceptors...)
-	c.Pet.Intercept(interceptors...)
-	c.User.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -208,10 +197,6 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *OidcProviderMutation:
 		return c.OidcProvider.mutate(ctx, m)
-	case *PetMutation:
-		return c.Pet.mutate(ctx, m)
-	case *UserMutation:
-		return c.User.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -350,278 +335,32 @@ func (c *OidcProviderClient) mutate(ctx context.Context, m *OidcProviderMutation
 	}
 }
 
-// PetClient is a client for the Pet schema.
-type PetClient struct {
-	config
-}
-
-// NewPetClient returns a client for the Pet from the given config.
-func NewPetClient(c config) *PetClient {
-	return &PetClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `pet.Hooks(f(g(h())))`.
-func (c *PetClient) Use(hooks ...Hook) {
-	c.hooks.Pet = append(c.hooks.Pet, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `pet.Intercept(f(g(h())))`.
-func (c *PetClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Pet = append(c.inters.Pet, interceptors...)
-}
-
-// Create returns a builder for creating a Pet entity.
-func (c *PetClient) Create() *PetCreate {
-	mutation := newPetMutation(c.config, OpCreate)
-	return &PetCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of Pet entities.
-func (c *PetClient) CreateBulk(builders ...*PetCreate) *PetCreateBulk {
-	return &PetCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *PetClient) MapCreateBulk(slice any, setFunc func(*PetCreate, int)) *PetCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &PetCreateBulk{err: fmt.Errorf("calling to PetClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*PetCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &PetCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for Pet.
-func (c *PetClient) Update() *PetUpdate {
-	mutation := newPetMutation(c.config, OpUpdate)
-	return &PetUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *PetClient) UpdateOne(pe *Pet) *PetUpdateOne {
-	mutation := newPetMutation(c.config, OpUpdateOne, withPet(pe))
-	return &PetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *PetClient) UpdateOneID(id int) *PetUpdateOne {
-	mutation := newPetMutation(c.config, OpUpdateOne, withPetID(id))
-	return &PetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for Pet.
-func (c *PetClient) Delete() *PetDelete {
-	mutation := newPetMutation(c.config, OpDelete)
-	return &PetDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *PetClient) DeleteOne(pe *Pet) *PetDeleteOne {
-	return c.DeleteOneID(pe.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *PetClient) DeleteOneID(id int) *PetDeleteOne {
-	builder := c.Delete().Where(pet.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &PetDeleteOne{builder}
-}
-
-// Query returns a query builder for Pet.
-func (c *PetClient) Query() *PetQuery {
-	return &PetQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypePet},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a Pet entity by its id.
-func (c *PetClient) Get(ctx context.Context, id int) (*Pet, error) {
-	return c.Query().Where(pet.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *PetClient) GetX(ctx context.Context, id int) *Pet {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// Hooks returns the client hooks.
-func (c *PetClient) Hooks() []Hook {
-	return c.hooks.Pet
-}
-
-// Interceptors returns the client interceptors.
-func (c *PetClient) Interceptors() []Interceptor {
-	return c.inters.Pet
-}
-
-func (c *PetClient) mutate(ctx context.Context, m *PetMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&PetCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&PetUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&PetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&PetDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown Pet mutation op: %q", m.Op())
-	}
-}
-
-// UserClient is a client for the User schema.
-type UserClient struct {
-	config
-}
-
-// NewUserClient returns a client for the User from the given config.
-func NewUserClient(c config) *UserClient {
-	return &UserClient{config: c}
-}
-
-// Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `user.Hooks(f(g(h())))`.
-func (c *UserClient) Use(hooks ...Hook) {
-	c.hooks.User = append(c.hooks.User, hooks...)
-}
-
-// Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `user.Intercept(f(g(h())))`.
-func (c *UserClient) Intercept(interceptors ...Interceptor) {
-	c.inters.User = append(c.inters.User, interceptors...)
-}
-
-// Create returns a builder for creating a User entity.
-func (c *UserClient) Create() *UserCreate {
-	mutation := newUserMutation(c.config, OpCreate)
-	return &UserCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// CreateBulk returns a builder for creating a bulk of User entities.
-func (c *UserClient) CreateBulk(builders ...*UserCreate) *UserCreateBulk {
-	return &UserCreateBulk{config: c.config, builders: builders}
-}
-
-// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
-// a builder and applies setFunc on it.
-func (c *UserClient) MapCreateBulk(slice any, setFunc func(*UserCreate, int)) *UserCreateBulk {
-	rv := reflect.ValueOf(slice)
-	if rv.Kind() != reflect.Slice {
-		return &UserCreateBulk{err: fmt.Errorf("calling to UserClient.MapCreateBulk with wrong type %T, need slice", slice)}
-	}
-	builders := make([]*UserCreate, rv.Len())
-	for i := 0; i < rv.Len(); i++ {
-		builders[i] = c.Create()
-		setFunc(builders[i], i)
-	}
-	return &UserCreateBulk{config: c.config, builders: builders}
-}
-
-// Update returns an update builder for User.
-func (c *UserClient) Update() *UserUpdate {
-	mutation := newUserMutation(c.config, OpUpdate)
-	return &UserUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOne returns an update builder for the given entity.
-func (c *UserClient) UpdateOne(u *User) *UserUpdateOne {
-	mutation := newUserMutation(c.config, OpUpdateOne, withUser(u))
-	return &UserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// UpdateOneID returns an update builder for the given id.
-func (c *UserClient) UpdateOneID(id int) *UserUpdateOne {
-	mutation := newUserMutation(c.config, OpUpdateOne, withUserID(id))
-	return &UserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// Delete returns a delete builder for User.
-func (c *UserClient) Delete() *UserDelete {
-	mutation := newUserMutation(c.config, OpDelete)
-	return &UserDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
-}
-
-// DeleteOne returns a builder for deleting the given entity.
-func (c *UserClient) DeleteOne(u *User) *UserDeleteOne {
-	return c.DeleteOneID(u.ID)
-}
-
-// DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *UserClient) DeleteOneID(id int) *UserDeleteOne {
-	builder := c.Delete().Where(user.ID(id))
-	builder.mutation.id = &id
-	builder.mutation.op = OpDeleteOne
-	return &UserDeleteOne{builder}
-}
-
-// Query returns a query builder for User.
-func (c *UserClient) Query() *UserQuery {
-	return &UserQuery{
-		config: c.config,
-		ctx:    &QueryContext{Type: TypeUser},
-		inters: c.Interceptors(),
-	}
-}
-
-// Get returns a User entity by its id.
-func (c *UserClient) Get(ctx context.Context, id int) (*User, error) {
-	return c.Query().Where(user.ID(id)).Only(ctx)
-}
-
-// GetX is like Get, but panics if an error occurs.
-func (c *UserClient) GetX(ctx context.Context, id int) *User {
-	obj, err := c.Get(ctx, id)
-	if err != nil {
-		panic(err)
-	}
-	return obj
-}
-
-// Hooks returns the client hooks.
-func (c *UserClient) Hooks() []Hook {
-	return c.hooks.User
-}
-
-// Interceptors returns the client interceptors.
-func (c *UserClient) Interceptors() []Interceptor {
-	return c.inters.User
-}
-
-func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error) {
-	switch m.Op() {
-	case OpCreate:
-		return (&UserCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdate:
-		return (&UserUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpUpdateOne:
-		return (&UserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
-	case OpDelete, OpDeleteOne:
-		return (&UserDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
-	default:
-		return nil, fmt.Errorf("ent: unknown User mutation op: %q", m.Op())
-	}
-}
-
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		OidcProvider, Pet, User []ent.Hook
+		OidcProvider []ent.Hook
 	}
 	inters struct {
-		OidcProvider, Pet, User []ent.Interceptor
+		OidcProvider []ent.Interceptor
 	}
 )
+
+var (
+	// DefaultSchemaConfig represents the default schema names for all tables as defined in ent/schema.
+	DefaultSchemaConfig = SchemaConfig{
+		OidcProvider: tableSchemas[0],
+	}
+	tableSchemas = [...]string{"oidc"}
+)
+
+// SchemaConfig represents alternative schema names for all tables
+// that can be passed at runtime.
+type SchemaConfig = internal.SchemaConfig
+
+// AlternateSchemas allows alternate schema names to be
+// passed into ent operations.
+func AlternateSchema(schemaConfig SchemaConfig) Option {
+	return func(c *config) {
+		c.schemaConfig = schemaConfig
+	}
+}

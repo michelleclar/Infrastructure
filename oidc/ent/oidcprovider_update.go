@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"oidc/ent/internal"
 	"oidc/ent/oidcprovider"
 	"oidc/ent/predicate"
 
@@ -26,27 +27,6 @@ type OidcProviderUpdate struct {
 // Where appends a list predicates to the OidcProviderUpdate builder.
 func (opu *OidcProviderUpdate) Where(ps ...predicate.OidcProvider) *OidcProviderUpdate {
 	opu.mutation.Where(ps...)
-	return opu
-}
-
-// SetOidcProviderID sets the "oidc_provider_id" field.
-func (opu *OidcProviderUpdate) SetOidcProviderID(i int64) *OidcProviderUpdate {
-	opu.mutation.ResetOidcProviderID()
-	opu.mutation.SetOidcProviderID(i)
-	return opu
-}
-
-// SetNillableOidcProviderID sets the "oidc_provider_id" field if the given value is not nil.
-func (opu *OidcProviderUpdate) SetNillableOidcProviderID(i *int64) *OidcProviderUpdate {
-	if i != nil {
-		opu.SetOidcProviderID(*i)
-	}
-	return opu
-}
-
-// AddOidcProviderID adds i to the "oidc_provider_id" field.
-func (opu *OidcProviderUpdate) AddOidcProviderID(i int64) *OidcProviderUpdate {
-	opu.mutation.AddOidcProviderID(i)
 	return opu
 }
 
@@ -238,12 +218,6 @@ func (opu *OidcProviderUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := opu.mutation.OidcProviderID(); ok {
-		_spec.SetField(oidcprovider.FieldOidcProviderID, field.TypeInt64, value)
-	}
-	if value, ok := opu.mutation.AddedOidcProviderID(); ok {
-		_spec.AddField(oidcprovider.FieldOidcProviderID, field.TypeInt64, value)
-	}
 	if value, ok := opu.mutation.OidcProviderName(); ok {
 		_spec.SetField(oidcprovider.FieldOidcProviderName, field.TypeString, value)
 	}
@@ -282,6 +256,8 @@ func (opu *OidcProviderUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if opu.mutation.EndpointsCleared() {
 		_spec.ClearField(oidcprovider.FieldEndpoints, field.TypeJSON)
 	}
+	_spec.Node.Schema = opu.schemaConfig.OidcProvider
+	ctx = internal.NewSchemaConfigContext(ctx, opu.schemaConfig)
 	_spec.AddModifiers(opu.modifiers...)
 	if n, err = sqlgraph.UpdateNodes(ctx, opu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -302,27 +278,6 @@ type OidcProviderUpdateOne struct {
 	hooks     []Hook
 	mutation  *OidcProviderMutation
 	modifiers []func(*sql.UpdateBuilder)
-}
-
-// SetOidcProviderID sets the "oidc_provider_id" field.
-func (opuo *OidcProviderUpdateOne) SetOidcProviderID(i int64) *OidcProviderUpdateOne {
-	opuo.mutation.ResetOidcProviderID()
-	opuo.mutation.SetOidcProviderID(i)
-	return opuo
-}
-
-// SetNillableOidcProviderID sets the "oidc_provider_id" field if the given value is not nil.
-func (opuo *OidcProviderUpdateOne) SetNillableOidcProviderID(i *int64) *OidcProviderUpdateOne {
-	if i != nil {
-		opuo.SetOidcProviderID(*i)
-	}
-	return opuo
-}
-
-// AddOidcProviderID adds i to the "oidc_provider_id" field.
-func (opuo *OidcProviderUpdateOne) AddOidcProviderID(i int64) *OidcProviderUpdateOne {
-	opuo.mutation.AddOidcProviderID(i)
-	return opuo
 }
 
 // SetOidcProviderName sets the "oidc_provider_name" field.
@@ -543,12 +498,6 @@ func (opuo *OidcProviderUpdateOne) sqlSave(ctx context.Context) (_node *OidcProv
 			}
 		}
 	}
-	if value, ok := opuo.mutation.OidcProviderID(); ok {
-		_spec.SetField(oidcprovider.FieldOidcProviderID, field.TypeInt64, value)
-	}
-	if value, ok := opuo.mutation.AddedOidcProviderID(); ok {
-		_spec.AddField(oidcprovider.FieldOidcProviderID, field.TypeInt64, value)
-	}
 	if value, ok := opuo.mutation.OidcProviderName(); ok {
 		_spec.SetField(oidcprovider.FieldOidcProviderName, field.TypeString, value)
 	}
@@ -587,6 +536,8 @@ func (opuo *OidcProviderUpdateOne) sqlSave(ctx context.Context) (_node *OidcProv
 	if opuo.mutation.EndpointsCleared() {
 		_spec.ClearField(oidcprovider.FieldEndpoints, field.TypeJSON)
 	}
+	_spec.Node.Schema = opuo.schemaConfig.OidcProvider
+	ctx = internal.NewSchemaConfigContext(ctx, opuo.schemaConfig)
 	_spec.AddModifiers(opuo.modifiers...)
 	_node = &OidcProvider{config: opuo.config}
 	_spec.Assign = _node.assignValues

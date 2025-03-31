@@ -30,7 +30,7 @@ const (
 	// FieldEndpoints holds the string denoting the endpoints field in the database.
 	FieldEndpoints = "endpoints"
 	// Table holds the table name of the oidcprovider in the database.
-	Table = "oidc_providers"
+	Table = "oidc provider"
 )
 
 // Columns holds all SQL columns for oidcprovider fields.
