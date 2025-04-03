@@ -177,13 +177,13 @@ subprojects {
     }
     if (!project.toString().contains('infrastructure')) {
         dependencies {
-//            implementation project(':infrastructure:boot')
+            implementation project(':infrastructure:boot')
 
         }
         var api = System.getenv("API_PREFIX") == null ? "/api/v1" : System.getenv("API_PREFIX")
         quarkus {
             quarkusBuildProperties.put("quarkus.grpc.codegen.proto-directory", "./protos")
-            quarkusBuildProperties.put("quarkus.http.root-path", api)
+//            quarkusBuildProperties.put("quarkus.http.root-path", api)
         }
         quarkusBuild {
             nativeArgs {
