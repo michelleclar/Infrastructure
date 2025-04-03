@@ -3,7 +3,9 @@ package org.carl.infrastructure.util.parse.json;
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
@@ -18,6 +20,8 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.function.Consumer;
+
+import org.jooq.JSON;
 import org.jooq.JSONB;
 
 public enum JacksonProvider implements Provider<ObjectMapper> {
@@ -130,10 +134,12 @@ class CustomJSONBDeserializer extends StdDeserializer<JSONB> {
     @Override
     public JSONB deserialize(JsonParser p, DeserializationContext ctxt)
             throws IOException, JacksonException {
-        if (p.isExpectedStartObjectToken()) {
-            return JSONB.valueOf(p.nextTextValue());
-        }
-        return JSONB.jsonb(p.getValueAsString());
+                // Get reference to ObjectCodec
+        ObjectCodec codec = p.getCodec();
+
+        // Parse "object" node into Jackson's tree model
+        JsonNode node = codec.readTree(p);
+        return JSONB.jsonb(node.toString());
     }
 }
 
