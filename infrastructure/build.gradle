@@ -1,3 +1,6 @@
+plugins {
+    id 'org.kordamp.gradle.jandex'
+}
 subprojects {
     //    implementation libs.bundles.persistence
     //    jooqGenerator libs.quarkusJdbcPostgreSQL
@@ -6,16 +9,17 @@ subprojects {
     //    implementation libs.bundles.mq
     //    implementation libs.bundles.cache
     dependencies {
-
+        apply {
+            plugin 'org.kordamp.gradle.jandex'
+        }
         implementation libs.bundles.base
         implementation libs.bundles.protocol
         implementation libs.bundles.utils
         implementation libs.bundles.registerCenterConsul
-        api libs.bundles.share
-        if(!name.startsWith('comment')){
+        //        api libs.bundles.share
+        if (!name.startsWith('comment')) {
             api project(':infrastructure:comment')
         }
-        testImplementation libs.bundles.test
         def applicationEnv = new Properties()
         def envPropertiesFile = file('src/main/resources/application.properties')
         if (envPropertiesFile.exists()) {

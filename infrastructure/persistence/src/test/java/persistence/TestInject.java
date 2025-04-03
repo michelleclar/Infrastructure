@@ -1,4 +1,4 @@
-package org.carl.infrastructure.persistence;
+package persistence;
 
 import io.quarkus.test.junit.QuarkusTest;
 import jakarta.inject.Inject;

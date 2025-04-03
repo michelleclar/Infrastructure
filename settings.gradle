@@ -17,6 +17,7 @@ pluginManagement {
         id "${quarkusPluginId}" version "${quarkusPluginVersion}"
         id 'nu.studer.jooq' version '9.0'
         id 'com.diffplug.spotless' version '7.0.0.BETA4'
+        id 'org.kordamp.gradle.jandex' version '2.1.0'
     }
 }
 dependencyResolutionManagement {

@@ -173,10 +173,12 @@ subprojects {
     }
     dependencies {
         implementation enforcedPlatform(libs.quarkusPlatform)
+        testImplementation libs.bundles.test
     }
     if (!project.toString().contains('infrastructure')) {
         dependencies {
-            implementation project(':infrastructure:boot')
+//            implementation project(':infrastructure:boot')
+
         }
         var api = System.getenv("API_PREFIX") == null ? "/api/v1" : System.getenv("API_PREFIX")
         quarkus {

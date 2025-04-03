@@ -143,6 +143,7 @@ public class PersistenceContext {
     public Configuration configuration() {
         return dslContext.configuration();
     }
+
     @SuppressWarnings("unchecked")
     public int execute(String sql) {
         return dslContext.execute(sql);
