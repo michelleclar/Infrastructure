@@ -177,7 +177,7 @@ subprojects {
     }
     if (!project.toString().contains('infrastructure')) {
         dependencies {
-            implementation project(':infrastructure:boot')
+            implementation project(':infrastructure-components:infrastructure-component-boot')
 
         }
         var api = System.getenv("API_PREFIX") == null ? "/v1/api" : System.getenv("API_PREFIX")
