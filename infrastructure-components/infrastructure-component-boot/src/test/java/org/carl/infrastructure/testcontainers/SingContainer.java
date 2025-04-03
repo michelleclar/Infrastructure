@@ -1,14 +1,11 @@
 package org.carl.infrastructure.testcontainers;
 
-import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
-import java.util.Map;
-import java.util.ServiceLoader;
-//import org.testcontainers.containers.GenericContainer;
-//import org.testcontainers.junit.jupiter.Testcontainers;
-//import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
+// import org.testcontainers.containers.GenericContainer;
+// import org.testcontainers.junit.jupiter.Testcontainers;
+// import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 
-//@Testcontainers
-//public interface SingContainer extends QuarkusTestResourceLifecycleManager {
+// @Testcontainers
+// public interface SingContainer extends QuarkusTestResourceLifecycleManager {
 //    GenericContainer<?> getContainer();
 //
 //    default void runContainer() {
@@ -20,7 +17,8 @@ import java.util.ServiceLoader;
 //        if (!getContainer().isRunning()) {
 //            getContainer().start();
 //        }
-//        ServiceLoader.load(SingContainer.class).forEach(QuarkusTestResourceLifecycleManager::start);
+//
+// ServiceLoader.load(SingContainer.class).forEach(QuarkusTestResourceLifecycleManager::start);
 //        return ImmutableMap.of();
 //    }
 //
@@ -28,4 +26,4 @@ import java.util.ServiceLoader;
 //    default void stop() {
 //        getContainer().stop();
 //    }
-//}
+// }

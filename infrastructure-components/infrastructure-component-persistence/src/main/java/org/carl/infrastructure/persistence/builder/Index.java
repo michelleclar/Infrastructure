@@ -2,6 +2,7 @@ package org.carl.infrastructure.persistence.builder;
 
 import java.util.ArrayList;
 import java.util.List;
+
 @Deprecated
 class Index {
     private List<String> columns;

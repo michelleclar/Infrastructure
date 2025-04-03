@@ -3,6 +3,7 @@ package org.carl.infrastructure.persistence.builder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
 @Deprecated
 public class TableWrapper extends TableBase {
 
@@ -54,7 +55,11 @@ public class TableWrapper extends TableBase {
     }
 
     public TableWrapper addIndex(String columnName, boolean unique) {
-        Column col = getColumns().stream().filter(column -> column.getName().equals(columnName)).findFirst().orElse(null);
+        Column col =
+                getColumns().stream()
+                        .filter(column -> column.getName().equals(columnName))
+                        .findFirst()
+                        .orElse(null);
         if (col == null) {
             throw new IllegalArgumentException("No such column: " + columnName);
         }
@@ -64,12 +69,17 @@ public class TableWrapper extends TableBase {
     }
 
     public TableWrapper addIndex(List<String> columns) {
-        columns.forEach(columnName -> {
-            Column col = getColumns().stream().filter(column -> column.getName().equals(columnName)).findFirst().orElse(null);
-            if (col == null) {
-                throw new IllegalArgumentException("No such column: " + columnName);
-            }
-        });
+        columns.forEach(
+                columnName -> {
+                    Column col =
+                            getColumns().stream()
+                                    .filter(column -> column.getName().equals(columnName))
+                                    .findFirst()
+                                    .orElse(null);
+                    if (col == null) {
+                        throw new IllegalArgumentException("No such column: " + columnName);
+                    }
+                });
 
         this.addIndex(columns, false);
         return this;
@@ -95,8 +105,13 @@ public class TableWrapper extends TableBase {
         return this;
     }
 
-    public TableWrapper addColumn(String columnName, String comment, Object defaultValue, boolean nullable) {
-        columns.add(Column.of(columnName).setComment(comment).setDefaultValue(defaultValue).setNullable(nullable));
+    public TableWrapper addColumn(
+            String columnName, String comment, Object defaultValue, boolean nullable) {
+        columns.add(
+                Column.of(columnName)
+                        .setComment(comment)
+                        .setDefaultValue(defaultValue)
+                        .setNullable(nullable));
         return this;
     }
 
@@ -139,5 +154,4 @@ public class TableWrapper extends TableBase {
     public TableWrapper(String name) {
         this.tableName = name;
     }
-
 }

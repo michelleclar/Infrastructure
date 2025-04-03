@@ -10,11 +10,10 @@ import org.carl.infrastructure.persistence.metadata.DBTable;
 /**
  * use database or file only provider original tool current only database and database support pg
  * <>provide database default read all schema</>
- *
  */
 public interface IPersistenceProvider {
     // persistence context,because after replace,use `Decorator`,inner use JOOQ PersistenceContext
-    PersistenceContext getPersistenceContext();
+    PersistenceContext dsl();
 
     void setPersistenceContext(PersistenceContext persistenceContext);
 
@@ -26,8 +25,7 @@ public interface IPersistenceProvider {
      * @return
      */
     default DBInfo getDBInfo() {
-        return getPersistenceContext()
-                .connectionResult(
+        return dsl().connectionResult(
                         r -> {
                             try {
                                 DatabaseMetaData metaData = r.getMetaData();
@@ -48,7 +46,7 @@ public interface IPersistenceProvider {
                                         String tableName = tablesRs.getString("TABLE_NAME");
                                         String schema = tablesRs.getString("TABLE_SCHEM");
                                         DBTable table =
-                                                new DBTable(getPersistenceContext())
+                                                new DBTable(dsl())
                                                         .setTableName(tableName)
                                                         .setSchema(schema);
                                         info.getSchema(schema).addTable(table);

@@ -10,7 +10,7 @@ public class PersistenceStd implements IPersistenceProvider {
     private PersistenceContext persistenceContext;
 
     @Override
-    public PersistenceContext getPersistenceContext() {
+    public PersistenceContext dsl() {
         return persistenceContext;
     }
 

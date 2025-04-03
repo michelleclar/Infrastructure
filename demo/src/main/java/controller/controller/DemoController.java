@@ -15,7 +15,7 @@ public class DemoController extends PersistenceStd {
     @POST
     public Response insert(ImMessages po) {
         ImMessagesRecord insertMessage = new ImMessagesRecord(po);
-        getPersistenceContext().insert(insertMessage);
+        dsl().insert(insertMessage);
         po.setMessageId(insertMessage.getMessageId());
         return Response.ok(po).build();
     }

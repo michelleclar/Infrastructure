@@ -13,8 +13,7 @@ import org.jooq.*;
 public interface IPersistenceOperations extends IPersistenceProvider {
     // NOTE: code sync by database
     default Map<String, DBColumn> getColumnMap(String schema, String tableName) {
-        DBTable dbTable =
-                new DBTable(getPersistenceContext()).setTableName(tableName).setSchema(schema);
+        DBTable dbTable = new DBTable(dsl()).setTableName(tableName).setSchema(schema);
         return dbTable.getColumnMap();
     }
 
@@ -37,14 +36,14 @@ public interface IPersistenceOperations extends IPersistenceProvider {
 
     // core method all is ·xxxCtx·
     default PersistenceContext persistenceCtx() {
-        return getPersistenceContext();
+        return dsl();
     }
 
     default void transaction(Consumer<PersistenceContext> queryFunction) {
-        getPersistenceContext().transaction(queryFunction);
+        dsl().transaction(queryFunction);
     }
 
     default void execute(String sql) {
-        getPersistenceContext().execute(sql);
+        dsl().execute(sql);
     }
 }

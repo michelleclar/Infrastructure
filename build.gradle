@@ -153,24 +153,6 @@ subprojects {
         }
     }
 
-    def mainSrc = 'src/main/java'
-    def generatedDir = 'src/main/generated'
-    sourceSets {
-        main {
-            java {
-                srcDir generatedDir
-                srcDir mainSrc
-            }
-        }
-    }
-
-    idea {
-        module {
-            generatedSourceDirs.addAll(file(generatedDir))
-            sourceDirs.addAll(file(generatedDir))
-            sourceDirs.addAll(file(mainSrc))
-        }
-    }
     dependencies {
         implementation enforcedPlatform(libs.quarkusPlatform)
         testImplementation libs.bundles.test
@@ -178,7 +160,24 @@ subprojects {
     if (!project.toString().contains('infrastructure')) {
         dependencies {
             implementation project(':infrastructure-components:infrastructure-component-boot')
+        }
+        def mainSrc = 'src/main/java'
+        def generatedDir = 'src/main/generated'
+        sourceSets {
+            main {
+                java {
+                    srcDir generatedDir
+                    srcDir mainSrc
+                }
+            }
+        }
 
+        idea {
+            module {
+                generatedSourceDirs.addAll(file(generatedDir))
+                sourceDirs.addAll(file(generatedDir))
+                sourceDirs.addAll(file(mainSrc))
+            }
         }
         var api = System.getenv("API_PREFIX") == null ? "/v1/api" : System.getenv("API_PREFIX")
         quarkus {

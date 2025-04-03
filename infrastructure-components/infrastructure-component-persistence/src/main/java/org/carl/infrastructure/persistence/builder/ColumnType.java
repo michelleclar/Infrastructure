@@ -1,4 +1,5 @@
 package org.carl.infrastructure.persistence.builder;
+
 @Deprecated
 public enum ColumnType {
     VARCHAR,

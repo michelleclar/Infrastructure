@@ -177,5 +177,5 @@ include 'infrastructure-components:infrastructure-component-authorization'
 include 'infrastructure-components:infrastructure-component-search'
 include 'infrastructure-components:infrastructure-component-cache'
 include 'infrastructure-components:infrastructure-component-broadcast'
-include 'infrastructure-components:infrastructure-component-comment'
+include 'infrastructure-components:infrastructure-component-tool'
 

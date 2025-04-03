@@ -1,33 +1,33 @@
 package org.carl.infrastructure.testcontainers;
 
-import org.carl.infrastructure.config.IProfile;
-import org.carl.infrastructure.util.Utils;
-import org.eclipse.microprofile.config.ConfigProvider;
-
 import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
+import org.carl.infrastructure.config.IProfile;
+import org.carl.infrastructure.util.Utils;
+import org.eclipse.microprofile.config.ConfigProvider;
 
 // @Testcontainers
 public interface AllContainerTest {
-//    ComposeContainer compose =
-//            new ComposeContainer(new File("src/test/resources/composev2/compose-test.yml"));
-//
-//    default void register() {
-//        for (ContainerType value : ContainerType.values()) {
-//            if (value.containerConfig != null) {
-//                withExposedService(value.containerConfig);
-//            }
-//        }
-//    }
-//
-//    default void withExposedService(ContainerConfig containerConfig) {
-//        containerConfig.ports.forEach(
-//                port -> {
-//                    compose.withExposedService(containerConfig.containerName, port.servicePort());
-//                });
-//    }
+    //    ComposeContainer compose =
+    //            new ComposeContainer(new File("src/test/resources/composev2/compose-test.yml"));
+    //
+    //    default void register() {
+    //        for (ContainerType value : ContainerType.values()) {
+    //            if (value.containerConfig != null) {
+    //                withExposedService(value.containerConfig);
+    //            }
+    //        }
+    //    }
+    //
+    //    default void withExposedService(ContainerConfig containerConfig) {
+    //        containerConfig.ports.forEach(
+    //                port -> {
+    //                    compose.withExposedService(containerConfig.containerName,
+    // port.servicePort());
+    //                });
+    //    }
 }
 
 class ContainerConfig {

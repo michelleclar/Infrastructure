@@ -1,7 +1,6 @@
 package org.carl.infrastructure.search.plugins.es.build;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-
 import org.junit.jupiter.api.Test;
 
 class QueryTest {

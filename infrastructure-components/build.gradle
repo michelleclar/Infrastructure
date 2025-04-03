@@ -11,8 +11,8 @@ subprojects {
         implementation libs.bundles.utils
         implementation libs.bundles.registerCenterConsul
         //        api libs.bundles.share
-        if (!name.startsWith('infrastructure-component-comment')) {
-            api project(':infrastructure-components:infrastructure-component-comment')
+        if (!name.startsWith('infrastructure-component-tool')) {
+            api project(':infrastructure-components:infrastructure-component-tool')
         }
         def applicationEnv = new Properties()
         def envPropertiesFile = file('src/main/resources/application.properties')
