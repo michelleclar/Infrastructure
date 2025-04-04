@@ -1,4 +1,4 @@
-package org.carl.infrastructure.ability;
+package org.carl.infrastructure.broadcast.ability;
 
 import org.carl.infrastructure.broadcast.IBroadcastOperations;
 

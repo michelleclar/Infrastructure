@@ -1,4 +1,4 @@
-package org.carl.infrastructure.ability;
+package org.carl.infrastructure.persistence.ability;
 
 import jakarta.transaction.Transactional;
 import org.carl.infrastructure.persistence.IPersistenceOperations;

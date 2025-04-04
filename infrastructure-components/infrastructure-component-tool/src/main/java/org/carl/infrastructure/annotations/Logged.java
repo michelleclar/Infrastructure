@@ -1,6 +1,7 @@
 package org.carl.infrastructure.annotations;
 
 import jakarta.interceptor.InterceptorBinding;
+
 import java.lang.annotation.*;
 
 @InterceptorBinding

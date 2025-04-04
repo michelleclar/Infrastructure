@@ -159,7 +159,7 @@ subprojects {
     }
     if (!project.toString().contains('infrastructure')) {
         dependencies {
-            implementation project(':infrastructure-components:infrastructure-component-boot')
+//            implementation project(':infrastructure-components:infrastructure-component-boot')
         }
         def mainSrc = 'src/main/java'
         def generatedDir = 'src/main/generated'
