@@ -23,7 +23,7 @@ import java.util.Optional;
 @ApplicationScoped
 public class RootFilter {
 
-    @ConfigProperty(name = "quarkus.rest.path", defaultValue = "/api")
+    @ConfigProperty(name = "quarkus.rest.path", defaultValue = "/v1/api")
     String restPath;
 
     @Inject ScaffoldConfig config;

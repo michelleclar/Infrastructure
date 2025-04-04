@@ -1,5 +1,6 @@
-package org.carl.infrastructure.config.desensitization;
+package org.carl.infrastructure.persistence;
 
+import org.carl.infrastructure.config.desensitization.IDesensitizationAlgorithm;
 import org.jooq.Field;
 
 import java.util.HashMap;

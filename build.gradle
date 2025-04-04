@@ -160,6 +160,12 @@ subprojects {
     if (!project.toString().contains('infrastructure')) {
         dependencies {
 //            implementation project(':infrastructure-components:infrastructure-component-boot')
+            implementation project(':infrastructure-components:infrastructure-component-authorization')
+            implementation project(':infrastructure-components:infrastructure-component-broadcast')
+            implementation project(':infrastructure-components:infrastructure-component-cache')
+            implementation project(':infrastructure-components:infrastructure-component-persistence')
+            implementation project(':infrastructure-components:infrastructure-component-search')
+            implementation project(':infrastructure-components:infrastructure-component-tool')
         }
         def mainSrc = 'src/main/java'
         def generatedDir = 'src/main/generated'
