@@ -1,6 +1,5 @@
 package org.carl.infrastructure.commponent.web.model;
 
-
 import org.carl.infrastructure.commponent.web.runtime.IRuntimeUser;
 
 public class ApiRequest {

@@ -1,0 +1,4 @@
+dependencies {
+    api libs.bundles.web
+    implementation libs.bundles.register.center.consul
+}

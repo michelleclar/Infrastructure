@@ -6,9 +6,8 @@ import io.quarkus.jackson.ObjectMapperCustomizer;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
-import org.carl.infrastructure.commponent.web.config.JacksonProvider;
-
 import java.util.List;
+import org.carl.infrastructure.commponent.web.config.JacksonProvider;
 
 @ApplicationScoped
 public class ObjectMapperConfig {
