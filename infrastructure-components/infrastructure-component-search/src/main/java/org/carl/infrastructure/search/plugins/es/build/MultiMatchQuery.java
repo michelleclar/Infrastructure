@@ -1,7 +1,6 @@
 package org.carl.infrastructure.search.plugins.es.build;
 
-import static org.carl.infrastructure.util.JSON.JSON;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.Arrays;
 import java.util.List;
@@ -25,9 +24,9 @@ public class MultiMatchQuery implements BaseQuery {
     }
 
     public Query build() {
-        ObjectNode jsonNode = JSON.createObjectNode();
-
-        ObjectNode inner = JSON.createObjectNode();
+        ObjectMapper objectMapper = new ObjectMapper();
+        ObjectNode jsonNode = objectMapper.createObjectNode();
+        ObjectNode inner = objectMapper.createObjectNode();
         inner.put("query", query);
         fields.forEach(field -> inner.putArray("fields").add(field));
         jsonNode.set(getQueryType().name().toLowerCase(), inner);

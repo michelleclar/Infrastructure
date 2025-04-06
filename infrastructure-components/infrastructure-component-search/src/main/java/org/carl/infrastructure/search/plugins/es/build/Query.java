@@ -1,10 +1,9 @@
 package org.carl.infrastructure.search.plugins.es.build;
 
-import static org.carl.infrastructure.util.JSON.JSON;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.carl.infrastructure.ability.JacksonAbility;
 
 public class Query {
     public ObjectNode query;
@@ -34,13 +33,13 @@ public class Query {
     }
 
     Query toQuery(ObjectNode node) {
-        if (query == null) query = JSON.createObjectNode();
+        if (query == null) query = new ObjectMapper().createObjectNode();
         query.setAll(node);
         return this;
     }
 }
 
-class TermQuery implements BaseQuery, JacksonAbility {
+class TermQuery implements BaseQuery{
     TermPair termPair;
     Query q;
 
@@ -49,8 +48,8 @@ class TermQuery implements BaseQuery, JacksonAbility {
     }
 
     public Query build() throws JsonProcessingException {
-        ObjectNode objectNode = JSON.createObjectNode();
-        ObjectNode jsonNode = JSON.createObjectNode();
+        ObjectNode objectNode = new ObjectMapper().createObjectNode();
+        ObjectNode jsonNode = new ObjectMapper().createObjectNode();
         jsonNode.put(termPair.field, termPair.value);
         objectNode.set(getQueryType().name().toLowerCase(), jsonNode);
         return this.q.toQuery(objectNode);

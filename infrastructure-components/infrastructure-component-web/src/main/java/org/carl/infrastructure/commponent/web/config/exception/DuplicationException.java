@@ -1,6 +1,6 @@
-package org.carl.infrastructure.config.exception;
+package org.carl.infrastructure.commponent.web.config.exception;
 
-import org.carl.infrastructure.config.StatusType;
+import org.carl.infrastructure.commponent.web.config.StatusType;
 
 public class DuplicationException extends BaseException {
     public DuplicationException(StatusType statusType) {

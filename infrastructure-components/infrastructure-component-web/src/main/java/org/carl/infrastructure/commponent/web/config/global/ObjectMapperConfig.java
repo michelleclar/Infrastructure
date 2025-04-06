@@ -1,4 +1,4 @@
-package org.carl.infrastructure.config.global;
+package org.carl.infrastructure.commponent.web.config.global;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.arc.All;
@@ -6,7 +6,7 @@ import io.quarkus.jackson.ObjectMapperCustomizer;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
-import org.carl.infrastructure.util.parse.json.JacksonProvider;
+import org.carl.infrastructure.commponent.web.config.JacksonProvider;
 
 import java.util.List;
 

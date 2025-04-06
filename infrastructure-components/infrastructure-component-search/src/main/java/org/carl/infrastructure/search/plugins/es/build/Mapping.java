@@ -1,8 +1,7 @@
 package org.carl.infrastructure.search.plugins.es.build;
 
-import static org.carl.infrastructure.util.JSON.JSON;
-
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.Map.Entry;
 import java.util.function.Function;
@@ -24,7 +23,7 @@ public class Mapping {
     }
 
     Mapping addProperties(ObjectNode jsonNode) {
-        if (json == null) json = JSON.createObjectNode();
+        if (json == null) json = new ObjectMapper().createObjectNode();
         JsonNode jsonNode1 = json.get(rootName);
         if (jsonNode1 != null) {
             for (Entry<String, JsonNode> property : jsonNode1.properties()) {
@@ -61,8 +60,8 @@ class Properties {
     }
 
     public Mapping build() {
-        ObjectNode jsonNode = JSON.createObjectNode();
-        ObjectNode inner = JSON.createObjectNode();
+        ObjectNode jsonNode = new ObjectMapper().createObjectNode();
+        ObjectNode inner = new ObjectMapper().createObjectNode();
         inner.put("type", type.name().toLowerCase());
         jsonNode.set(name, inner);
         return mapping.addProperties(jsonNode);

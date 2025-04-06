@@ -1,7 +1,7 @@
 plugins {
     id 'java'
     id "com.diffplug.spotless"
-    alias(libs.plugins.quarkusPlugin)
+    alias(libs.plugins.quarkus)
     id 'nu.studer.jooq'
     id 'java-library'
 }
@@ -154,7 +154,7 @@ subprojects {
     }
 
     dependencies {
-        implementation enforcedPlatform(libs.quarkusPlatform)
+        implementation enforcedPlatform(libs.quarkus.platform.bom)
         testImplementation libs.bundles.test
     }
     if (!project.toString().contains('infrastructure')) {
@@ -166,6 +166,7 @@ subprojects {
             implementation project(':infrastructure-components:infrastructure-component-persistence')
             implementation project(':infrastructure-components:infrastructure-component-search')
             implementation project(':infrastructure-components:infrastructure-component-tool')
+            implementation project(':infrastructure-components:infrastructure-component-web')
         }
         def mainSrc = 'src/main/java'
         def generatedDir = 'src/main/generated'

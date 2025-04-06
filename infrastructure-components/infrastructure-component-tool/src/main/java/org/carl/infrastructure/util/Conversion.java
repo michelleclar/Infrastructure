@@ -1,12 +1,11 @@
 package org.carl.infrastructure.util;
 
 import java.util.function.Function;
-import org.carl.infrastructure.ability.GsonAbility;
 import org.carl.infrastructure.annotations.NotThreadSafe;
 import org.jboss.logging.Logger;
 
 @NotThreadSafe
-public class Conversion implements GsonAbility {
+public class Conversion {
     private final Logger log = Logger.getLogger(Conversion.class);
     private final Object value;
 
@@ -98,14 +97,6 @@ public class Conversion implements GsonAbility {
             log.warnf("NonReactiveConversion failed, returning default value: %s", defaultValue);
             return defaultValue;
         }
-    }
-
-    public String toJsonString() {
-        return to(this::toJsonString);
-    }
-
-    public String toJsonObject() {
-        return to(this::toJsonString);
     }
 
     public <T> T to(Function<Object, T> adapter) {

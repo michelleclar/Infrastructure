@@ -1,0 +1,112 @@
+[versions]
+testcontainers = "1.20.4"
+quarkus = "3.19.3"
+jooq = "3.19.12"
+commons = "4.4"
+xml = '4.0.2'
+guava = "33.2.1-jre"
+
+[libraries]
+quarkus-platform-bom = { module = "io.quarkus.platform:quarkus-bom", version.ref = "quarkus" }
+quarkus-camel-platform-bom = { module = "io.quarkus.platform:quarkus-camel-bom", version.ref = "quarkus" }
+quarkus-smallrye-openapi = { module = "io.quarkus:quarkus-smallrye-openapi", version.ref = "quarkus" }
+quarkus-arc = { module = 'io.quarkus:quarkus-arc', version.ref = 'quarkus' } #CDI
+quarkus-config-yaml = { module = 'io.quarkus:quarkus-arc', version.ref = 'quarkus' }
+quarkus-rest = { module = 'io.quarkus:quarkus-rest', version.ref = 'quarkus' }
+quarkus-reactive-routes = { module = 'io.quarkus:quarkus-reactive-routes', version.ref = 'quarkus' }
+quarkus-vertx = { module = 'io.quarkus:quarkus-vertx', version.ref = 'quarkus' }
+quarkus-jsonp = { module = 'io.quarkus:quarkus-jsonp', version.ref = 'quarkus' }
+quarkus-jackson = { module = 'io.quarkus:quarkus-rest-jackson', version.ref = 'quarkus' }
+quarkus-smallrye-context-propagation = { module = 'io.quarkus:quarkus-smallrye-context-propagation', version.ref = 'quarkus' }
+xml-bind = { module = 'jakarta.xml.bind:jakarta.xml.bind-api', version.ref = 'xml' }
+websocket = { module = "io.quarkus:quarkus-websockets-client", version.ref = "quarkus" }
+oidc = { module = "io.quarkus:quarkus-oidc", version.ref = "quarkus" }
+keycloak = { module = "io.quarkus:quarkus-keycloak-authorization", version.ref = "quarkus" }
+vault = { module = "io.quarkiverse:quarkus-vault", version.ref = "quarkus" }
+cache = { module = "io.quarkus:quarkus-cache", version.ref = "quarkus" }
+vertx-client = { module = "io.smallrye.reactive:smallrye-mutiny-vertx-web-client", version.ref = "quarkus" }
+agroal = { module = "io.quarkus:quarkus-agroal", version.ref = "quarkus" }
+quarkus-jdbc-postgresql = { module = "io.quarkus:quarkus-jdbc-postgresql", version.ref = "quarkus" }
+quarkus-jdbc-mysql = { module = "io.quarkus:quarkus-jdbc-mysql", version.ref = "quarkus" }
+quarkus-reactive-pg-client = { module = "io.quarkus:quarkus-reactive-pg-client", version.ref = "quarkus" }
+redis = { module = "io.quarkus:quarkus-redis-client", version.ref = "quarkus" }
+flyway = { module = "io.quarkus:quarkus-flyway", version.ref = "quarkus" }
+db-health = { module = "io.quarkus:quarkus-smallrye-health", version.ref = "quarkus" }
+graphql = { module = "io.quarkus:quarkus-smallrye-graphql", version.ref = "quarkus" }
+rest-client-jackson = { module = "io.quarkus:quarkus-rest-client-jackson", version.ref = "quarkus" }
+rest-client = { module = "io.quarkus:quarkus-rest-client-jackson", version.ref = "quarkus" }
+guava = { module = "com.google.guava:guava", version.ref = "guava" }
+opentelemetry = { module = "io.quarkus:quarkus-opentelemetry", version.ref = "quarkus" }
+commons = { module = "org.apache.commons:commons-collections4", version.ref = "commons" }
+micrometer = { module = "io.quarkus:quarkus-micrometer", version.ref = "quarkus" }
+jooq = { module = "org.jooq:jooq", version.ref = "jooq" }
+jooq-meta = { module = "org.jooq:jooq-meta", version.ref = "jooq" }
+jooq-codegen = { module = "org.jooq:jooq-codegen", version.ref = "jooq" }
+elasticsearch-java-client = { module = "io.quarkus:quarkus-elasticsearch-java-client", version.ref = "quarkus" }
+consul = { module = "io.quarkiverse.config:quarkus-config-consul", version.ref = "quarkus" }
+consul-stork = { module = "io.smallrye.stork:stork-service-discovery-consul", version.ref = "quarkus" }
+consul-client = { module = "io.smallrye.reactive:smallrye-mutiny-vertx-consul-client", version.ref = "quarkus" }
+pulsar = { module = "io.quarkus:quarkus-messaging-pulsar", version.ref = "quarkus" }
+grpc = { module = "io.quarkus:quarkus-grpc", version.ref = "quarkus" }
+testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
+testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
+testcontainers-consul = { module = "org.testcontainers:consul", version.ref = "testcontainers" }
+testcontainers-pulsar = { module = "org.testcontainers:pulsar", version.ref = "testcontainers" }
+testcontainers-neo4j = { module = "org.testcontainers:neo4j", version.ref = "testcontainers" }
+testcontainers-elasticsearch = { module = "org.testcontainers:elasticsearch", version.ref = "testcontainers" }
+testcontainers-milvus = { module = "org.testcontainers:milvus", version.ref = "testcontainers" }
+testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
+quarkus-junit5 = { module = "io.quarkus:quarkus-junit5", version.ref = "quarkus" }
+assured = { module = "io.rest-assured:rest-assured", version.ref = "quarkus" }
+jwt = { module = "io.quarkus:quarkus-smallrye-jwt", version.ref = "quarkus" }
+jwt-build = { module = "io.quarkus:quarkus-smallrye-jwt-build", version.ref = "quarkus" }
+smtp = { module = "io.quarkus:quarkus-mailer", version.ref = "quarkus" }
+valid = { module = "io.quarkus:quarkus-hibernate-validator", version.ref = "quarkus" }
+
+[bundles]
+share = ['quarkus-arc']
+web = [
+    'quarkus-rest',
+    'quarkus-jackson',
+    'quarkus-smallrye-openapi',
+    'quarkus-reactive-routes',
+    'quarkus-vertx'
+]
+
+# base bundle
+base = [
+    'xml-bind',
+]
+
+auth = ['oidc', 'keycloak']
+
+register-center-consul = ['consul', 'consul-stork', 'consul-client']
+
+persistence = [
+    'quarkus-jdbc-postgresql',
+    'quarkus-reactive-pg-client',
+    'agroal',
+    'jooq'
+]
+
+cache = ['cache', 'redis']
+mq = ['pulsar']
+search = ['elasticsearch-java-client']
+utils = ['guava']
+protocol = ['grpc', 'websocket']
+
+test = [
+    'flyway',
+    'assured',
+    'quarkus-junit5'
+    # 'testcontainers-junit-jupiter',
+    # 'testcontainers',
+    # 'testcontainers-postgresql',
+    # 'testcontainers-pulsar',
+    # 'testcontainers-consul',
+    # 'testcontainers-neo4j',
+    # 'testcontainers-elasticsearch',
+    # 'testcontainers-milvus'
+]
+[plugins]
+quarkus = { id = "io.quarkus", version.ref = "quarkus" }

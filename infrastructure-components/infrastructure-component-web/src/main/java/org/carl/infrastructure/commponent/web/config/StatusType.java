@@ -1,4 +1,4 @@
-package org.carl.infrastructure.config;
+package org.carl.infrastructure.commponent.web.config;
 
 import jakarta.ws.rs.core.Response;
 
