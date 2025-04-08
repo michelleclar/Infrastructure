@@ -165,7 +165,7 @@ subprojects {
             implementation project(':infrastructure-components:infrastructure-component-cache')
             implementation project(':infrastructure-components:infrastructure-component-persistence')
             implementation project(':infrastructure-components:infrastructure-component-search')
-            implementation project(':infrastructure-components:infrastructure-component-tool')
+//            implementation project(':infrastructure-components:infrastructure-component-tool')
             implementation project(':infrastructure-components:infrastructure-component-web')
         }
         def mainSrc = 'src/main/java'

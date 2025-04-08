@@ -1,7 +1,7 @@
 [versions]
 testcontainers = "1.20.4"
 quarkus = "3.19.3"
-jooq = "3.19.12"
+jooq = "3.19.13"
 commons = "4.4"
 xml = '4.0.2'
 guava = "33.2.1-jre"
@@ -18,7 +18,8 @@ quarkus-vertx = { module = 'io.quarkus:quarkus-vertx', version.ref = 'quarkus' }
 quarkus-jsonp = { module = 'io.quarkus:quarkus-jsonp', version.ref = 'quarkus' }
 quarkus-jackson = { module = 'io.quarkus:quarkus-rest-jackson', version.ref = 'quarkus' }
 quarkus-smallrye-context-propagation = { module = 'io.quarkus:quarkus-smallrye-context-propagation', version.ref = 'quarkus' }
-xml-bind = { module = 'jakarta.xml.bind:jakarta.xml.bind-api', version.ref = 'xml' }
+#xml-bind = { module = 'jakarta.xml.bind:jakarta.xml.bind-api', version.ref = 'xml' }
+xml-bind = { module = 'io.quarkus:quarkus-jaxb', version.ref = 'quarkus' }
 websocket = { module = "io.quarkus:quarkus-websockets-client", version.ref = "quarkus" }
 oidc = { module = "io.quarkus:quarkus-oidc", version.ref = "quarkus" }
 keycloak = { module = "io.quarkus:quarkus-keycloak-authorization", version.ref = "quarkus" }

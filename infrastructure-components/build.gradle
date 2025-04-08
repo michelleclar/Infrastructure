@@ -2,13 +2,13 @@ plugins {
     id 'org.kordamp.gradle.jandex'
 }
 subprojects {
+    apply {
+        plugin 'org.kordamp.gradle.jandex'
+    }
     dependencies {
-        apply {
-            plugin 'org.kordamp.gradle.jandex'
-        }
         //        implementation libs.bundles.base
         //        implementation libs.bundles.protocol
-        implementation libs.bundles.utils
+//        implementation libs.bundles.utils
         testImplementation libs.bundles.web
         //        implementation libs.bundles.register.center.consul
         //        api libs.bundles.share
