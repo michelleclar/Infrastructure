@@ -19,11 +19,14 @@ import org.carl.infrastructure.config.ScaffoldConfig;
 import org.carl.infrastructure.constant.Constants;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+// NOTE: web runtime context
 @ApplicationScoped
 public class RootFilter {
 
     @ConfigProperty(name = "quarkus.rest.path", defaultValue = "/v1/api")
     String restPath;
+
+    public static String userID = "userID";
 
     @Inject ScaffoldConfig config;
 
@@ -82,9 +85,8 @@ public class RootFilter {
             if (userOptional.isPresent()) {
                 return userOptional.get();
             }
-            if (config.isTestMode() // 只有测试模式需要手动提供 userID 放在 Header里
-                    && context.request().getHeader(Constants.Fields.USER_ID) != null) {
-                String userID = context.request().getHeader("userID");
+            if (config.isTestMode() && context.request().getHeader(RootFilter.userID) != null) {
+                String userID = context.request().getHeader(RootFilter.userID);
                 return IRuntimeUser.build(userID);
             }
         }
