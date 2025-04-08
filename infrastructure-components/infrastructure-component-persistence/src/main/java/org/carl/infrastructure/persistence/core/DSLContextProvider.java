@@ -5,8 +5,6 @@ import io.quarkus.arc.DefaultBean;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
-import org.carl.infrastructure.persistence.engine.runtime.DslContextFactory;
-import org.jooq.DSLContext;
 
 public class DSLContextProvider implements Provider<PersistenceContext> {
     @Inject AgroalDataSource dataSource;
@@ -15,11 +13,6 @@ public class DSLContextProvider implements Provider<PersistenceContext> {
     @DefaultBean
     @Override
     public PersistenceContext get() {
-        return PersistenceContext.create(DslContextFactory.create(dataSource));
-    }
-
-    @ApplicationScoped
-    public DSLContext dslContext() {
-        return DslContextFactory.create(dataSource);
+        return PersistenceContext.create(dataSource);
     }
 }
