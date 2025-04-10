@@ -1,4 +1,4 @@
-package org.carl.infrastructure.annotations;
+package org.carl.infrastructure.component.web.annotations;
 
 import jakarta.interceptor.InterceptorBinding;
 

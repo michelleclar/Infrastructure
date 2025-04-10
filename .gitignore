@@ -51,3 +51,4 @@ bin/
 /oidc/.idea/.gitignore
 /oidc/.idea/modules.xml
 /oidc/.idea/vcs.xml
+**/generated/

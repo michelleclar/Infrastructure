@@ -1,7 +1,10 @@
-package org.carl.infrastructure.commponent.web.model;
+package org.carl.infrastructure.component.web.model;
 
-import org.carl.infrastructure.commponent.web.runtime.IRuntimeUser;
+import org.carl.infrastructure.component.web.runtime.IRuntimeUser;
 
+import java.util.Map;
+
+/** api path like /api/v1/{module}.{submodule}/{action} */
 public class ApiRequest {
 
     public static final ApiRequest BLANK = new ApiRequest("");
@@ -9,6 +12,7 @@ public class ApiRequest {
     private final String path;
     private String module;
     private String action;
+    private Map<String, Object> parameters;
     private String dataID;
     private boolean isSkip = false;
     private IRuntimeUser user = IRuntimeUser.WHITE;
@@ -23,29 +27,21 @@ public class ApiRequest {
     public ApiRequest(String path) {
         this.path = path;
 
-        // /api/platform/user/view/xxxx
+        // NOTE: /api/v1/{module}.{submodule}/{action}
+        // NOTE: /api/v1/system.config/refresh
         String[] urlBlock = path.split("/");
-        // ["", "api", "platform", "user", "view", "xxxx"]
+        // ["", "api", "v1", "system.config", "refresh"]
 
-        if (urlBlock.length < 5) { // 说明不是平台标化接口
+        if (urlBlock.length < 5) {
             isSkip = true;
             return;
         }
 
-        if ("wildcard".equals(urlBlock[4])) { // 说明是通配接口，需要特殊处理
-            // /api/platform/commondoc/wildcard/wangpan/view/xxxx
-            module = urlBlock[3] + "/" + urlBlock[4] + "/" + urlBlock[5];
-            action = urlBlock[6];
-            if (urlBlock.length > 7) {
-                dataID = urlBlock[7];
-            }
-        } else {
-            module = urlBlock[3];
-            action = urlBlock[4];
+        module = urlBlock[3];
+        action = urlBlock[4];
 
-            if (urlBlock.length > 5) {
-                dataID = urlBlock[5];
-            }
+        if (urlBlock.length > 5) {
+            dataID = urlBlock[5];
         }
     }
 

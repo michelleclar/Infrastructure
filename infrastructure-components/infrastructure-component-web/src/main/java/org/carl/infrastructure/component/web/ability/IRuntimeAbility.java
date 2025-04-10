@@ -1,8 +1,8 @@
-package org.carl.infrastructure.commponent.web.ability;
+package org.carl.infrastructure.component.web.ability;
 
 import io.vertx.ext.web.RoutingContext;
-import org.carl.infrastructure.commponent.web.model.ApiRequest;
-import org.carl.infrastructure.commponent.web.runtime.IRuntimeUser;
+import org.carl.infrastructure.component.web.model.ApiRequest;
+import org.carl.infrastructure.component.web.runtime.IRuntimeUser;
 import org.carl.infrastructure.config.IProfile;
 import org.carl.infrastructure.constant.Constants;
 

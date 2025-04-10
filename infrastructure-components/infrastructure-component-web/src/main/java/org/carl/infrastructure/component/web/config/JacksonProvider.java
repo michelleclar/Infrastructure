@@ -1,4 +1,4 @@
-package org.carl.infrastructure.commponent.web.config;
+package org.carl.infrastructure.component.web.config;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;

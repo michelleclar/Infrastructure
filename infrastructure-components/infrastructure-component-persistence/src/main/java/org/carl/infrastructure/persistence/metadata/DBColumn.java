@@ -2,6 +2,7 @@ package org.carl.infrastructure.persistence.metadata;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 @Deprecated
 public class DBColumn {
@@ -103,5 +104,18 @@ public class DBColumn {
             return matcher.group(1);
         }
         return input;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("name", name)
+                .append("description", description)
+                .append("type", type)
+                .append("defaultValue", defaultValue)
+                .append("nullable", nullable)
+                .append("primaryKey", primaryKey)
+                .append("sequence", sequence)
+                .toString();
     }
 }
