@@ -31,12 +31,16 @@ public class LinkedTable<T> {
         StringBuilder str = new StringBuilder();
         while (current != -1) {
             str.append(nodes[current].value);
+            current = nodes[current].next;
+            if (current != -1) {
+                str.append(" -> ");
+            }
         }
         return str.toString();
     }
 
     public static class Node<T> {
-        private T value;
+        private final T value;
         private int next = -1;
 
         public Node(T value) {

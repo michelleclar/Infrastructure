@@ -1,21 +1,29 @@
 package org.carl.infrastructure.component.web.model;
 
 import org.carl.infrastructure.component.web.runtime.IRuntimeUser;
+import org.carl.infrastructure.util.LinkedTable;
 
-import java.util.Map;
-
-/** api path like /api/v1/{module}.{submodule}/{action} */
+/**
+ * api path like
+ *
+ * <p>e.g:
+ *
+ * <p>GET: /api/v1/{module}.{submodule}/{action}/xxx
+ *
+ * <p>POST: /api/v1/{module}.{submodule}/{action}
+ */
 public class ApiRequest {
 
     public static final ApiRequest BLANK = new ApiRequest("");
 
     private final String path;
-    private String module;
+    private String mainModule;
+    private String version;
+    private LinkedTable<String> models;
     private String action;
-    private Map<String, Object> parameters;
-    private String dataID;
     private boolean isSkip = false;
     private IRuntimeUser user = IRuntimeUser.WHITE;
+    private String dataId;
     private String moduleID;
     private String moduleName;
     private String actionName;
@@ -36,12 +44,20 @@ public class ApiRequest {
             isSkip = true;
             return;
         }
-
-        module = urlBlock[3];
         action = urlBlock[4];
+        version = urlBlock[2];
 
+        if (urlBlock[3].contains(".")) {
+            String[] parts = urlBlock[3].split("\\.");
+            models = new LinkedTable<>(parts.length);
+            for (String part : parts) {
+                models.insert(part);
+            }
+        } else {
+            mainModule = urlBlock[3];
+        }
         if (urlBlock.length > 5) {
-            dataID = urlBlock[5];
+            dataId = urlBlock[5];
         }
     }
 
@@ -58,16 +74,16 @@ public class ApiRequest {
         this.error = error;
     }
 
-    public String getModule() {
-        return module;
+    public String getMainModule() {
+        return mainModule;
     }
 
     public String getAction() {
         return action;
     }
 
-    public String getDataID() {
-        return dataID;
+    public String getDataId() {
+        return this.dataId;
     }
 
     public IRuntimeUser getUser() {
@@ -110,7 +126,7 @@ public class ApiRequest {
     }
 
     public String getUsername() {
-        if (username != null) { // sso 登录的时候，会手动写入username
+        if (username != null) {
             return username;
         }
 
@@ -135,12 +151,14 @@ public class ApiRequest {
         return "path:"
                 + path
                 + ", module:"
-                + module
+                + mainModule
+                + ", models:"
+                + models.toString()
                 + ", action:"
                 + action
-                + ", dataID:"
-                + dataID
-                + ", userID"
+                + ", dataId:"
+                + dataId
+                + ", userId"
                 + getUser().getId()
                 + ", isSkip:"
                 + isSkip;

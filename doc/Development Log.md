@@ -47,6 +47,22 @@ package manage
 
 > base design
 
+> In my opinion, the traditional REST style has its limitations when handling complex predicates, as
+> REST can only express actions. This forces developers to consider both the request method and the
+> request path to determine the business information, which can be distracting.  
+> Therefore, I believe adopting a unified design approach is more appropriate:
+
+- **GET requests** should be limited to a single parameter (as a path variable) with the following
+  format:  
+  `/api/v1/{module}.{submodule}/{action}/xxx`
+- When multiple parameters need to be passed, it is recommended to use **POST requests** with the
+  format:  
+  `/api/v1/{module}.{submodule}/{action}`
+
+> This design makes the business intent of the API clearer and avoids the extra complexity that
+> arises
+> from mixing request methods with path parsing.
+
 ```puml
 @startuml
 
@@ -80,6 +96,7 @@ PersistenceService ..|> IPersistenceOperations : implements
 
 > oidc
 > oauth2,openID
+
 #### data Permissions
 
 > ReBAC
@@ -222,4 +239,5 @@ graph LR
 1. Introduces additional steps in the development process.
 
 ## task flow
+
 > n8n zeebe Camunda 
