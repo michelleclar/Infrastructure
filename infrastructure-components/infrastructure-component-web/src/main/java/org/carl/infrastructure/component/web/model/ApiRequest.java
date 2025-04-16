@@ -1,5 +1,6 @@
 package org.carl.infrastructure.component.web.model;
 
+import java.util.StringJoiner;
 import org.carl.infrastructure.component.web.runtime.IRuntimeUser;
 import org.carl.infrastructure.util.LinkedTable;
 
@@ -64,6 +65,10 @@ public class ApiRequest {
     public ApiRequest setUser(IRuntimeUser user) {
         this.user = user;
         return this;
+    }
+
+    public String getVersion() {
+        return version;
     }
 
     public void setSkip() {
@@ -148,19 +153,21 @@ public class ApiRequest {
 
     @Override
     public String toString() {
-        return "path:"
-                + path
-                + ", module:"
-                + mainModule
-                + ", models:"
-                + models.toString()
-                + ", action:"
-                + action
-                + ", dataId:"
-                + dataId
-                + ", userId"
-                + getUser().getId()
-                + ", isSkip:"
-                + isSkip;
+        return new StringJoiner(", ", ApiRequest.class.getSimpleName() + "[", "]")
+                .add("path='" + path + "'")
+                .add("mainModule='" + mainModule + "'")
+                .add("version='" + version + "'")
+                .add("models=" + models)
+                .add("action='" + action + "'")
+                .add("isSkip=" + isSkip)
+                .add("user=" + user)
+                .add("dataId='" + dataId + "'")
+                .add("moduleID='" + moduleID + "'")
+                .add("moduleName='" + moduleName + "'")
+                .add("actionName='" + actionName + "'")
+                .add("username='" + username + "'")
+                .add("authCondition='" + authCondition + "'")
+                .add("error=" + error)
+                .toString();
     }
 }

@@ -7,8 +7,7 @@ import jakarta.interceptor.AroundInvoke;
 import jakarta.interceptor.Interceptor;
 import jakarta.interceptor.InvocationContext;
 import jakarta.ws.rs.core.Response;
-
-import org.carl.infrastructure.component.web.annotations.Logged;
+import org.carl.infrastructure.component.web.annotations.ControllerLogged;
 import org.carl.infrastructure.component.web.config.ExceptionReason;
 import org.carl.infrastructure.component.web.config.exception.BizException;
 import org.carl.infrastructure.component.web.config.exception.SysException;
@@ -16,10 +15,10 @@ import org.jboss.logging.Logger;
 
 @Priority(1)
 @Interceptor
-@Logged
-public class LoggingInterceptor {
+@ControllerLogged
+public class ControllerLoggedInterceptor {
 
-    private final Logger log = Logger.getLogger(LoggingInterceptor.class);
+    private static final Logger log = Logger.getLogger(ControllerLoggedInterceptor.class);
 
     @AroundInvoke
     Object logInvocation(InvocationContext context) {
@@ -62,24 +61,24 @@ public class LoggingInterceptor {
             return sys.toResponse();
         }
         log.errorf(e, "Unhandled exception: %s", e.getMessage());
-        return Response.status(9999)
-                .entity(
-                        new ExceptionReason() {
-                            @Override
-                            public String getReason() {
-                                return e.getMessage();
-                            }
+        ExceptionReason entity =
+                new ExceptionReason() {
+                    @Override
+                    public String getReason() {
+                        return e.getMessage();
+                    }
 
-                            @Override
-                            public String getErrorType() {
-                                return "UNKNOWN_ERROR";
-                            }
+                    @Override
+                    public String getErrorType() {
+                        return "UNKNOWN_ERROR";
+                    }
 
-                            @Override
-                            public int getCode() {
-                                return 9999;
-                            }
-                        });
+                    @Override
+                    public int getCode() {
+                        return 9999;
+                    }
+                };
+        return Response.status(entity.getCode()).entity(entity);
     }
 
     private void logRequest(InvocationContext context) {
