@@ -116,7 +116,7 @@ services:
       - OPENFGA_DATASTORE_ENGINE=postgres
       - OPENFGA_DATASTORE_URI=postgres://root:root@postgres-scaffold:5432/openfga?sslmode=disable
     command: migrate
-    restart: always
+    restart: on-failure
     networks:
       - default
   openfga:
