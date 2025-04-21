@@ -1,20 +1,22 @@
 services:
   keycloak:
     image: quay.io/keycloak/keycloak:26.1.2
+    container_name: keycloak-scaffold
     ports:
       - "1080:8080"
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: root
       KC_BOOTSTRAP_ADMIN_PASSWORD: root
     command: start-dev
-  consul:
-    image: hashicorp/consul:1.20
-    container_name: consul-scaffold
-    ports:
-      - "8500:8500"
-    volumes:
-      - ./data:/consul/data
-      - ./consul.d/:/consul/config:rw
+    restart: always
+    #  consul:
+    #    image: hashicorp/consul:1.20
+    #    container_name: consul-scaffold
+    #    ports:
+    #      - "8500:8500"
+    #    volumes:
+    #      - ./data:/consul/data
+    #      - ./consul.d/:/consul/config:rw
     #    command: >
     #      consul agent -server
     #      -bootstrap-expect=1
@@ -23,11 +25,11 @@ services:
     #      -data-dir=/consul/data
     #      --config-dir=/consul/config
     #      -bind '{{ GetPrivateInterfaces | include "network" "172.27.0.0/16" | attr "address" }}'
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8500/ui/dc1/services/consul" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+  #    healthcheck:
+  #      test: [ "CMD", "curl", "-f", "http://localhost:8500/ui/dc1/services/consul" ]
+  #      interval: 30s
+  #      timeout: 10s
+  #      retries: 3
   #  neo4j:
   #    image: neo4j:5.24.2
   #    container_name: neo4j-scaffold
@@ -44,7 +46,7 @@ services:
     image: redis:7-alpine
     ports:
       - "6379:6379"
-    restart: no
+    restart: always
   pg:
     container_name: postgres-scaffold
     image: postgres:17-alpine
@@ -54,7 +56,15 @@ services:
       POSTGRES_DB: db
     ports:
       - "15432:5432"
-    restart: no
+    restart: always
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U root -d db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./init.sh:/docker-entrypoint-initdb.d/init.sh
+      #      - ./postgres:/var/lib/postgresql/data
   #    volumes:
   #      - ./postgres:/var/lib/postgresql/data
   mongodb:
@@ -67,9 +77,9 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=root
-    restart: no
-    volumes:
-      - ./mongodb:/data/db
+    restart: always
+#    volumes:
+#      - ./mongodb:/data/db
   pulsar:
     container_name: pulsar-scaffold
     command: "bin/pulsar standalone"
@@ -78,24 +88,68 @@ services:
       #      - "9080:8080"
       - "6650:6650"
     tty: true
-    restart: no
+    restart: always
     stdin_open: true
   es:
     container_name: elasticsearch-scaffold
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.16.0
+    image: elasticsearch:8.16.0
     environment:
       discovery.type: single-node
       ELASTICSEARCH_USERNAME: elastic
       ELASTICSEARCH_PASSWORD: 123456
     ports:
       - "19200:9200"
-    restart: no
+    restart: always
   qdrant:
-    container_name: qdrant
+    container_name: qdrant-scaffold
     image: qdrant/qdrant
     ports:
       - "6333:6333"
-    restart: no
+    restart: always
+  migrate:
+    depends_on:
+      pg:
+        condition: service_healthy
+    image: openfga/openfga:latest
+    container_name: migrate-scaffold
+    environment:
+      - OPENFGA_DATASTORE_ENGINE=postgres
+      - OPENFGA_DATASTORE_URI=postgres://root:root@postgres-scaffold:5432/openfga?sslmode=disable
+    command: migrate
+    restart: always
+    networks:
+      - default
+  openfga:
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    image: openfga/openfga:latest
+    container_name: openfga-scaffold
+    command: run
+    restart: always
+    environment:
+      - OPENFGA_DATASTORE_ENGINE=postgres
+      - OPENFGA_DATASTORE_URI=postgres://root:root@postgres-scaffold:5432/openfga?sslmode=disable
+      - OPENFGA_DATASTORE_MAX_OPEN_CONNS=100 #see postgres container
+      - OPENFGA_PLAYGROUND_ENABLED=true
+    networks:
+      - default
+    ports:
+      - "8080:8080" #http
+      - "8081:8081" #grpc
+      - "3000:3000" #playground
+      - "2112:2112" #prometheus metrics
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "/usr/local/bin/grpc_health_probe",
+          "-addr=openfga:8081"
+        ]
+      interval: 5s
+      timeout: 30s
+      retries: 3
+
 #  etcd:
 #    container_name: milvus-etcd-scaffold
 #    image: quay.io/coreos/etcd:v3.5.16
