@@ -36,39 +36,39 @@ public class Query {
         query.setAll(node);
         return this;
     }
-}
 
-class TermQuery implements BaseQuery {
-    TermPair termPair;
-    Query q;
+    public class TermQuery implements BaseQuery {
+        TermPair termPair;
+        Query q;
 
-    public TermQuery(Query query) {
-        this.q = query;
+        public TermQuery(Query query) {
+            this.q = query;
+        }
+
+        public Query build() throws JsonProcessingException {
+            ObjectNode objectNode = new ObjectMapper().createObjectNode();
+            ObjectNode jsonNode = new ObjectMapper().createObjectNode();
+            jsonNode.put(termPair.field, termPair.value);
+            objectNode.set(getQueryType().name().toLowerCase(), jsonNode);
+            return this.q.toQuery(objectNode);
+        }
+
+        public TermPair getTermPair() {
+            return termPair;
+        }
+
+        public TermQuery setTermPair(String field, String value) {
+            this.termPair = new TermPair(field, value);
+            return this;
+        }
+
+        @Override
+        public QueryType getQueryType() {
+            return QueryType.TERM;
+        }
+
+        record TermPair(String field, String value) {}
     }
-
-    public Query build() throws JsonProcessingException {
-        ObjectNode objectNode = new ObjectMapper().createObjectNode();
-        ObjectNode jsonNode = new ObjectMapper().createObjectNode();
-        jsonNode.put(termPair.field, termPair.value);
-        objectNode.set(getQueryType().name().toLowerCase(), jsonNode);
-        return this.q.toQuery(objectNode);
-    }
-
-    public TermPair getTermPair() {
-        return termPair;
-    }
-
-    public TermQuery setTermPair(String field, String value) {
-        this.termPair = new TermPair(field, value);
-        return this;
-    }
-
-    @Override
-    public QueryType getQueryType() {
-        return QueryType.TERM;
-    }
-
-    record TermPair(String field, String value) {}
 }
 
 interface BaseQuery {

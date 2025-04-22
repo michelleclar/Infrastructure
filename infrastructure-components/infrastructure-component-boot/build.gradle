@@ -1,7 +1,0 @@
-dependencies {
-    api project(':infrastructure-components:infrastructure-component-persistence')
-    api project(':infrastructure-components:infrastructure-component-authorization')
-    api project(':infrastructure-components:infrastructure-component-search')
-    api project(':infrastructure-components:infrastructure-component-cache')
-    api project(':infrastructure-components:infrastructure-component-broadcast')
-}

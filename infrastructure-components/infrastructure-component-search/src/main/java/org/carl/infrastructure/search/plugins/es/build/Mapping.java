@@ -38,32 +38,32 @@ public class Mapping {
     public String toString() {
         return json.toString();
     }
-}
 
-class Properties {
-    Mapping mapping;
-    String name;
-    PropertyType type;
+    public class Properties {
+        Mapping mapping;
+        String name;
+        PropertyType type;
 
-    public Properties(Mapping mapping) {
-        this.mapping = mapping;
-    }
+        public Properties(Mapping mapping) {
+            this.mapping = mapping;
+        }
 
-    public Properties setType(PropertyType type) {
-        this.type = type;
-        return this;
-    }
+        public Properties setType(PropertyType type) {
+            this.type = type;
+            return this;
+        }
 
-    public Properties setName(String name) {
-        this.name = name;
-        return this;
-    }
+        public Properties setName(String name) {
+            this.name = name;
+            return this;
+        }
 
-    public Mapping build() {
-        ObjectNode jsonNode = new ObjectMapper().createObjectNode();
-        ObjectNode inner = new ObjectMapper().createObjectNode();
-        inner.put("type", type.name().toLowerCase());
-        jsonNode.set(name, inner);
-        return mapping.addProperties(jsonNode);
+        public Mapping build() {
+            ObjectNode jsonNode = new ObjectMapper().createObjectNode();
+            ObjectNode inner = new ObjectMapper().createObjectNode();
+            inner.put("type", type.name().toLowerCase());
+            jsonNode.set(name, inner);
+            return mapping.addProperties(jsonNode);
+        }
     }
 }

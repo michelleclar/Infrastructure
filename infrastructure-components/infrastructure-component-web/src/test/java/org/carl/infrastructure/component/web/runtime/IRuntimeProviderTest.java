@@ -1,22 +1,21 @@
-package org.carl.infrastructure.component.web.annotations.interceptor;
+package org.carl.infrastructure.component.web.runtime;
 
 import static io.restassured.RestAssured.given;
 
 import io.quarkus.test.junit.QuarkusTest;
-import model.BaseArgs;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
-class ControllerLoggedInterceptorTest {
+class IRuntimeProviderTest {
+    /** {@link org.carl.infrastructure.component.web.filter.RootFilter} */
     @Test
-    @DisplayName("验证基础参数日志打印")
-    void testBaseArgsLogged() {
-        BaseArgs defualt = BaseArgs.DEFUALT;
+    @DisplayName("验证自定义过滤器")
+    void test() {
         given().contentType("application/json")
-                .body(defualt)
                 .when()
-                .post("/test/logger.base/args")
+                .headers("Authorization", "adsdddddddaadads")
+                .get("/test")
                 .then()
                 .statusCode(200)
                 .extract()

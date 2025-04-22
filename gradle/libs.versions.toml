@@ -47,6 +47,7 @@ quarkus-jwt = { module = "io.quarkus:quarkus-smallrye-jwt", version.ref = "quark
 quarkus-jwt-build = { module = "io.quarkus:quarkus-smallrye-jwt-build", version.ref = "quarkus" }
 quarkus-smtp = { module = "io.quarkus:quarkus-mailer", version.ref = "quarkus" }
 
+openfga = {module ='dev.openfga:openfga-sdk',version.require='0.8.1'}
 consul-stork = { module = "io.smallrye.stork:stork-service-discovery-consul", version.ref = "quarkus" }
 consul = { module = "io.quarkiverse.config:quarkus-config-consul", version.ref = "quarkus" }
 consul-client = { module = "io.smallrye.reactive:smallrye-mutiny-vertx-consul-client", version.ref = "quarkus" }

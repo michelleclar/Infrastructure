@@ -41,3 +41,8 @@ quarkus.oidc.roles.source=accesstoken
 quarkus.oidc.application-type=web-app
 
 ```
+### build native
+
+```puml
+./gradlew :demo:build "-Dquarkus.native.enabled=true" "-Dquarkus.native.container-build=true"
+```
