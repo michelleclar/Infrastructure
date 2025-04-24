@@ -1,6 +1,14 @@
 package org.carl.infrastructure.authorization;
 
-/** 权限基础类，用于表示系统中的权限 */
 public interface Permission {
+
+    /**
+     * @return permission name
+     */
     String getName();
+
+    /**
+     * @return permission description
+     */
+    String getDescription();
 }
