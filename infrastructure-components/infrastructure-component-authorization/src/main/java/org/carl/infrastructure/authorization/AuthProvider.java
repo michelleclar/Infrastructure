@@ -13,9 +13,9 @@ public interface AuthProvider {
      * get identity
      *
      * @param token jwt or other
-     * @return {@link AuthIdentity}
+     * @return {@link IUserIdentity}
      */
-    AuthIdentity getIdentity(String token);
+    IUserIdentity getIdentity(String token);
 
     /**
      * module permission
@@ -26,5 +26,5 @@ public interface AuthProvider {
      */
     boolean hasModulePermission(String userId, ModulePermission permission);
 
-    boolean canAccess(String userId, ResourcePermission permission);
+    boolean canAccess(String userId, ResourceIPermission permission);
 }

@@ -1,6 +1,8 @@
 package org.carl.infrastructure.authorization;
 
-public interface Permission {
+import jakarta.annotation.Nonnull;
+
+public interface IPermission {
 
     /**
      * @return permission name
@@ -11,4 +13,6 @@ public interface Permission {
      * @return permission description
      */
     String getDescription();
+
+    Boolean hasPermission(IUserIdentity identity, @Nonnull String requiredAction);
 }

@@ -1,6 +1,8 @@
 package org.carl.infrastructure.authorization;
 
-public class ResourcePermission implements Permission {
+import jakarta.annotation.Nonnull;
+
+public abstract class ResourceIPermission implements IPermission {
     String name;
     String resourceId;
     String resourceType;
@@ -17,6 +19,11 @@ public class ResourcePermission implements Permission {
         return description;
     }
 
+    @Override
+    public Boolean hasPermission(IUserIdentity identity, @Nonnull String requiredAction) {
+        return null;
+    }
+
     public String getResourceId() {
         return resourceId;
     }
@@ -30,10 +37,10 @@ public class ResourcePermission implements Permission {
     }
 
     public static class ResourcePermissionBuilder {
-        final ResourcePermission permission;
+        final ResourceIPermission permission;
 
         ResourcePermissionBuilder() {
-            permission = new ResourcePermission();
+            permission = new ResourceIPermission() {};
         }
 
         public static ResourcePermissionBuilder create() {
@@ -65,7 +72,7 @@ public class ResourcePermission implements Permission {
             return this;
         }
 
-        public ResourcePermission build() {
+        public ResourceIPermission build() {
             // TODO check filed is null
             return permission;
         }
