@@ -1,6 +1,11 @@
 package org.carl.infrastructure.authorization.modle;
 
+import io.quarkus.security.identity.SecurityIdentity;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.function.Function;
 import org.carl.infrastructure.authorization.IUserIdentity;
+import org.carl.infrastructure.authorization.modle.Permission.PermissionBuilder;
 import org.carl.infrastructure.util.Conversion;
 
 import java.util.Map;
@@ -13,6 +18,17 @@ public class UserIdentity implements IUserIdentity {
     Set<UserOrganize> userOrganizes;
     Set<String> roles;
     Map<String, Object> attributes;
+
+    public UserIdentity() {}
+
+    public UserIdentity(SecurityIdentity identity) {
+        this.isAnonymous = identity.isAnonymous();
+        this.permissions = new HashMap<>();
+        this.userGroups = new HashSet<>();
+        this.userOrganizes = new HashSet<>();
+        this.roles = identity.getRoles();
+        this.attributes = identity.getAttributes();
+    }
 
     @Override
     public Boolean isAnonymous() {
@@ -54,33 +70,63 @@ public class UserIdentity implements IUserIdentity {
         return attributes;
     }
 
-    public UserIdentity setAttributes(Map<String, Object> attributes) {
-        this.attributes = attributes;
-        return this;
-    }
+    public static class UserIdentityBuilder {
+        UserIdentity userIdentity;
 
-    public UserIdentity setRoles(Set<String> roles) {
-        this.roles = roles;
-        return this;
-    }
+        public static UserIdentityBuilder create() {
+            return new UserIdentityBuilder();
+        }
 
-    public UserIdentity setUserOrganizes(Set<UserOrganize> userOrganizes) {
-        this.userOrganizes = userOrganizes;
-        return this;
-    }
+        public UserIdentityBuilder setAttributes(Map<String, Object> attributes) {
+            this.userIdentity.attributes = attributes;
+            return this;
+        }
 
-    public UserIdentity setUserGroups(Set<UserGroup> userGroups) {
-        this.userGroups = userGroups;
-        return this;
-    }
+        public UserIdentityBuilder setRoles(Set<String> roles) {
+            this.userIdentity.roles = roles;
+            return this;
+        }
 
-    public UserIdentity setPermissions(Map<String, Set<Permission>> permissions) {
-        this.permissions = permissions;
-        return this;
-    }
+        public UserIdentityBuilder setUserOrganizes(Set<UserOrganize> userOrganizes) {
+            this.userIdentity.userOrganizes = userOrganizes;
+            return this;
+        }
 
-    public UserIdentity setAnonymous(Boolean anonymous) {
-        isAnonymous = anonymous;
-        return this;
+        public UserIdentityBuilder setUserGroups(Set<UserGroup> userGroups) {
+            this.userIdentity.userGroups = userGroups;
+            return this;
+        }
+
+        public UserIdentityBuilder setPermissions(Map<String, Set<Permission>> permissions) {
+            this.userIdentity.permissions = permissions;
+            return this;
+        }
+
+        public UserIdentityBuilder addPermission(String module, Permission permission) {
+            Set<Permission> set =
+                    this.userIdentity.permissions.getOrDefault(module, new HashSet<>());
+            set.add(permission);
+            this.userIdentity.permissions.put(module, set);
+            return this;
+        }
+
+        public UserIdentityBuilder addPermission(
+                String module, Function<PermissionBuilder, Permission> permission) {
+            Set<Permission> set =
+                    this.userIdentity.permissions.getOrDefault(module, new HashSet<>());
+            Permission apply = permission.apply(PermissionBuilder.create(module));
+            set.add(apply);
+            this.userIdentity.permissions.put(module, set);
+            return this;
+        }
+
+        public UserIdentityBuilder setAnonymous(Boolean anonymous) {
+            this.userIdentity.isAnonymous = anonymous;
+            return this;
+        }
+
+        public UserIdentity build() {
+            return this.userIdentity;
+        }
     }
 }

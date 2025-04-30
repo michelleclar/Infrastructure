@@ -92,6 +92,8 @@ PersistenceService ..|> IPersistenceOperations : implements
 
 ### **auth**
 
+![./image/auth.png](./image/auth.png)
+
 #### member
 
 > oidc

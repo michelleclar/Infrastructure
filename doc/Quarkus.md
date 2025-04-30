@@ -11,19 +11,19 @@ quarkus.http.root-path=/
 
 #### 1. create realms
 
-![image-20250331141919090](/Users/carl/workspace/backend/Infrastructure/doc/image/keyloak-create-realms-1.png)
+![image-20250331141919090](./image/keyloak-create-realms-1.png)
 
 #### 2. create user
 
-![image-20250331142151228](/Users/carl/workspace/backend/Infrastructure/doc/image/keyloak-create-user1.png)
+![image-20250331142151228](./image/keyloak-create-user1.png)
 
 #### 3. Create client
 
-![image-20250331142526059](/Users/carl/workspace/backend/Infrastructure/doc/image/keyloak-create-client-1.png)
+![image-20250331142526059](./image/keyloak-create-client-1.png)
 
 > open client create and auth
 
-![image-20250331142720360](/Users/carl/workspace/backend/Infrastructure/doc/image/keyloak-create-client-2.png)
+![image-20250331142720360](./image/keyloak-create-client-2.png)
 
 > modify
 

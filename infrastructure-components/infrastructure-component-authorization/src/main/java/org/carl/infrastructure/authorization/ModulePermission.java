@@ -4,7 +4,11 @@ import jakarta.annotation.Nonnull;
 import java.util.Set;
 import org.carl.infrastructure.authorization.modle.Permission;
 
-/** * check user have module permission from role permission */
+/**
+ * * build by web api request ,check user have module permission from role permission
+ *
+ * <p>TODO: should is private?
+ */
 public abstract class ModulePermission implements IPermission {
 
     /** module name */
@@ -14,7 +18,7 @@ public abstract class ModulePermission implements IPermission {
     String description;
 
     /** module action */
-    String action;
+    private String action;
 
     @Override
     public String getName() {
@@ -35,6 +39,16 @@ public abstract class ModulePermission implements IPermission {
         Set<Permission> permissions = identity.getPermissions().getOrDefault(name, Set.of());
         for (Permission permission : permissions) {
             if (permission.hasPermission(requiredAction)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public Boolean hasPermission(IUserIdentity identity) {
+        Set<Permission> permissions = identity.getPermissions().getOrDefault(name, Set.of());
+        for (Permission permission : permissions) {
+            if (permission.hasPermission(this.action)) {
                 return true;
             }
         }

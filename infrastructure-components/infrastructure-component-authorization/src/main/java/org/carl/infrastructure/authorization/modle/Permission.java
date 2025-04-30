@@ -1,15 +1,30 @@
 package org.carl.infrastructure.authorization.modle;
 
+import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.carl.infrastructure.authorization.IModuleEnum;
+import org.carl.infrastructure.authorization.modle.ModuleAction.ModuleActionBuilder;
 
+/**
+ * user all permission
+ *
+ * <p>1. module permission
+ *
+ * <p>2. resource permission
+ */
 public class Permission {
-    final String module;
-    final Set<ModuleAction> actions;
-    Integer maxLevel = -1;
-    Set<String> enabledActions;
-    Set<String> disabledActions;
+    private final String module;
+
+    private Set<ModuleAction> actions;
+    private Integer maxLevel = -1;
+    private Set<String> enabledActions;
+    private Set<String> disabledActions;
+
+    private Permission(String module) {
+        this.module = module;
+    }
 
     public Permission(String module, Set<ModuleAction> actions) {
         this.module = module;
@@ -79,5 +94,39 @@ public class Permission {
     @Override
     public int hashCode() {
         return module.hashCode();
+    }
+
+    public static class PermissionBuilder {
+        Permission permission;
+
+        private PermissionBuilder(String module) {
+            permission = new Permission(module);
+        }
+
+        public static PermissionBuilder create(String module) {
+            return new PermissionBuilder(module);
+        }
+
+        public PermissionBuilder addAction(Function<ModuleActionBuilder, ModuleAction> f) {
+            ModuleAction apply = f.apply(new ModuleActionBuilder());
+            addActions(apply);
+            return this;
+        }
+
+        public PermissionBuilder addAction(ModuleAction action) {
+            addActions(action);
+            return this;
+        }
+        public Permission build() {
+            return permission;
+        }
+
+        private void addActions(ModuleAction action) {
+            if (permission.actions == null) {
+                permission.actions = new HashSet<>();
+            }
+            permission.actions.add(action);
+        }
+
     }
 }
