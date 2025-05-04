@@ -97,6 +97,8 @@ services:
       discovery.type: single-node
       ELASTICSEARCH_USERNAME: elastic
       ELASTICSEARCH_PASSWORD: 123456
+      ES_JAVA_OPTS: -Xms64m -Xmx2048m
+      xpack.security.enabled: false
     ports:
       - "19200:9200"
     restart: always

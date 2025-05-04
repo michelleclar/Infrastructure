@@ -35,6 +35,10 @@ public class ApiRequest {
 
     public ApiRequest(String path) {
         this.path = path;
+        if (!path.startsWith("/api")) {
+            isSkip = true;
+            return;
+        }
 
         // NOTE: /api/v1/{module}.{submodule}/{action}
         // NOTE: /api/v1/system.config/refresh
