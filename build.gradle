@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.quarkus)
     id 'nu.studer.jooq'
     id 'java-library'
+    id("io.github.klahap.dotenv") version "1.1.3"
 }
 subprojects {
     apply {
@@ -13,14 +14,26 @@ subprojects {
         plugin 'io.quarkus'
         plugin 'java-library'
         plugin 'nu.studer.jooq'
+        plugin 'io.github.klahap.dotenv'
     }
     group = 'org.carl'
     version = '1.0-BATE'
     repositories {
+        // NOTE: Save bandwidth
+        mavenLocal()
         maven { url 'https://maven.aliyun.com/repository/central' }
+        maven {
+            credentials {
+                username = '659e01070cab697efe1345a8'
+                password = System.getenv("MAVEN_PASSWORD")
+            }
+            url = 'https://packages.aliyun.com/659e01070cab697efe1345a8/maven/repo-wdhey'
+        }
         maven { url 'https://mirrors.cloud.tencent.com/repository/maven' }
         mavenCentral()
     }
+
+
     java {
         toolchain {
             languageVersion = JavaLanguageVersion.of(21)

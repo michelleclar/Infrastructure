@@ -1,16 +1,20 @@
 package org.carl.infrastructure.util;
 
+import org.carl.infrastructure.annotations.NotThreadSafe;
+
 public class LinkedTable<T> {
     private Node<T>[] nodes;
     private int size;
     private int head;
 
+    @SuppressWarnings("unchecked")
     public LinkedTable(int capacity) {
         nodes = new Node[capacity];
         size = 0;
         head = -1;
     }
 
+    @NotThreadSafe
     public void insert(T value) {
         if (size >= nodes.length) {
             throw new ArrayIndexOutOfBoundsException("Table is full");
@@ -30,11 +34,12 @@ public class LinkedTable<T> {
         int current = head;
         StringBuilder str = new StringBuilder();
         while (current != -1) {
-            str.append(nodes[current].value);
+            str.append(nodes[current].value).append(" -> ");
             current = nodes[current].next;
             if (current != -1) {
                 str.append(" -> ");
             }
+            str.append(nodes[current].value);
         }
         return str.toString();
     }
