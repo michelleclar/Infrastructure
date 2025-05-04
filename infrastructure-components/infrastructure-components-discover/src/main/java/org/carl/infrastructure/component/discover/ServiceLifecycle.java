@@ -1,4 +1,4 @@
-package org.carl.infrastructure.component.web.config;
+package org.carl.infrastructure.component.discover;
 
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;

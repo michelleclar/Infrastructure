@@ -1,5 +1,4 @@
 dependencies {
     api libs.bundles.web
-    implementation libs.bundles.register.center.consul
     testImplementation project(':infrastructure-components:infrastructure-component-authorization')
 }
