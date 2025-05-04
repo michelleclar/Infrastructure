@@ -19,13 +19,25 @@ class ModulePermissionTest {
                         .name("user.manager.employee")
                         .description("create employee")
                         .build();
-        UserIdentityBuilder userIdentityBuilder = new UserIdentityBuilder();
+        UserIdentityBuilder userIdentityBuilder = UserIdentityBuilder.create();
         // a manager user: userIdentity from token
         userIdentityBuilder
                 .setAnonymous(false)
                 .setRoles(Set.of("manager"))
                 .addPermission(
                         "user.manager.employee",
+                        permissionBuilder ->
+                                permissionBuilder
+                                        .addAction(
+                                                f ->
+                                                        f.enable(true)
+                                                                .addStandardAction(
+                                                                        ModuleStandardPermission
+                                                                                .CREATE)
+                                                                .build())
+                                        .build())
+                .addPermission(
+                        "user.document",
                         permissionBuilder ->
                                 permissionBuilder
                                         .addAction(

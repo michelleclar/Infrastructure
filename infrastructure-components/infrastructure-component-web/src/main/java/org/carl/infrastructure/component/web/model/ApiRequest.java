@@ -51,6 +51,7 @@ public class ApiRequest {
         }
         action = urlBlock[4];
         version = urlBlock[2];
+        moduleName = urlBlock[3];
 
         if (urlBlock[3].contains(".")) {
             String[] parts = urlBlock[3].split("\\.");

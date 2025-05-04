@@ -243,3 +243,8 @@ graph LR
 ## task flow
 
 > n8n zeebe Camunda 
+> 
+
+## next
+
+impl ui, impl auth schema

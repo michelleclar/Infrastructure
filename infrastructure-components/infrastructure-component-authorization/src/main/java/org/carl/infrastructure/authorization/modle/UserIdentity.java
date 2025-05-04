@@ -3,17 +3,16 @@ package org.carl.infrastructure.authorization.modle;
 import io.quarkus.security.identity.SecurityIdentity;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import org.carl.infrastructure.authorization.IUserIdentity;
 import org.carl.infrastructure.authorization.modle.Permission.PermissionBuilder;
 import org.carl.infrastructure.util.Conversion;
 
-import java.util.Map;
-import java.util.Set;
-
 public class UserIdentity implements IUserIdentity {
     Boolean isAnonymous;
-    Map<String, Set<Permission>> permissions;
+    Map<String, Set<Permission>> permissions = new HashMap<>();
     Set<UserGroup> userGroups;
     Set<UserOrganize> userOrganizes;
     Set<String> roles;
@@ -73,6 +72,10 @@ public class UserIdentity implements IUserIdentity {
     public static class UserIdentityBuilder {
         UserIdentity userIdentity;
 
+        UserIdentityBuilder() {
+            userIdentity = new UserIdentity();
+        }
+
         public static UserIdentityBuilder create() {
             return new UserIdentityBuilder();
         }
@@ -104,25 +107,32 @@ public class UserIdentity implements IUserIdentity {
 
         public UserIdentityBuilder addPermission(String module, Permission permission) {
             Set<Permission> set =
-                    this.userIdentity.permissions.getOrDefault(module, new HashSet<>());
+                    getPermission().getOrDefault(module, new HashSet<>());
             set.add(permission);
-            this.userIdentity.permissions.put(module, set);
+            getPermission().put(module, set);
             return this;
         }
 
         public UserIdentityBuilder addPermission(
                 String module, Function<PermissionBuilder, Permission> permission) {
             Set<Permission> set =
-                    this.userIdentity.permissions.getOrDefault(module, new HashSet<>());
+                    getPermission().getOrDefault(module, new HashSet<>());
             Permission apply = permission.apply(PermissionBuilder.create(module));
             set.add(apply);
-            this.userIdentity.permissions.put(module, set);
+            getPermission().put(module, set);
             return this;
         }
 
         public UserIdentityBuilder setAnonymous(Boolean anonymous) {
             this.userIdentity.isAnonymous = anonymous;
             return this;
+        }
+
+        private Map<String, Set<Permission>> getPermission() {
+            if (userIdentity.permissions == null) {
+                userIdentity.permissions = new HashMap<>();
+            }
+            return userIdentity.permissions;
         }
 
         public UserIdentity build() {

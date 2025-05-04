@@ -36,7 +36,7 @@ public class Permission {
         if (getDisabledActions().contains(requirePermission)) {
             return false;
         }
-        return enabledActions.contains(requirePermission);
+        return getEnabledActions().contains(requirePermission);
     }
 
     public Boolean hasPermission(Integer permissionLevel) {
@@ -117,6 +117,7 @@ public class Permission {
             addActions(action);
             return this;
         }
+
         public Permission build() {
             return permission;
         }
@@ -127,6 +128,5 @@ public class Permission {
             }
             permission.actions.add(action);
         }
-
     }
 }

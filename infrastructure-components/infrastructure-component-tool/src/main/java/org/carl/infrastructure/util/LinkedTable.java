@@ -34,12 +34,11 @@ public class LinkedTable<T> {
         int current = head;
         StringBuilder str = new StringBuilder();
         while (current != -1) {
-            str.append(nodes[current].value).append(" -> ");
+            str.append(nodes[current].value);
             current = nodes[current].next;
             if (current != -1) {
                 str.append(" -> ");
             }
-            str.append(nodes[current].value);
         }
         return str.toString();
     }
