@@ -2,8 +2,6 @@ plugins {
     java
     idea
     id("com.diffplug.spotless") version "7.0.0.BETA4"
-    alias(libs.plugins.quarkus)
-    id("nu.studer.jooq") version "9.0"
     id("java-library")
 }
 subprojects {
@@ -11,9 +9,7 @@ subprojects {
         plugin("com.diffplug.spotless")
         plugin("java")
         plugin("idea")
-        plugin("io.quarkus")
         plugin("java-library")
-        plugin("nu.studer.jooq")
     }
     group = "org.carl"
     version = "1.0-BATE"
@@ -124,16 +120,16 @@ subprojects {
 //            endWithNewline()
 //        }
     }
-    afterEvaluate {
-        tasks.findByName("spotlessApply")?.let { spotless ->
-            tasks.withType<JavaCompile>().configureEach {
-                finalizedBy(spotless)
-            }
-            tasks.withType<GroovyCompile>().configureEach {
-                finalizedBy(spotless)
-            }
-        }
-    }
+//    afterEvaluate {
+//        tasks.findByName("spotlessApply")?.let { spotless ->
+//            tasks.withType<JavaCompile>().configureEach {
+//                finalizedBy(spotless)
+//            }
+//            tasks.withType<GroovyCompile>().configureEach {
+//                finalizedBy(spotless)
+//            }
+//        }
+//    }
     // NOTE: pulsar
     configurations.configureEach {
         resolutionStrategy.dependencySubstitution {
@@ -145,53 +141,53 @@ subprojects {
                 .withoutClassifier()
         }
     }
-    val libs = rootProject.libs
-    dependencies {
-        implementation(enforcedPlatform(libs.quarkus.platform.bom))
-        testImplementation(libs.bundles.test)
-    }
-    if (!project.toString().contains("infrastructure")) {
-        dependencies {
-//            implementation project(':infrastructure-components:infrastructure-component-boot')
-            implementation(project(":infrastructure-components:infrastructure-component-authorization"))
-            implementation(project(":infrastructure-components:infrastructure-component-broadcast"))
-            implementation(project(":infrastructure-components:infrastructure-component-cache"))
-            implementation(project(":infrastructure-components:infrastructure-component-persistence"))
-            implementation(project(":infrastructure-components:infrastructure-component-search"))
-//            implementation project(':infrastructure-components:infrastructure-component-tool')
-            implementation(project(":infrastructure-components:infrastructure-component-web"))
-        }
-        val mainSrc = "src/main/java"
-        val generatedDir = "src/main/generated"
-        sourceSets {
-            named("main") {
-                java {
-                    srcDir(generatedDir)
-                    srcDir(mainSrc)
-                }
-            }
-        }
-
-        idea {
-            val mainSrcFile = file("src/main/java")
-            val generatedDirFile = file("src/main/generated")
-            module {
-                generatedSourceDirs.add(generatedDirFile)
-                sourceDirs.add(generatedDirFile)
-                sourceDirs.add(mainSrcFile)
-            }
-        }
-//        var api = System.getenv("API_PREFIX") == null ? "/v1/api" : System.getenv("API_PREFIX")
-        quarkus {
-            quarkusBuildProperties.put("quarkus.grpc.codegen.proto-directory", "./protos")
-//            quarkusBuildProperties.put("quarkus.http.root-path", api)
-        }
-        tasks.quarkusBuild {
-            nativeArgs {
-                "container-build" to true
-                "builder-image" to "quay.io/quarkus/ubi9-quarkus-mandrel-builder-image:jdk-21"
-
-            }
-        }
-    }
+//    val libs = rootProject.libs
+//    dependencies {
+//        implementation(enforcedPlatform(libs.quarkus.platform.bom))
+//        testImplementation(libs.bundles.test)
+//    }
+//    if (!project.toString().contains("infrastructure")) {
+//        dependencies {
+////            implementation project(':infrastructure-components:infrastructure-component-boot')
+//            implementation(project(":infrastructure-components:infrastructure-component-authorization"))
+//            implementation(project(":infrastructure-components:infrastructure-component-broadcast"))
+//            implementation(project(":infrastructure-components:infrastructure-component-cache"))
+//            implementation(project(":infrastructure-components:infrastructure-component-persistence"))
+//            implementation(project(":infrastructure-components:infrastructure-component-search"))
+////            implementation project(':infrastructure-components:infrastructure-component-tool')
+//            implementation(project(":infrastructure-components:infrastructure-component-web"))
+//        }
+//        val mainSrc = "src/main/java"
+//        val generatedDir = "src/main/generated"
+//        sourceSets {
+//            named("main") {
+//                java {
+//                    srcDir(generatedDir)
+//                    srcDir(mainSrc)
+//                }
+//            }
+//        }
+//
+//        idea {
+//            val mainSrcFile = file("src/main/java")
+//            val generatedDirFile = file("src/main/generated")
+//            module {
+//                generatedSourceDirs.add(generatedDirFile)
+//                sourceDirs.add(generatedDirFile)
+//                sourceDirs.add(mainSrcFile)
+//            }
+//        }
+////        var api = System.getenv("API_PREFIX") == null ? "/v1/api" : System.getenv("API_PREFIX")
+//        quarkus {
+//            quarkusBuildProperties.put("quarkus.grpc.codegen.proto-directory", "./protos")
+////            quarkusBuildProperties.put("quarkus.http.root-path", api)
+//        }
+//        tasks.quarkusBuild {
+//            nativeArgs {
+//                "container-build" to true
+//                "builder-image" to "quay.io/quarkus/ubi9-quarkus-mandrel-builder-image:jdk-21"
+//
+//            }
+//        }
+//    }
 }

@@ -9,6 +9,7 @@ version = "1.0-SNAPSHOT"
 repositories {
     // NOTE: Save bandwidth
     mavenLocal()
+    maven { url = uri("https://maven.aliyun.com/repository/central") }
     maven {
         credentials {
             username = findProperty("MAVEN_USERNAME").toString()

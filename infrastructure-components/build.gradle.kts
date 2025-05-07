@@ -1,23 +1,23 @@
 plugins {
     id("org.kordamp.gradle.jandex") version "2.1.0"
+    alias(libs.plugins.quarkus)
     id("maven-publish")
+}
+tasks.named("quarkusDependenciesBuild") {
+    enabled = false
+    dependsOn("jandex")
 }
 
 subprojects {
     apply {
         plugin("org.kordamp.gradle.jandex")
         plugin("maven-publish")
+        plugin("io.quarkus")
     }
 
-    val env: Map<String, String> = file(".env").takeIf { it.exists() }
-        ?.readLines()
-        ?.filterNot { it.trim().startsWith("#") || it.isBlank() }?.associate {
-            val (k, v) = it.split("=", limit = 2)
-            k.trim() to v.trim()
-        } ?: emptyMap()
-
-    fun Project.env(key: String): String? = env[key]
-
+    tasks.named("quarkusDependenciesBuild") {
+        dependsOn("jandex")
+    }
     publishing {
         publications {
             create<MavenPublication>("mavenJava") {
@@ -28,38 +28,21 @@ subprojects {
             }
         }
         repositories {
-            //        maven {
-            //            name = "GitHubPackages"
-            //            url = uri("https://maven.pkg.github.com/michelleclar/Infrastructure")
-            //            credentials {
-            //                username = 'carl'
-            //                password = System.getenv('GITHUB_TOKEN')
-            //            }
-            //        }
+
             maven {
                 url = uri("https://packages.aliyun.com/659e01070cab697efe1345a8/maven/repo-wdhey")
                 credentials {
-                    username = "${project.env("MAVEN_USERNAME")}"
-                    username = "${project.env("MAVEN_USERNAME")}"
+                    username = findProperty("ALIYUN_MAVEN_USERNAME").toString()
+                    password = findProperty("ALIYUN_MAVEN_password").toString()
                 }
             }
         }
-//            publications {
-//                gpr(MavenPublication) {
-//                    from(components.java)
-//                }
-//            }
-    }
-
-    tasks.named("quarkusDependenciesBuild") {
-        dependsOn("jandex")
     }
 
     val libs = rootProject.libs
     dependencies {
+        implementation(enforcedPlatform(libs.quarkus.platform.bom))
+        testImplementation(libs.bundles.test)
         testImplementation(libs.bundles.web)
-        if (!name.startsWith("infrastructure-component-tool")) {
-            api(project(":infrastructure-components:infrastructure-component-tool"))
-        }
     }
 }
