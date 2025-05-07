@@ -5,7 +5,7 @@ pluginManagement {
     }
 }
 
-rootProject.name = "scaffold"
+rootProject.name = "infrastructure"
 include("infrastructure-components")
 include("infrastructure-components:infrastructure-component-persistence")
 //include "infrastructure-components:infrastructure-component-boot"
