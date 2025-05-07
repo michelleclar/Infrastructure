@@ -1,5 +1,6 @@
 plugins {
     java
+    idea
     id("io.quarkus") version "3.19.3"
 }
 
@@ -19,6 +20,26 @@ repositories {
         url = uri("https://packages.aliyun.com/659e01070cab697efe1345a8/maven/repo-wdhey")
     }
 }
+val mainSrc = "src/main/java"
+val generatedDir = "src/main/generated"
+sourceSets {
+    named("main") {
+        java {
+            srcDir(generatedDir)
+            srcDir(mainSrc)
+        }
+    }
+}
+
+idea {
+    val mainSrcFile = file("src/main/java")
+    val generatedDirFile = file("src/main/generated")
+    module {
+        generatedSourceDirs.add(generatedDirFile)
+        sourceDirs.add(generatedDirFile)
+        sourceDirs.add(mainSrcFile)
+    }
+}
 
 tasks.withType<Test>().configureEach {
     enabled = false
@@ -31,4 +52,18 @@ dependencies {
     implementation(enforcedPlatform(libs.quarkus.platform.bom))
     implementation(libs.bundles.all)
     testImplementation(libs.bundles.test)
+}
+
+
+//        var api = System.getenv("API_PREFIX") == null ? "/v1/api" : System.getenv("API_PREFIX")
+quarkus {
+    quarkusBuildProperties.put("quarkus.grpc.codegen.proto-directory", "./protos")
+//            quarkusBuildProperties.put("quarkus.http.root-path", api)
+}
+tasks.quarkusBuild {
+    nativeArgs {
+        "container-build" to true
+        "builder-image" to "quay.io/quarkus/ubi9-quarkus-mandrel-builder-image:jdk-21"
+
+    }
 }

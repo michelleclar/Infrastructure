@@ -21,7 +21,6 @@ subprojects {
         mavenCentral()
     }
 
-
     java {
         toolchain {
             languageVersion = JavaLanguageVersion.of(21)
@@ -61,6 +60,7 @@ subprojects {
         ratchetFrom = "origin/main"
 
         java {
+            target("src/main/**/*.java")
             importOrder()
             cleanthat()
             googleJavaFormat().aosp().reflowLongStrings().formatJavadoc(false).reorderImports(false)
@@ -71,16 +71,17 @@ subprojects {
         }
         protobuf {
             target("**/*.proto")
+            targetExclude("**/build/**", "**/build-*/**")
             buf()
             licenseHeader("/* (C) \$YEAR */")
         }
         flexmark {
             target("**/*.md")
+            targetExclude("**/build/**", "**/build-*/**")
             flexmark()
         }
         sql {
             target("src/main/resources/**/*.sql")
-            targetExclude("**/build/**", "**/build-*/**")
             dbeaver()
             prettier()
         }
@@ -93,44 +94,18 @@ subprojects {
             target("src/main/resources/**/*.sh")
             shfmt()
         }
-        groovyGradle {
-            target("**/*.gradle")
-            greclipse()
-            indentWithSpaces(4)
-            trimTrailingWhitespace()
-            endWithNewline()
-        }
-//        format 'xml', {
-//            target fileTree('.') {
-//                include '**/*.xml'
-//                exclude '**/build/**', '**/build-*/**'
-//            }
-//            eclipseWtp('xml')
-//            trimTrailingWhitespace()
-//            indentWithSpaces(2)
-//            endWithNewline()
-//        }
-//        format 'misc', {
-//            target fileTree('.') {
-//                include '**/*.md', '**/.gitignore'
-//                exclude '**/build/**', '**/build-*/**'
-//            }
-//            trimTrailingWhitespace()
-//            indentWithSpaces(2)
-//            endWithNewline()
-//        }
     }
-//    afterEvaluate {
-//        tasks.findByName("spotlessApply")?.let { spotless ->
-//            tasks.withType<JavaCompile>().configureEach {
-//                finalizedBy(spotless)
-//            }
-//            tasks.withType<GroovyCompile>().configureEach {
-//                finalizedBy(spotless)
-//            }
-//        }
-//    }
-    // NOTE: pulsar
+    afterEvaluate {
+        tasks.findByName("spotlessApply")?.let { spotless ->
+            tasks.withType<JavaCompile>().configureEach {
+                finalizedBy(spotless)
+            }
+            tasks.withType<GroovyCompile>().configureEach {
+                finalizedBy(spotless)
+            }
+        }
+    }
+    // NOTE: build pulsar
     configurations.configureEach {
         resolutionStrategy.dependencySubstitution {
             substitute(module("org.apache.bookkeeper:circe-checksum"))
@@ -141,53 +116,4 @@ subprojects {
                 .withoutClassifier()
         }
     }
-//    val libs = rootProject.libs
-//    dependencies {
-//        implementation(enforcedPlatform(libs.quarkus.platform.bom))
-//        testImplementation(libs.bundles.test)
-//    }
-//    if (!project.toString().contains("infrastructure")) {
-//        dependencies {
-////            implementation project(':infrastructure-components:infrastructure-component-boot')
-//            implementation(project(":infrastructure-components:infrastructure-component-authorization"))
-//            implementation(project(":infrastructure-components:infrastructure-component-broadcast"))
-//            implementation(project(":infrastructure-components:infrastructure-component-cache"))
-//            implementation(project(":infrastructure-components:infrastructure-component-persistence"))
-//            implementation(project(":infrastructure-components:infrastructure-component-search"))
-////            implementation project(':infrastructure-components:infrastructure-component-tool')
-//            implementation(project(":infrastructure-components:infrastructure-component-web"))
-//        }
-//        val mainSrc = "src/main/java"
-//        val generatedDir = "src/main/generated"
-//        sourceSets {
-//            named("main") {
-//                java {
-//                    srcDir(generatedDir)
-//                    srcDir(mainSrc)
-//                }
-//            }
-//        }
-//
-//        idea {
-//            val mainSrcFile = file("src/main/java")
-//            val generatedDirFile = file("src/main/generated")
-//            module {
-//                generatedSourceDirs.add(generatedDirFile)
-//                sourceDirs.add(generatedDirFile)
-//                sourceDirs.add(mainSrcFile)
-//            }
-//        }
-////        var api = System.getenv("API_PREFIX") == null ? "/v1/api" : System.getenv("API_PREFIX")
-//        quarkus {
-//            quarkusBuildProperties.put("quarkus.grpc.codegen.proto-directory", "./protos")
-////            quarkusBuildProperties.put("quarkus.http.root-path", api)
-//        }
-//        tasks.quarkusBuild {
-//            nativeArgs {
-//                "container-build" to true
-//                "builder-image" to "quay.io/quarkus/ubi9-quarkus-mandrel-builder-image:jdk-21"
-//
-//            }
-//        }
-//    }
 }

@@ -14,9 +14,16 @@ subprojects {
         plugin("maven-publish")
         plugin("io.quarkus")
     }
+//    tasks.named<Jar>("sourcesJar") {
+//        dependsOn(tasks.named("compileQuarkusGeneratedSourcesJava"))
+//    }
+
+    tasks.named<JavaCompile>("compileJava") {
+        dependsOn(tasks.named("compileQuarkusGeneratedSourcesJava"))
+    }
 
     tasks.named("quarkusDependenciesBuild") {
-        dependsOn("jandex")
+        mustRunAfter(tasks.named("jandex"))
     }
     publishing {
         publications {

@@ -1,18 +1,7 @@
 pluginManagement {
     repositories {
-
         mavenLocal()
-//        maven { url = uri("https://maven.aliyun.com/repository/central") }
-//        maven { url 'https://mirrors.cloud.tencent.com/repository/maven' }
-//        maven { url = uri("https://maven.aliyun.com/repository/public") }
-//        maven { url = uri("https://maven.aliyun.com/repository/google") }
-//        maven { url = uri("https://maven.aliyun.com/repository/gradle-plugin") }
-        //        maven { url 'https://maven.aliyun.com/repository/jcenter' }
-
-//        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
-        //        maven { url 'https://maven.aliyun.com/repository/apache-snapshots' }
         gradlePluginPortal()
-//        mavenCentral()
     }
 }
 
