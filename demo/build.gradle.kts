@@ -60,10 +60,21 @@ quarkus {
     quarkusBuildProperties.put("quarkus.grpc.codegen.proto-directory", "./protos")
 //            quarkusBuildProperties.put("quarkus.http.root-path", api)
 }
+
+// NOTE: fix build pulsar
+configurations.configureEach {
+    resolutionStrategy.dependencySubstitution {
+        substitute(module("org.apache.bookkeeper:circe-checksum"))
+            .using(module("org.apache.bookkeeper:circe-checksum:4.17.0"))
+            .withoutClassifier()
+        substitute(module("org.apache.bookkeeper:cpu-affinity"))
+            .using(module("org.apache.bookkeeper:cpu-affinity:4.17.0"))
+            .withoutClassifier()
+    }
+}
 tasks.quarkusBuild {
     nativeArgs {
         "container-build" to true
         "builder-image" to "quay.io/quarkus/ubi9-quarkus-mandrel-builder-image:jdk-21"
-
     }
 }
