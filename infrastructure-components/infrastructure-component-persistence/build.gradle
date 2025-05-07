@@ -1,7 +1,0 @@
-dependencies {
-    api libs.bundles.persistence
-    //    if ("prod" != System.getenv('quarkus.profile')) {
-    //        implementation libs.jooq.meta
-    //        implementation libs.jooq.codegen
-    //    }
-}
