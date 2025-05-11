@@ -55,6 +55,8 @@ dependencies {
     implementation(libs.bundles.all)
     implementation(libs.infrastructure.component.qdrant.grpc)
     testImplementation(libs.bundles.test)
+    annotationProcessor("com.querydsl:querydsl-apt:5.1.0:jakarta")
+    annotationProcessor("jakarta.persistence:jakarta.persistence-api:3.1.0")
 }
 
 quarkus {

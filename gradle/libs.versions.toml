@@ -2,10 +2,11 @@
 testcontainers = "1.20.4"
 quarkus = "3.19.3"
 commons = "4.4"
-xml = '4.0.2'
+xml = "4.0.2"
 guava = "33.2.1-jre"
-jdbi = '3.49.0'
-velocity = '2.4.1'
+jdbi = "3.49.0"
+velocity = "2.4.1"
+querydsl = "5.1.0"
 
 [libraries]
 quarkus-platform-bom = { module = "io.quarkus.platform:quarkus-bom", version.ref = "quarkus" }
@@ -47,7 +48,10 @@ quarkus-jwt = { module = "io.quarkus:quarkus-smallrye-jwt", version.ref = "quark
 quarkus-jwt-build = { module = "io.quarkus:quarkus-smallrye-jwt-build", version.ref = "quarkus" }
 quarkus-smtp = { module = "io.quarkus:quarkus-mailer", version.ref = "quarkus" }
 
-openfga = {module ='dev.openfga:openfga-sdk',version.require='0.8.1'}
+querydsl-apt = { module = "com.querydsl:querydsl-apt", version.ref = "querydsl" }
+querydsl-jpa = { module = "com.querydsl:querydsl-jpa", version.ref = "querydsl" }
+querydsl-sql = { module = "com.querydsl:querydsl-sql", version.ref = "querydsl" }
+openfga = { module = 'dev.openfga:openfga-sdk', version.require = '0.8.1' }
 consul-stork = { module = "io.smallrye.stork:stork-service-discovery-consul", version.ref = "quarkus" }
 consul = { module = "io.quarkiverse.config:quarkus-config-consul", version.ref = "quarkus" }
 consul-client = { module = "io.smallrye.reactive:smallrye-mutiny-vertx-consul-client", version.ref = "quarkus" }
@@ -91,7 +95,10 @@ persistence = [
     'quarkus-panache',
     'jdbi-core',
     'quarkus-agroal',
-    'velocity'
+    'velocity',
+    'querydsl-apt',
+    'querydsl-sql',
+    'querydsl-jpa'
 ]
 
 cache = ['quarkus-cache', 'quarkus-redis']
