@@ -1,6 +1,6 @@
 package org.carl.infrastructure.util;
 
-/** source: package org.apache.commons.lang3; */
+/** source: {@link org.apache.commons.lang3}; */
 public class StringUtils {
     /**
      * Checks if a CharSequence is empty ("") or null.
@@ -25,16 +25,16 @@ public class StringUtils {
     }
 
     /**
-     * Checks if the CharSequence contains only Unicode digits. A decimal point is not a Unicode
-     * digit and returns false.
+     * Checks if the CharSequence contains only Unicode digits. A decimal point is not a Unicode digit
+     * and returns false.
      *
      * <p>{@code null} will return {@code false}. An empty CharSequence (length()=0) will return
      * {@code false}.
      *
      * <p>Note that the method does not allow for a leading sign, either positive or negative. Also,
-     * if a String passes the numeric test, it may still generate a NumberFormatException when
-     * parsed by Integer.parseInt or Long.parseLong, e.g. if the value is outside the range for int
-     * or long respectively.
+     * if a String passes the numeric test, it may still generate a NumberFormatException when parsed
+     * by Integer.parseInt or Long.parseLong, e.g. if the value is outside the range for int or long
+     * respectively.
      *
      * <pre>
      * StringUtils.isNumeric(null)   = false
@@ -69,8 +69,8 @@ public class StringUtils {
     }
 
     /**
-     * Checks if the CharSequence contains only Unicode digits or space ({@code ' '}). A decimal
-     * point is not a Unicode digit and returns false.
+     * Checks if the CharSequence contains only Unicode digits or space ({@code ' '}). A decimal point
+     * is not a Unicode digit and returns false.
      *
      * <p>{@code null} will return {@code false}. An empty CharSequence (length()=0) will return
      * {@code true}.

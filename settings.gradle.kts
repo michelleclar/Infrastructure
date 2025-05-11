@@ -15,5 +15,6 @@ include("infrastructure-components:infrastructure-component-cache")
 include("infrastructure-components:infrastructure-component-broadcast")
 include("infrastructure-components:infrastructure-component-tool")
 include("infrastructure-components:infrastructure-component-web")
-include("infrastructure-components:infrastructure-components-discover")
-
+include("infrastructure-components:infrastructure-component-discover")
+include("infrastructure-components:infrastructure-component-vector")
+include("infrastructure-component-qdrant-grpc")

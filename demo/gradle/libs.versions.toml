@@ -10,6 +10,8 @@ infrastructure-component-cache = { module = "org.carl:infrastructure-component-c
 infrastructure-component-persistence = { module = "org.carl:infrastructure-component-persistence", version.ref = "carl" }
 infrastructure-component-search = { module = "org.carl:infrastructure-component-search", version.ref = "carl" }
 infrastructure-component-web = { module = "org.carl:infrastructure-component-web", version.ref = "carl" }
+infrastructure-component-vector= { module = "org.carl:infrastructure-component-vector", version.ref = "carl" }
+infrastructure-component-qdrant-grpc= { module = "org.carl:infrastructure-component-qdrant-grpc", version.ref = "carl" }
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 testcontainers-consul = { module = "org.testcontainers:consul", version.ref = "testcontainers" }
@@ -18,6 +20,7 @@ testcontainers-neo4j = { module = "org.testcontainers:neo4j", version.ref = "tes
 testcontainers-elasticsearch = { module = "org.testcontainers:elasticsearch", version.ref = "testcontainers" }
 testcontainers-milvus = { module = "org.testcontainers:milvus", version.ref = "testcontainers" }
 testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
+quarkus-grpc = { module = "io.quarkus:quarkus-grpc", version.ref = "quarkus" }
 
 quarkus-flyway = { module = "io.quarkus:quarkus-flyway", version.ref = "quarkus" }
 quarkus-junit5 = { module = "io.quarkus:quarkus-junit5", version.ref = "quarkus" }

@@ -1,6 +1,7 @@
 plugins {
     java
     idea
+    id("java-library")
     id("io.quarkus") version "3.19.3"
 }
 
@@ -10,23 +11,25 @@ version = "1.0-SNAPSHOT"
 repositories {
     // NOTE: Save bandwidth
     mavenLocal()
-    maven { url = uri("https://maven.aliyun.com/repository/central") }
-    maven {
-        credentials {
-            username = findProperty("MAVEN_USERNAME").toString()
-//            username =  "659e008740b4a9e2bd75af84"
-            password = findProperty("MAVEN_PASSWORD").toString()
-        }
-        url = uri("https://packages.aliyun.com/659e01070cab697efe1345a8/maven/repo-wdhey")
-    }
+    maven { url = uri("https://maven.aliyun.com/repository/public") }
+//    maven {
+//        credentials {
+////            username = findProperty("ALIYUN_MAVEN_USERNAME").toString()
+//            username = "659e008740b4a9e2bd75af84"
+////            username =  "659e008740b4a9e2bd75af84"
+////            password = findProperty("ALIYUN_MAVEN_PASSWORD").toString()
+//            password = "wTgVA2Y5]O2("
+//        }
+//        url = uri("https://packages.aliyun.com/659e01070cab697efe1345a8/maven/repo-wdhey")
+//    }
+//    mavenLocal()
 }
 val mainSrc = "src/main/java"
 val generatedDir = "src/main/generated"
 sourceSets {
-    named("main") {
+    main {
         java {
-            srcDir(generatedDir)
-            srcDir(mainSrc)
+            srcDirs(generatedDir, mainSrc)
         }
     }
 }
@@ -48,17 +51,14 @@ tasks.withType<Test>().configureEach {
     systemProperty("TESTCONTAINERS_REUSE_ENABLE", "true")
 }
 dependencies {
-    //    implementation libs.openfga
     implementation(enforcedPlatform(libs.quarkus.platform.bom))
     implementation(libs.bundles.all)
+    implementation(libs.infrastructure.component.qdrant.grpc)
     testImplementation(libs.bundles.test)
 }
 
-
-//        var api = System.getenv("API_PREFIX") == null ? "/v1/api" : System.getenv("API_PREFIX")
 quarkus {
     quarkusBuildProperties.put("quarkus.grpc.codegen.proto-directory", "./protos")
-//            quarkusBuildProperties.put("quarkus.http.root-path", api)
 }
 
 // NOTE: fix build pulsar

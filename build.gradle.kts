@@ -16,7 +16,6 @@ subprojects {
     repositories {
         // NOTE: Save bandwidth
         mavenLocal()
-        maven { url = uri("https://maven.aliyun.com/repository/central") }
         maven { url = uri("https://mirrors.cloud.tencent.com/repository/maven") }
         mavenCentral()
     }
@@ -69,12 +68,11 @@ subprojects {
             trimTrailingWhitespace()
             endWithNewline()
         }
-        protobuf {
-            target("**/*.proto")
-            targetExclude("**/build/**", "**/build-*/**")
-            buf()
-            licenseHeader("/* (C) \$YEAR */")
-        }
+//        protobuf {
+//            target("**/*.proto")
+//            targetExclude("**/build/**", "**/build-*/**")
+//            buf()
+//        }
         flexmark {
             target("**/*.md")
             targetExclude("**/build/**", "**/build-*/**")
@@ -95,16 +93,16 @@ subprojects {
             shfmt()
         }
     }
-    afterEvaluate {
-        tasks.findByName("spotlessApply")?.let { spotless ->
-            tasks.withType<JavaCompile>().configureEach {
-                finalizedBy(spotless)
-            }
-            tasks.withType<GroovyCompile>().configureEach {
-                finalizedBy(spotless)
-            }
-        }
-    }
+//    afterEvaluate {
+//        tasks.findByName("spotlessApply")?.let { spotless ->
+//            tasks.withType<JavaCompile>().configureEach {
+//                finalizedBy(spotless)
+//            }
+//            tasks.withType<GroovyCompile>().configureEach {
+//                finalizedBy(spotless)
+//            }
+//        }
+//    }
     // NOTE: build pulsar
     configurations.configureEach {
         resolutionStrategy.dependencySubstitution {

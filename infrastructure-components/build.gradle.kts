@@ -9,11 +9,9 @@ tasks.named("quarkusDependenciesBuild") {
 }
 
 subprojects {
-    apply {
-        plugin("org.kordamp.gradle.jandex")
-        plugin("maven-publish")
-        plugin("io.quarkus")
-    }
+    apply(plugin = "org.kordamp.gradle.jandex")
+    apply(plugin = "maven-publish")
+    apply(plugin = "io.quarkus")
 //    tasks.named<Jar>("sourcesJar") {
 //        dependsOn(tasks.named("compileQuarkusGeneratedSourcesJava"))
 //    }
@@ -37,12 +35,13 @@ subprojects {
         repositories {
 
             maven {
-                url = uri("https://packages.aliyun.com/659e01070cab697efe1345a8/maven/repo-wdhey")
                 credentials {
-                    username = findProperty("ALIYUN_MAVEN_USERNAME").toString()
-                    password = findProperty("ALIYUN_MAVEN_password").toString()
+                    username = System.getenv("ALIYUN_MAVEN_USERNAME").toString()
+                    password = System.getenv("ALIYUN_MAVEN_PASSWORD").toString()
                 }
+                url = uri("https://packages.aliyun.com/659e01070cab697efe1345a8/maven/repo-wdhey")
             }
+
         }
     }
 
