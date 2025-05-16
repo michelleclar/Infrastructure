@@ -16,7 +16,8 @@ public class DefaultGlobalExceptionHandler implements ExceptionMapper<Exception>
     @Produces(MediaType.APPLICATION_JSON)
     public Response toResponse(Exception e) {
         if (e instanceof BaseException exception) {
-//            return exception.getErrorResponse();
+            //            return exception.getErrorResponse();
+            return exception.toResponse();
         }
         Response.Status responseStatus = Response.Status.INTERNAL_SERVER_ERROR;
         log.error("Unhandled exception.", e.getMessage(), e);

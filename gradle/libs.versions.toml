@@ -12,20 +12,21 @@ querydsl = "5.1.0"
 quarkus-platform-bom = { module = "io.quarkus.platform:quarkus-bom", version.ref = "quarkus" }
 quarkus-camel-platform-bom = { module = "io.quarkus.platform:quarkus-camel-bom", version.ref = "quarkus" }
 quarkus-smallrye-openapi = { module = "io.quarkus:quarkus-smallrye-openapi", version.ref = "quarkus" }
-quarkus-arc = { module = 'io.quarkus:quarkus-arc', version.ref = 'quarkus' } #CDI
-quarkus-config-yaml = { module = 'io.quarkus:quarkus-arc', version.ref = 'quarkus' }
-quarkus-rest = { module = 'io.quarkus:quarkus-rest', version.ref = 'quarkus' }
-quarkus-reactive-routes = { module = 'io.quarkus:quarkus-reactive-routes', version.ref = 'quarkus' }
-quarkus-vertx = { module = 'io.quarkus:quarkus-vertx', version.ref = 'quarkus' }
-quarkus-jsonp = { module = 'io.quarkus:quarkus-jsonp', version.ref = 'quarkus' }
-quarkus-jackson = { module = 'io.quarkus:quarkus-rest-jackson', version.ref = 'quarkus' }
-quarkus-panache = { module = 'io.quarkus:quarkus-hibernate-orm-panache', version.ref = 'quarkus' }
-quarkus-smallrye-context-propagation = { module = 'io.quarkus:quarkus-smallrye-context-propagation', version.ref = 'quarkus' }
+quarkus-arc = { module = "io.quarkus:quarkus-arc", version.ref = "quarkus" } #CDI
+quarkus-config-yaml = { module = "io.quarkus:quarkus-arc", version.ref = "quarkus" }
+quarkus-rest = { module = "io.quarkus:quarkus-rest", version.ref = "quarkus" }
+quarkus-reactive-routes = { module = "io.quarkus:quarkus-reactive-routes", version.ref = "quarkus" }
+quarkus-vertx = { module = "io.quarkus:quarkus-vertx", version.ref = "quarkus" }
+quarkus-jsonp = { module = "io.quarkus:quarkus-jsonp", version.ref = "quarkus" }
+quarkus-jackson = { module = "io.quarkus:quarkus-rest-jackson", version.ref = "quarkus" }
+quarkus-panache = { module = "io.quarkus:quarkus-hibernate-orm-panache", version.ref = "quarkus" }
+quarkus-hibernate-orm = { module = "io.quarkus:quarkus-hibernate-orm", version.ref = "quarkus" }
+quarkus-smallrye-context-propagation = { module = "io.quarkus:quarkus-smallrye-context-propagation", version.ref = "quarkus" }
 quarkus-websocket = { module = "io.quarkus:quarkus-websockets-client", version.ref = "quarkus" }
 quarkus-oidc = { module = "io.quarkus:quarkus-oidc", version.ref = "quarkus" }
 quarkus-keycloak = { module = "io.quarkus:quarkus-keycloak-authorization", version.ref = "quarkus" }
-xml-bind = { module = 'jakarta.xml.bind:jakarta.xml.bind-api', version.ref = 'xml' }
-#xml-bind = { module = 'io.quarkus:quarkus-jaxb', version.ref = 'quarkus' }
+xml-bind = { module = "jakarta.xml.bind:jakarta.xml.bind-api", version.ref = "xml" }
+#xml-bind = { module = "io.quarkus:quarkus-jaxb", version.ref = "quarkus" }
 jdbi-core = { module = "org.jdbi:jdbi3-core", version.ref = "jdbi" }
 quarkus-vault = { module = "io.quarkiverse:quarkus-vault", version.ref = "quarkus" }
 quarkus-cache = { module = "io.quarkus:quarkus-cache", version.ref = "quarkus" }
@@ -49,9 +50,10 @@ quarkus-jwt-build = { module = "io.quarkus:quarkus-smallrye-jwt-build", version.
 quarkus-smtp = { module = "io.quarkus:quarkus-mailer", version.ref = "quarkus" }
 
 querydsl-apt = { module = "com.querydsl:querydsl-apt", version.ref = "querydsl" }
+
 querydsl-jpa = { module = "com.querydsl:querydsl-jpa", version.ref = "querydsl" }
 querydsl-sql = { module = "com.querydsl:querydsl-sql", version.ref = "querydsl" }
-openfga = { module = 'dev.openfga:openfga-sdk', version.require = '0.8.1' }
+openfga = { module = "dev.openfga:openfga-sdk", version.require = "0.8.1" }
 consul-stork = { module = "io.smallrye.stork:stork-service-discovery-consul", version.ref = "quarkus" }
 consul = { module = "io.quarkiverse.config:quarkus-config-consul", version.ref = "quarkus" }
 consul-client = { module = "io.smallrye.reactive:smallrye-mutiny-vertx-consul-client", version.ref = "quarkus" }
@@ -71,54 +73,55 @@ testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter", ve
 assured = { module = "io.rest-assured:rest-assured", version.ref = "quarkus" }
 
 [bundles]
-share = ['quarkus-arc']
+share = ["quarkus-arc"]
 web = [
-    'quarkus-rest',
-    'quarkus-jackson',
-    'quarkus-smallrye-openapi',
-    'quarkus-reactive-routes',
-    'quarkus-vertx'
+    "quarkus-rest",
+    "quarkus-jackson",
+    "quarkus-smallrye-openapi",
+    "quarkus-reactive-routes",
+    "quarkus-vertx"
 ]
 
 # base bundle
 base = [
-    'xml-bind',
+    "xml-bind",
 ]
 
-auth = ['quarkus-oidc', 'quarkus-keycloak']
+auth = ["quarkus-oidc", "quarkus-keycloak"]
 
-register-center-consul = ['consul', 'consul-stork', 'consul-client']
+register-center-consul = ["consul", "consul-stork", "consul-client"]
 
 persistence = [
-    'quarkus-jdbc-postgresql',
-    'quarkus-reactive-pg-client',
-    'quarkus-panache',
-    'jdbi-core',
-    'quarkus-agroal',
-    'velocity',
-    'querydsl-apt',
-    'querydsl-sql',
-    'querydsl-jpa'
+    "quarkus-jdbc-postgresql",
+    "quarkus-reactive-pg-client",
+    "quarkus-hibernate-orm",
+    #    "quarkus-panache",
+    "jdbi-core",
+    "quarkus-agroal",
+    "velocity",
+#    "querydsl-apt",
+#    "querydsl-sql",
+#    "querydsl-jpa"
 ]
 
-cache = ['quarkus-cache', 'quarkus-redis']
-mq = ['quarkus-pulsar']
-search = ['quarkus-elasticsearch']
-utils = ['guava']
-protocol = ['quarkus-grpc', 'quarkus-websocket']
+cache = ["quarkus-cache", "quarkus-redis"]
+mq = ["quarkus-pulsar"]
+search = ["quarkus-elasticsearch"]
+utils = ["guava"]
+protocol = ["quarkus-grpc", "quarkus-websocket"]
 
 test = [
-    'quarkus-flyway',
-    'assured',
-    'quarkus-junit5',
-    # 'testcontainers-junit-jupiter',
-    # 'testcontainers',
-    # 'testcontainers-postgresql',
-    # 'testcontainers-pulsar',
-    # 'testcontainers-consul',
-    # 'testcontainers-neo4j',
-    # 'testcontainers-elasticsearch',
-    # 'testcontainers-milvus'
+    "quarkus-flyway",
+    "assured",
+    "quarkus-junit5",
+    # "testcontainers-junit-jupiter",
+    # "testcontainers",
+    # "testcontainers-postgresql",
+    # "testcontainers-pulsar",
+    # "testcontainers-consul",
+    # "testcontainers-neo4j",
+    # "testcontainers-elasticsearch",
+    # "testcontainers-milvus"
 ]
 [plugins]
 quarkus = { id = "io.quarkus", version.ref = "quarkus" }

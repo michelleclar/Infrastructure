@@ -8,16 +8,18 @@ public class BaseException extends RuntimeException {
 
     @Serial private static final long serialVersionUID = 1L;
     private final String errorType;
-    private ExceptionReason reason;
+    private final ExceptionReason reason;
 
     public BaseException(ExceptionReason reason, String errorType) {
         super(reason.toString());
         this.errorType = errorType;
+        this.reason = reason;
     }
 
     public BaseException(ExceptionReason reason, String errorType, Throwable cause) {
         super(reason.toString(), cause);
         this.errorType = errorType;
+        this.reason = reason;
     }
 
     public String getErrorType() {
@@ -29,6 +31,6 @@ public class BaseException extends RuntimeException {
     }
 
     public Response toResponse() {
-        return Response.status(getReason().getCode()).type(errorType).entity(getReason()).build();
+        return Response.status(getReason().getCode()).entity(getReason()).build();
     }
 }

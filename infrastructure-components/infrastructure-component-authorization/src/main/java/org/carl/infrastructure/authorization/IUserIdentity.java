@@ -5,7 +5,6 @@ import java.util.Set;
 import org.carl.infrastructure.authorization.modle.Permission;
 import org.carl.infrastructure.authorization.modle.UserGroup;
 import org.carl.infrastructure.authorization.modle.UserOrganize;
-import org.carl.infrastructure.util.Conversion;
 
 /**
  * roles: main
@@ -85,7 +84,7 @@ public interface IUserIdentity {
 
     Boolean hasRole(String role);
 
-    Conversion getAttribute(String name);
+    Object getAttribute(String name);
 
     Map<String, Object> getAttributes();
 }

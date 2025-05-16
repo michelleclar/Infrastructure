@@ -1,4 +1,4 @@
-package controller.controller;
+package controller;
 
 import io.qdrant.client.grpc.Collections;
 import io.smallrye.mutiny.Uni;

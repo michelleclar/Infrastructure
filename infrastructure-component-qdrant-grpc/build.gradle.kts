@@ -10,7 +10,7 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("io.vertx:vertx-junit5:4.5.13")
-    protobuf(files("dil/proto"))
+    protobuf(files("dil/protos"))
 }
 
 tasks.test {

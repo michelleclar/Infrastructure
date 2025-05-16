@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package embedding;
+
+option java_package = "io.embeddingj.client.grpc";
+
+service Embedding {
+  rpc TextToVector (TextVectorRequest) returns (TextVectorResponse);
+  rpc FaceToVector (FaceVectorRequest) returns (FaceVectorResponse);
+}
+
+message TextVectorRequest {
+  string text = 1;
+}
+
+message TextVectorResponse {
+  repeated float vector = 1;
+  string reason = 2;
+  string code = 3;
+}
+
+message FaceVectorRequest {
+  bytes data = 3;
+}
+// sign face
+message FaceVectorResponse {
+  repeated float vector = 1;
+  string reason = 2;
+  uint32 code = 3;
+}

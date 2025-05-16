@@ -15,6 +15,8 @@ subprojects {
     version = "1.0-BATE"
     repositories {
         // NOTE: Save bandwidth
+
+        maven { url = uri("https://maven.aliyun.com/repository/public") }
         mavenLocal()
         maven { url = uri("https://mirrors.cloud.tencent.com/repository/maven") }
         mavenCentral()

@@ -1,5 +1,5 @@
 ## quarkus http root
->  https://cn.quarkus.io/guides/rest#request-or-response-filters
+>  https://cn.quarkus.io/guides/rest#request-or-entityResponse-filters
 ```properties
 
 quarkus.http.root-path=/

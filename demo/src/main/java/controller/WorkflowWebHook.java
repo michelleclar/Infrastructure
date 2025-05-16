@@ -1,4 +1,4 @@
-package controller.controller;
+package controller;
 
 // @Path("/")
 public interface WorkflowWebHook {}

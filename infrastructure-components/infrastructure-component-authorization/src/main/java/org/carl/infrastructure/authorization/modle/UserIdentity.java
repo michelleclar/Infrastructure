@@ -8,7 +8,6 @@ import java.util.Set;
 import java.util.function.Function;
 import org.carl.infrastructure.authorization.IUserIdentity;
 import org.carl.infrastructure.authorization.modle.Permission.PermissionBuilder;
-import org.carl.infrastructure.util.Conversion;
 
 public class UserIdentity implements IUserIdentity {
     Boolean isAnonymous;
@@ -60,8 +59,8 @@ public class UserIdentity implements IUserIdentity {
     }
 
     @Override
-    public Conversion getAttribute(String name) {
-        return Conversion.create(attributes.get(name));
+    public Object getAttribute(String name) {
+        return attributes.get(name);
     }
 
     @Override
@@ -106,8 +105,7 @@ public class UserIdentity implements IUserIdentity {
         }
 
         public UserIdentityBuilder addPermission(String module, Permission permission) {
-            Set<Permission> set =
-                    getPermission().getOrDefault(module, new HashSet<>());
+            Set<Permission> set = getPermission().getOrDefault(module, new HashSet<>());
             set.add(permission);
             getPermission().put(module, set);
             return this;
@@ -115,8 +113,7 @@ public class UserIdentity implements IUserIdentity {
 
         public UserIdentityBuilder addPermission(
                 String module, Function<PermissionBuilder, Permission> permission) {
-            Set<Permission> set =
-                    getPermission().getOrDefault(module, new HashSet<>());
+            Set<Permission> set = getPermission().getOrDefault(module, new HashSet<>());
             Permission apply = permission.apply(PermissionBuilder.create(module));
             set.add(apply);
             getPermission().put(module, set);

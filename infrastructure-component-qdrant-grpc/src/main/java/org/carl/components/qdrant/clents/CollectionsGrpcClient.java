@@ -45,4 +45,20 @@ public class CollectionsGrpcClient {
                             return request.response().compose(GrpcReadStream::last);
                         });
     }
+
+    public Future<Collections.CollectionExistsResponse> collectionExists(
+            Function<
+                            Collections.CollectionExistsRequest.Builder,
+                            Collections.CollectionExistsRequest>
+                    function) {
+        Collections.CollectionExistsRequest.Builder builder =
+                Collections.CollectionExistsRequest.newBuilder();
+        Collections.CollectionExistsRequest apply = function.apply(builder);
+        return client.request(address, VertxCollectionsGrpcClient.CollectionExists)
+                .compose(
+                        request -> {
+                            request.end(apply);
+                            return request.response().compose(GrpcReadStream::last);
+                        });
+    }
 }

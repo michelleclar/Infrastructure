@@ -12,17 +12,13 @@ repositories {
     // NOTE: Save bandwidth
     mavenLocal()
     maven { url = uri("https://maven.aliyun.com/repository/public") }
-//    maven {
-//        credentials {
-////            username = findProperty("ALIYUN_MAVEN_USERNAME").toString()
-//            username = "659e008740b4a9e2bd75af84"
-////            username =  "659e008740b4a9e2bd75af84"
-////            password = findProperty("ALIYUN_MAVEN_PASSWORD").toString()
-//            password = "wTgVA2Y5]O2("
-//        }
-//        url = uri("https://packages.aliyun.com/659e01070cab697efe1345a8/maven/repo-wdhey")
-//    }
-//    mavenLocal()
+    maven {
+        credentials {
+            username = System.getenv("ALIYUN_MAVEN_USERNAME").toString()
+            password = System.getenv("ALIYUN_MAVEN_PASSWORD").toString()
+        }
+        url = uri("https://packages.aliyun.com/659e01070cab697efe1345a8/maven/repo-wdhey")
+    }
 }
 val mainSrc = "src/main/java"
 val generatedDir = "src/main/generated"
@@ -54,6 +50,7 @@ dependencies {
     implementation(enforcedPlatform(libs.quarkus.platform.bom))
     implementation(libs.bundles.all)
     implementation(libs.infrastructure.component.qdrant.grpc)
+    implementation(libs.infrastructure.component.embedding.grpc)
     testImplementation(libs.bundles.test)
     annotationProcessor("com.querydsl:querydsl-apt:5.1.0:jakarta")
     annotationProcessor("jakarta.persistence:jakarta.persistence-api:3.1.0")
