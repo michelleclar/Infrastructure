@@ -1,14 +1,9 @@
 package controller;
 
-import com.querydsl.jpa.impl.JPAQuery;
-import com.querydsl.jpa.impl.JPAQueryFactory;
-import entity.QSimilarSearchKeyword;
-import entity.SimilarSearchKeyword;
 import io.embeddingj.client.grpc.EmbeddingOuterClass;
 import io.qdrant.client.grpc.Points;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
-import jakarta.persistence.EntityManager;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.core.Response;
@@ -25,11 +20,7 @@ public class EmbeddingController {
     @Inject QdrantClient qdrantClient;
     @Inject EmbeddingClient embeddingClient;
     final String faceCollection = "face_vectors";
-    @Inject EntityManager em;
-    {
-        QSimilarSearchKeyword similarSearchKeyword = QSimilarSearchKeyword.similarSearchKeyword;
-//        JPAQueryFactory factory = new JPAQueryFactory(em);
-    }
+
     //    @POST
     //    @Path("/text")
     //    public Uni<Response> search() {
