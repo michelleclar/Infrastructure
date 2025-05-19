@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 public class SqlLoggerFactory {
     public static SqlLogger DEFAULT =
             new SqlLogger() {
-                private Logger log = LoggerFactory.getLogger(SqlLoggerFactory.class);
+                private final Logger log = LoggerFactory.getLogger(SqlLoggerFactory.class);
 
                 @Override
                 public void logAfterExecution(StatementContext context) {
