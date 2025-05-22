@@ -1,4 +1,4 @@
-package org.carl.infrastructure.component.web.response;
+package org.carl.component.dto;
 
 public class SingleEntityResponse<T> extends EntityResponse {
     T data;

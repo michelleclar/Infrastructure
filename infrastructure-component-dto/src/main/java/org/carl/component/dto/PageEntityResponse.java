@@ -1,4 +1,4 @@
-package org.carl.infrastructure.component.web.response;
+package org.carl.component.dto;
 
 import java.util.ArrayList;
 import java.util.Collection;

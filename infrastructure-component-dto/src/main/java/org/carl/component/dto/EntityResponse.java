@@ -1,6 +1,6 @@
-package org.carl.infrastructure.component.web.response;
+package org.carl.component.dto;
 
-public class EntityResponse extends Entity {
+public class EntityResponse extends DTO{
 
     private boolean success;
 
