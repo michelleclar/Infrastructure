@@ -10,7 +10,6 @@ infrastructure-component-cache = { module = "org.carl:infrastructure-component-c
 infrastructure-component-persistence = { module = "org.carl:infrastructure-component-persistence", version.ref = "carl" }
 infrastructure-component-search = { module = "org.carl:infrastructure-component-search", version.ref = "carl" }
 infrastructure-component-web = { module = "org.carl:infrastructure-component-web", version.ref = "carl" }
-infrastructure-component-vector = { module = "org.carl:infrastructure-component-vector", version.ref = "carl" }
 infrastructure-component-qdrant-grpc = { module = "org.carl:infrastructure-component-qdrant-grpc", version.ref = "carl" }
 infrastructure-component-embedding-grpc = { module = "org.carl:infrastructure-component-embedding-grpc", version.ref = "carl" }
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }

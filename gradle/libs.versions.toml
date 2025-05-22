@@ -6,7 +6,7 @@ xml = "4.0.2"
 guava = "33.2.1-jre"
 jdbi = "3.49.0"
 velocity = "2.4.1"
-
+jooq = "3.20.3"
 [libraries]
 quarkus-platform-bom = { module = "io.quarkus.platform:quarkus-bom", version.ref = "quarkus" }
 quarkus-camel-platform-bom = { module = "io.quarkus.platform:quarkus-camel-bom", version.ref = "quarkus" }
@@ -27,6 +27,9 @@ quarkus-keycloak = { module = "io.quarkus:quarkus-keycloak-authorization", versi
 xml-bind = { module = "jakarta.xml.bind:jakarta.xml.bind-api", version.ref = "xml" }
 #xml-bind = { module = "io.quarkus:quarkus-jaxb", version.ref = "quarkus" }
 jdbi-core = { module = "org.jdbi:jdbi3-core", version.ref = "jdbi" }
+jooq = { module = "org.jooq:jooq", version.ref = "jooq" }
+jooq-meta = { module = "org.jooq:jooq-meta", version.ref = "jooq" }
+jooq-codegen = { module = "org.jooq:jooq-codegen", version.ref = "jooq" }
 quarkus-vault = { module = "io.quarkiverse:quarkus-vault", version.ref = "quarkus" }
 quarkus-cache = { module = "io.quarkus:quarkus-cache", version.ref = "quarkus" }
 quarkus-agroal = { module = "io.quarkus:quarkus-agroal", version.ref = "quarkus" }
@@ -74,7 +77,7 @@ web = [
     "quarkus-jackson",
     "quarkus-smallrye-openapi",
     "quarkus-reactive-routes",
-    "quarkus-vertx"
+    "quarkus-vertx",
 ]
 
 # base bundle
@@ -88,12 +91,13 @@ register-center-consul = ["consul", "consul-stork", "consul-client"]
 
 persistence = [
     "quarkus-jdbc-postgresql",
-    "quarkus-reactive-pg-client",
+#    "quarkus-reactive-pg-client",
 #    "quarkus-hibernate-orm",
-    "quarkus-panache",
+    #    "quarkus-panache",
     "jdbi-core",
     "quarkus-agroal",
     "velocity",
+    "jooq"
 ]
 
 cache = ["quarkus-cache", "quarkus-redis"]

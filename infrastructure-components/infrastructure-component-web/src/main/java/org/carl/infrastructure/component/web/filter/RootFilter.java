@@ -12,11 +12,12 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Priorities;
 import java.util.Optional;
+
+import org.carl.infrastructure.component.web.config.ScaffoldConfig;
 import org.carl.infrastructure.component.web.model.ApiRequest;
 import org.carl.infrastructure.component.web.runtime.IRuntimeProvider;
 import org.carl.infrastructure.component.web.runtime.IRuntimeUser;
-import org.carl.infrastructure.config.ScaffoldConfig;
-import org.carl.infrastructure.constant.Constants;
+import org.carl.infrastructure.tool.constant.Constants;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 // NOTE: web runtime context

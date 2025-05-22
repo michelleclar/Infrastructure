@@ -6,6 +6,7 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
 import org.carl.infrastructure.component.web.config.exception.BaseException;
+import org.carl.infrastructure.component.web.config.exception.ExceptionReason;
 import org.jboss.logging.Logger;
 
 @Provider
@@ -16,12 +17,30 @@ public class DefaultGlobalExceptionHandler implements ExceptionMapper<Exception>
     @Produces(MediaType.APPLICATION_JSON)
     public Response toResponse(Exception e) {
         if (e instanceof BaseException exception) {
-            //            return exception.getErrorResponse();
             return exception.toResponse();
         }
         Response.Status responseStatus = Response.Status.INTERNAL_SERVER_ERROR;
         log.error("Unhandled exception.", e.getMessage(), e);
+        ExceptionReason entity =
+                new ExceptionReason() {
+                    @Override
+                    public String getReason() {
+                        return e.getMessage();
+                    }
+
+                    @Override
+                    public String getErrorType() {
+                        return "UNKNOWN_ERROR";
+                    }
+
+                    @Override
+                    public int getCode() {
+                        return -999;
+                    }
+                };
         // NOTE: other return Internal Server Error
-        return Response.status(responseStatus).entity(responseStatus.getReasonPhrase()).build();
+        return Response.status(responseStatus.getStatusCode(), e.getMessage())
+                .entity(entity)
+                .build();
     }
 }
