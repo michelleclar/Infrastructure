@@ -1,4 +1,4 @@
-package org.carl.infrastructure.annotations;
+package org.carl.infrastructure.tool.annotations;
 
 import jakarta.interceptor.InterceptorBinding;
 
@@ -10,4 +10,10 @@ import java.lang.annotation.Target;
 @InterceptorBinding
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Limit {}
+public @interface PreventDuplicateValidator {
+    String[] includeFieldKeys() default {};
+
+    String[] optionalValues() default {};
+
+    long expireTime() default 10_000L;
+}

@@ -1,9 +1,9 @@
-package org.carl.infrastructure.util;
+package org.carl.infrastructure.tool.util;
 
-import org.carl.infrastructure.annotations.NotThreadSafe;
+import org.carl.infrastructure.tool.annotations.NotThreadSafe;
 
 public class LinkedTable<T> {
-    private Node<T>[] nodes;
+    private final Node<T>[] nodes;
     private int size;
     private int head;
 

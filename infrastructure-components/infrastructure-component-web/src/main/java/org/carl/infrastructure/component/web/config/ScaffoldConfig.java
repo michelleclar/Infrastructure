@@ -1,12 +1,11 @@
-package org.carl.infrastructure.config;
+package org.carl.infrastructure.component.web.config;
 
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
-import org.carl.infrastructure.constant.Constants;
 
 import java.util.Objects;
 
-@ConfigMapping(prefix = Constants.Fields.SCAFFOLD)
+@ConfigMapping(prefix = "scaffold")
 public interface ScaffoldConfig extends IProfile {
 
     @WithDefault("1")

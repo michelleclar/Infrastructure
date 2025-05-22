@@ -1,4 +1,4 @@
-package org.carl.infrastructure.config;
+package org.carl.infrastructure.component.web.config;
 
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;

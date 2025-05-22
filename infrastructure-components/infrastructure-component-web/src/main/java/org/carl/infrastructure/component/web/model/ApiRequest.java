@@ -2,7 +2,7 @@ package org.carl.infrastructure.component.web.model;
 
 import java.util.StringJoiner;
 import org.carl.infrastructure.component.web.runtime.IRuntimeUser;
-import org.carl.infrastructure.util.LinkedTable;
+import org.carl.infrastructure.tool.util.LinkedTable;
 
 /**
  * api path like

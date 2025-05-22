@@ -1,4 +1,4 @@
-package org.carl.infrastructure.util;
+package org.carl.infrastructure.tool.util;
 
 import jakarta.xml.bind.DatatypeConverter;
 import java.net.URISyntaxException;

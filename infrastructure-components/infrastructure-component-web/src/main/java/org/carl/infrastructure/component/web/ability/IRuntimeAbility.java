@@ -3,8 +3,8 @@ package org.carl.infrastructure.component.web.ability;
 import io.vertx.ext.web.RoutingContext;
 import org.carl.infrastructure.component.web.model.ApiRequest;
 import org.carl.infrastructure.component.web.runtime.IRuntimeUser;
-import org.carl.infrastructure.config.IProfile;
-import org.carl.infrastructure.constant.Constants;
+import org.carl.infrastructure.component.web.config.IProfile;
+import org.carl.infrastructure.tool.constant.Constants;
 
 public interface IRuntimeAbility extends IProfile {
     RoutingContext getRoutingContext();

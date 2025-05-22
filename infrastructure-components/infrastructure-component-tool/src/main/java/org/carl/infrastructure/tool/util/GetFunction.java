@@ -1,4 +1,4 @@
-package org.carl.infrastructure.util;
+package org.carl.infrastructure.tool.util;
 
 @FunctionalInterface
 public interface GetFunction<R> {

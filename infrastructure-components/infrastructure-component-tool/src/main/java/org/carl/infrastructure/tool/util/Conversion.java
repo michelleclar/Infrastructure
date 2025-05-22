@@ -1,7 +1,7 @@
-package org.carl.infrastructure.util;
+package org.carl.infrastructure.tool.util;
 
 import java.util.function.Function;
-import org.carl.infrastructure.annotations.NotThreadSafe;
+import org.carl.infrastructure.tool.annotations.NotThreadSafe;
 import org.jboss.logging.Logger;
 
 @NotThreadSafe

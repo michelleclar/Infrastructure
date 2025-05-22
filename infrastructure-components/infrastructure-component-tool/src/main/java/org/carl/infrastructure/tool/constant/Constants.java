@@ -1,4 +1,4 @@
-package org.carl.infrastructure.constant;
+package org.carl.infrastructure.tool.constant;
 
 public class Constants {
     public static class Fields {

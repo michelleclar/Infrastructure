@@ -100,17 +100,23 @@ public class SqlLoggerListener extends LoggerListener {
 
     @Override
     public void recordEnd(ExecuteContext ctx) {
-        // log.debug("..........recordEnd");
+        if (log.isDebugEnabled()) {
+            log.debug("..........recordEnd");
+        }
     }
 
     @Override
     public void resultEnd(ExecuteContext ctx) {
-        // log.debug("..........resultEnd");
+        if (log.isDebugEnabled()) {
+            log.debug("..........resultEnd");
+        }
     }
 
     @Override
     public void executeEnd(ExecuteContext ctx) {
-        // log.debug("Affected row(s)", ctx.rows());
+        if (log.isDebugEnabled()) {
+            log.debugf("Affected row(s): %d", ctx.rows());
+        }
     }
 
     private static final int maxLength = 2000;

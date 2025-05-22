@@ -1,4 +1,4 @@
-package org.carl.infrastructure.config.desensitization;
+package org.carl.infrastructure.tool.config.desensitization;
 
 public interface IDesensitizationAlgorithm {
     String desensitize(String source);
