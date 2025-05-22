@@ -1,0 +1,59 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.14.0
+    restart: always
+    container_name: qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    expose:
+      - 6333
+      - 6334
+      - 6335
+    configs:
+      - source: qdrant_config
+        target: /qdrant/config/production.yaml
+    volumes:
+      - ./qdrant_data:/qdrant/storage
+    networks:
+      - default
+  pg:
+    container_name: pg
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: db
+    ports:
+      - "15432:5432"
+    restart: always
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U root -d db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./init.sh:/docker-entrypoint-initdb.d/init.sh
+  embedding:
+    image: embedding/embedding-native:1.0
+    restart: always
+    container_name: embedding
+    environment:
+      - QUARKUS_QDRANT_PORT=6334
+      - QUARKUS_QDRANT_HOST=qdrant
+      - QUARKUS_EMBEDDING_PORT=50051
+      - QUARKUS_EMBEDDING_HOST=host.docker.internal
+    ports:
+      - "8080:8080"
+    networks:
+      - default
+configs:
+  qdrant_config:
+    content: |
+      log_level: INFO
+
+networks:
+  default:
+    name: embedding
+    driver: bridge
+
