@@ -4,11 +4,14 @@ import io.quarkus.arc.DefaultBean;
 import io.vertx.core.Vertx;
 import io.vertx.core.net.SocketAddress;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 
 public class QdrantGrpcClientProvider implements Provider<QdrantGrpcClient> {
+
+    @Inject Vertx vertx; // ✅ 注入 Quarkus 管理的 Vertx 实例
 
     @ApplicationScoped
     @DefaultBean
@@ -19,6 +22,6 @@ public class QdrantGrpcClientProvider implements Provider<QdrantGrpcClient> {
         Integer port = config.getOptionalValue("quarkus.qdrant.port", Integer.class).orElse(6334);
         String host =
                 config.getOptionalValue("quarkus.qdrant.host", String.class).orElse("localhost");
-        return new QdrantGrpcClient(Vertx.vertx(), SocketAddress.inetSocketAddress(port, host));
+        return new QdrantGrpcClient(vertx, SocketAddress.inetSocketAddress(port, host));
     }
 }
