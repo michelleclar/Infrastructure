@@ -1,3 +1,4 @@
 dependencies {
-    implementation(libs.bundles.mq)
+    implementation(libs.quarkus.vertx)
+    testImplementation(project(":infrastructure-component-dto"))
 }

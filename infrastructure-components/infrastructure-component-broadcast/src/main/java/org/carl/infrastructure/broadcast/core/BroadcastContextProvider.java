@@ -17,6 +17,6 @@ public class BroadcastContextProvider implements Provider<BroadcastContext> {
         //        String serviceUrl = config.getValue("mp.messaging.incoming.data.serviceUrl",
         // String.class);
         //        ClientBuilder clientBuilder = PulsarClient.builder().serviceUrl(serviceUrl);
-        return new BroadcastContext(null, eventBus);
+        return new BroadcastContext(eventBus);
     }
 }
