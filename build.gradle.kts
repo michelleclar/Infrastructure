@@ -60,11 +60,12 @@ subprojects {
         ratchetFrom = "origin/main"
 
         java {
-            target("src/main/**/*.java")
-            importOrder()
+            target("src/main/**/*.java","src/test/**/*.java")
+//            importOrder()
             cleanthat()
-            googleJavaFormat().aosp().reflowLongStrings().formatJavadoc(false).reorderImports(false)
-                .groupArtifact("com.google.googlejavaformat:google-java-format")
+            googleJavaFormat().aosp()
+//            googleJavaFormat().aosp().reflowLongStrings().formatJavadoc(false).reorderImports(true)
+//                .groupArtifact("com.google.googlejavaformat:google-java-format")
             formatAnnotations()
             trimTrailingWhitespace()
             endWithNewline()

@@ -2,14 +2,15 @@ package org.carl.infrastructure.broadcast;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.util.function.Function;
 
 @QuarkusTest
 class IBroadcastOperationsTest extends BroadcastStd {
+
     @BeforeEach
     void setUp() {
         subscribe("test.int", Integer.class, System.out::println).subscribe().with(__ -> {});
