@@ -9,27 +9,27 @@ services:
       KC_BOOTSTRAP_ADMIN_PASSWORD: root
     command: start-dev
     restart: always
-    #  consul:
-    #    image: hashicorp/consul:1.20
-    #    container_name: consul-scaffold
-    #    ports:
-    #      - "8500:8500"
-    #    volumes:
-    #      - ./data:/consul/data
-    #      - ./consul.d/:/consul/config:rw
-    #    command: >
-    #      consul agent -server
-    #      -bootstrap-expect=1
-    #      -ui
-    #      -client=0.0.0.0
-    #      -data-dir=/consul/data
-    #      --config-dir=/consul/config
-    #      -bind '{{ GetPrivateInterfaces | include "network" "172.27.0.0/16" | attr "address" }}'
-  #    healthcheck:
-  #      test: [ "CMD", "curl", "-f", "http://localhost:8500/ui/dc1/services/consul" ]
-  #      interval: 30s
-  #      timeout: 10s
-  #      retries: 3
+  consul:
+    image: hashicorp/consul:1.20
+    container_name: consul-scaffold
+    ports:
+      - "8500:8500"
+    volumes:
+      - ./data:/consul/data
+      - ./consul.d/:/consul/config:rw
+    command: >
+      consul agent -server
+      -bootstrap-expect=1
+      -ui
+      -client=0.0.0.0
+      -data-dir=/consul/data
+      --config-dir=/consul/config
+      -bind '{{ GetPrivateInterfaces | include "network" "172.27.0.0/16" | attr "address" }}'
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8500/ui/dc1/services/consul" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
   #  neo4j:
   #    image: neo4j:5.24.2
   #    container_name: neo4j-scaffold
@@ -78,8 +78,8 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=root
     restart: always
-#    volumes:
-#      - ./mongodb:/data/db
+  #    volumes:
+  #      - ./mongodb:/data/db
   pulsar:
     container_name: pulsar-scaffold
     command: "bin/pulsar standalone"

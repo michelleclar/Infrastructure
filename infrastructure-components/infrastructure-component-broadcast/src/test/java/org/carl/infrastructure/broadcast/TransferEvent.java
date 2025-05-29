@@ -1,10 +1,8 @@
 package org.carl.infrastructure.broadcast;
 
-import org.carl.component.dto.Event;
-
 import java.math.BigDecimal;
 
-public class TransferEvent extends Event {
+public class TransferEvent {
     BigDecimal amount;
     String from;
     String to;
@@ -39,9 +37,15 @@ public class TransferEvent extends Event {
     @Override
     public String toString() {
         return "{"
-                + "        \"amount\":\"" + amount + "\""
-                + ",         \"from\":\"" + from + "\""
-                + ",         \"to\":\"" + to + "\""
+                + "        \"amount\":\""
+                + amount
+                + "\""
+                + ",         \"from\":\""
+                + from
+                + "\""
+                + ",         \"to\":\""
+                + to
+                + "\""
                 + "}";
     }
 }
