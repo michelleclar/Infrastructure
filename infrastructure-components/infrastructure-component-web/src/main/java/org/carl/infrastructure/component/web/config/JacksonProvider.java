@@ -5,10 +5,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+
 import jakarta.inject.Provider;
+
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -33,6 +36,8 @@ public enum JacksonProvider implements Provider<ObjectMapper> {
                                     Duration.class, new CustomDurationSerializer());
                             customModule.addSerializer(
                                     OffsetDateTime.class, new CustomOffsetDateTimeSerializer());
+                            customModule.addSerializer(
+                                    LocalDate.class, new CustomLocalDateSerializer());
                             //                            customModule.addSerializer(
                             //                                    JSONB.class, new
                             // CustomJOOQJSONBSerializer());
@@ -90,6 +95,21 @@ class CustomLocalDateTimeSerializer extends StdSerializer<LocalDateTime> {
 
     @Override
     public void serialize(LocalDateTime value, JsonGenerator gen, SerializerProvider provider)
+            throws IOException {
+        gen.writeString(value.format(FORMATTER));
+    }
+}
+
+class CustomLocalDateSerializer extends StdSerializer<LocalDate> {
+    private static final DateTimeFormatter FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    public CustomLocalDateSerializer() {
+        super(LocalDate.class);
+    }
+
+    @Override
+    public void serialize(LocalDate value, JsonGenerator gen, SerializerProvider provider)
             throws IOException {
         gen.writeString(value.format(FORMATTER));
     }
