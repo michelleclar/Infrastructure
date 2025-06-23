@@ -2,7 +2,6 @@ package org.carl.component.dto;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.Map;
 
 public abstract class ClientObject implements Serializable{
@@ -13,7 +12,7 @@ public abstract class ClientObject implements Serializable{
     /**
      * This is for extended values
      */
-    protected Map<String, Object> extValues = new HashMap<String, Object>();
+    protected Map<String, Object> extValues;
 
     public Object getExtField(String key){
         if(extValues != null){
