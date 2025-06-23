@@ -50,7 +50,7 @@ quarkus-junit5 = { module = "io.quarkus:quarkus-junit5", version.ref = "quarkus"
 quarkus-jwt = { module = "io.quarkus:quarkus-smallrye-jwt", version.ref = "quarkus" }
 quarkus-jwt-build = { module = "io.quarkus:quarkus-smallrye-jwt-build", version.ref = "quarkus" }
 quarkus-smtp = { module = "io.quarkus:quarkus-mailer", version.ref = "quarkus" }
-
+quarkus-smallrye-fault-tolerance = { module = "io.quarkus:quarkus-smallrye-fault-tolerance", version.ref = "quarkus" }
 openfga = { module = "dev.openfga:openfga-sdk", version.require = "0.8.1" }
 consul-stork = { module = "io.smallrye.stork:stork-service-discovery-consul", version.ref = "quarkus" }
 consul = { module = "io.quarkiverse.config:quarkus-config-consul", version.ref = "quarkus" }
@@ -78,6 +78,7 @@ web = [
     "quarkus-smallrye-openapi",
     "quarkus-reactive-routes",
     "quarkus-vertx",
+    "quarkus-smallrye-fault-tolerance"
 ]
 
 # base bundle
@@ -91,8 +92,8 @@ register-center-consul = ["consul", "consul-stork", "consul-client"]
 
 persistence = [
     "quarkus-jdbc-postgresql",
-#    "quarkus-reactive-pg-client",
-#    "quarkus-hibernate-orm",
+    #    "quarkus-reactive-pg-client",
+    #    "quarkus-hibernate-orm",
     #    "quarkus-panache",
     "jdbi-core",
     "quarkus-agroal",
