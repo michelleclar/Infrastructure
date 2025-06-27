@@ -36,36 +36,35 @@ public class ControllerLoggedInterceptor {
         } catch (Throwable e) {
             response = handleException(e);
         } finally {
-            logResponse(startTime, response);
+            response = logResponse(startTime, response);
         }
         return response;
     }
 
-    private void logResponse(long startTime, Object response) {
+    private Object logResponse(long startTime, Object response) {
+
         try {
-            long endTime = System.currentTimeMillis();
             if (log.isDebugEnabled()) {
-                log.debugf("Elapsed time: %d ms", endTime - startTime);
                 if (response instanceof Uni<?> uni) {
-                    response =
-                            uni.invoke(
-                                    item -> {
-                                        log.debugf("Response:%s", JSON.toJsonStringX(item));
-                                    });
-                    return;
+                    return uni.invoke(
+                            item -> {
+                                long endTime = System.currentTimeMillis();
+                                log.debugf("Elapsed time: %d ms", endTime - startTime);
+                                log.debugf("Response:%s", JSON.toJsonStringX(item));
+                            });
                 }
                 if (response instanceof Multi<?> multi) {
-                    response =
-                            multi.invoke(
-                                    item -> {
-                                        log.debugf("Response:%s", JSON.toJsonStringX(item));
-                                    });
-                    return;
+                    return multi.invoke(
+                            item -> {
+                                log.debugf("Response:%s", JSON.toJsonStringX(item));
+                            });
                 }
                 log.debugf("Response:%s", JSON.toJsonString(response));
             }
+            return response;
         } catch (Exception e) {
             log.errorf(e, "Error logging response: %s", e.getMessage());
+            return response;
         }
     }
 
