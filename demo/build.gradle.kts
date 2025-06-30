@@ -14,7 +14,8 @@ version = "1.0-SNAPSHOT"
 repositories {
     // NOTE: Save bandwidth
     mavenLocal()
-    maven { url = uri("https://maven.aliyun.com/repository/public") }
+//    maven { url = uri("https://maven.aliyun.com/repository/public") }
+    mavenCentral()
     maven {
         credentials {
             username = System.getenv("ALIYUN_MAVEN_USERNAME").toString()
@@ -59,6 +60,7 @@ dependencies {
     implementation(libs.infrastructure.component.web)
     implementation(libs.infrastructure.component.qdrant.grpc)
     implementation(libs.infrastructure.component.embedding.grpc)
+    implementation(libs.infrastructure.component.workflow)
     jooqGenerator(libs.infrastructure.component.persistence)
     testImplementation(libs.bundles.test)
 }

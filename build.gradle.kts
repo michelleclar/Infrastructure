@@ -2,6 +2,7 @@ plugins {
     java
     idea
     id("com.diffplug.spotless") version "7.0.0.BETA4"
+    id("org.kordamp.gradle.jandex") version "2.1.0"
     id("java-library")
 }
 subprojects {
@@ -10,13 +11,14 @@ subprojects {
         plugin("java")
         plugin("idea")
         plugin("java-library")
+        plugin("org.kordamp.gradle.jandex")
     }
     group = "org.carl"
     version = "1.0-BATE"
     repositories {
         // NOTE: Save bandwidth
 
-        maven { url = uri("https://maven.aliyun.com/repository/public") }
+//        maven { url = uri("https://maven.aliyun.com/repository/public") }
         mavenLocal()
         maven { url = uri("https://mirrors.cloud.tencent.com/repository/maven") }
         mavenCentral()

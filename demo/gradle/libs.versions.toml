@@ -12,6 +12,7 @@ infrastructure-component-search = { module = "org.carl:infrastructure-component-
 infrastructure-component-web = { module = "org.carl:infrastructure-component-web", version.ref = "carl" }
 infrastructure-component-qdrant-grpc = { module = "org.carl:infrastructure-component-qdrant-grpc", version.ref = "carl" }
 infrastructure-component-embedding-grpc = { module = "org.carl:infrastructure-component-embedding-grpc", version.ref = "carl" }
+infrastructure-component-workflow = { module = "org.carl:infrastructure-component-workflow", version.ref = "carl" }
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 testcontainers-consul = { module = "org.testcontainers:consul", version.ref = "testcontainers" }
