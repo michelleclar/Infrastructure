@@ -7,6 +7,7 @@ guava = "33.2.1-jre"
 jdbi = "3.49.0"
 velocity = "2.4.1"
 jooq = "3.20.3"
+temporal = "0.1.2"
 [libraries]
 quarkus-platform-bom = { module = "io.quarkus.platform:quarkus-bom", version.ref = "quarkus" }
 quarkus-camel-platform-bom = { module = "io.quarkus.platform:quarkus-camel-bom", version.ref = "quarkus" }
@@ -50,7 +51,7 @@ quarkus-junit5 = { module = "io.quarkus:quarkus-junit5", version.ref = "quarkus"
 quarkus-jwt = { module = "io.quarkus:quarkus-smallrye-jwt", version.ref = "quarkus" }
 quarkus-jwt-build = { module = "io.quarkus:quarkus-smallrye-jwt-build", version.ref = "quarkus" }
 quarkus-smtp = { module = "io.quarkus:quarkus-mailer", version.ref = "quarkus" }
-quarkus-temporal = { module = "io.quarkiverse.temporal:quarkus-temporal", version.ref = "quarkus" }
+quarkus-temporal = { module = "io.quarkiverse.temporal:quarkus-temporal", version.ref = "temporal" }
 quarkus-smallrye-fault-tolerance = { module = "io.quarkus:quarkus-smallrye-fault-tolerance", version.ref = "quarkus" }
 openfga = { module = "dev.openfga:openfga-sdk", version.require = "0.8.1" }
 consul-stork = { module = "io.smallrye.stork:stork-service-discovery-consul", version.ref = "quarkus" }
@@ -79,7 +80,8 @@ web = [
     "quarkus-smallrye-openapi",
     "quarkus-reactive-routes",
     "quarkus-vertx",
-    "quarkus-smallrye-fault-tolerance"
+    "quarkus-smallrye-fault-tolerance",
+    "quarkus-temporal"
 ]
 
 # base bundle
