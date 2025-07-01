@@ -43,6 +43,9 @@ quarkus-graphql = { module = "io.quarkus:quarkus-smallrye-graphql", version.ref 
 quarkus-rest-client-jackson = { module = "io.quarkus:quarkus-rest-client-jackson", version.ref = "quarkus" }
 quarkus-rest-client = { module = "io.quarkus:quarkus-rest-client-jackson", version.ref = "quarkus" }
 quarkus-opentelemetry = { module = "io.quarkus:quarkus-opentelemetry", version.ref = "quarkus" }
+quarkus-micrometer-opentelemetry = { module = "io.quarkus:quarkus-micrometer-opentelemetry", version.ref = "quarkus" }
+quarkus-micrometer-registry-prometheus = { module = "io.quarkus:quarkus-micrometer-registry-prometheus", version.ref = "quarkus" }
+quarkus-observability-devservices-lgtm = { module = "io.quarkus:quarkus-observability-devservices-lgtm", version.ref = "quarkus" }
 quarkus-micrometer = { module = "io.quarkus:quarkus-micrometer", version.ref = "quarkus" }
 quarkus-elasticsearch = { module = "io.quarkus:quarkus-elasticsearch-java-client", version.ref = "quarkus" }
 quarkus-pulsar = { module = "io.quarkus:quarkus-messaging-pulsar", version.ref = "quarkus" }
@@ -110,7 +113,8 @@ mq = ["quarkus-pulsar"]
 search = ["quarkus-elasticsearch"]
 utils = ["guava"]
 protocol = ["quarkus-grpc", "quarkus-websocket"]
-
+#metrics = ["quarkus-observability-devservices-lgtm","quarkus-micrometer-registry-prometheus", "quarkus-opentelemetry", "quarkus-micrometer-opentelemetry"]
+metrics = ["quarkus-observability-devservices-lgtm", "quarkus-opentelemetry"]
 test = [
     "quarkus-flyway",
     "assured",
