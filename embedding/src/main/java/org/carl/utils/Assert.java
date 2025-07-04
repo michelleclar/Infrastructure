@@ -1,32 +1,68 @@
 package org.carl.utils;
 
 import org.carl.infrastructure.component.web.config.exception.BizException;
+import org.carl.infrastructure.utils.FieldsUtils;
+
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 public abstract class Assert {
+    public static void assertStringOrLongOrBoolean(Object value, String fieldName) {
+        if (value == null) return;
+        if (!FieldsUtils.isStringOrLongOrBoolean(value)) {
+            throw BizException.biz(
+                    "Field [%s] Only String, Long, Boolean are allowed.".formatted(fieldName));
+        }
+    }
 
-    public static void notNull(Object object, String errMessage) {
+    public static void assertAllStringOrLong(List<Object> list, String fieldName) {
+        if (list == null || list.isEmpty()) return;
+        if (list.stream().anyMatch(item -> !FieldsUtils.isStringOrLong(item))) {
+            throw BizException.biz(
+                    "Field [%s] only supports String and Long types.".formatted(fieldName));
+        }
+    }
+
+    public static void assertTrue(Boolean flag, String errMessage) {
+        if (flag) {
+            throw BizException.biz(errMessage);
+        }
+    }
+
+    public static void assertFalse(Boolean flag, String errMessage) {
+        if (!flag) {
+            throw BizException.biz(errMessage);
+        }
+    }
+
+    public static void assertNull(Object object, String errMessage) {
+        if (object != null) {
+            throw BizException.biz(errMessage);
+        }
+    }
+
+    public static void assertNotNull(Object object, String errMessage) {
         if (object == null) {
-            throw new BizException(errMessage);
+            throw BizException.biz(errMessage);
         }
     }
 
-    public static void notEmpty(String str, String errMessage) {
+    public static void assertNotEmpty(String str, String errMessage) {
         if (str == null || str.isEmpty()) {
-            throw new BizException(errMessage);
+            throw BizException.biz(errMessage);
         }
     }
 
-    public static void notEmpty(Collection<?> collection, String errMessage) {
+    public static void assertNotEmpty(Collection<?> collection, String errMessage) {
         if (collection == null || collection.isEmpty()) {
-            throw new BizException(errMessage);
+            throw BizException.biz(errMessage);
         }
     }
 
-    public static void notEmpty(Map<?, ?> map, String errMessage) {
+    public static void assertNotEmpty(Map<?, ?> map, String errMessage) {
         if (map == null || map.isEmpty()) {
-            throw new BizException(errMessage);
+            throw BizException.biz(errMessage);
         }
     }
 }

@@ -44,4 +44,21 @@ public class ScoredPointCO extends AbstractMetricCO{
         this.id = id;
         return this;
     }
+
+    @Override
+    public String toString() {
+        return "{"
+                + "        \"id\":\""
+                + id
+                + "\""
+                + ",         \"uuid\":\""
+                + uuid
+                + "\""
+                + ",         \"score\":\""
+                + score
+                + "\""
+                + ",         \"payload\":"
+                + payload
+                + "}";
+    }
 }

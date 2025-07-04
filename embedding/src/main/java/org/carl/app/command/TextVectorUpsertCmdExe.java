@@ -1,55 +1,23 @@
 package org.carl.app.command;
 
+import io.embeddingj.client.grpc.EmbeddingOuterClass;
 import io.smallrye.mutiny.Uni;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import org.carl.infrastructure.gatewayimpl.database.TextEmbeddingCacheDB;
 
-import org.carl.infrastructure.gatewayimpl.rpc.EmbeddingClient;
-import org.carl.utils.SimHashWithHanLP;
+import org.carl.domain.gateway.IEmbeddingGateway;
 
-import java.util.Arrays;
 import java.util.List;
 
 @ApplicationScoped
 public class TextVectorUpsertCmdExe {
-    @Inject TextEmbeddingCacheDB textEmbeddingCacheDB;
-    @Inject EmbeddingClient embeddingClient;
+    @Inject IEmbeddingGateway embeddingGateway;
 
     public Uni<List<Float>> execute(String text) {
-        long simHash = SimHashWithHanLP.calculateSimHash(text, false);
-        return textEmbeddingCacheDB
-                .getVectorWithSimHashCheck(simHash)
+        return embeddingGateway
+                .textToVector(text)
                 .onItem()
-                .transformToUni(
-                        item -> {
-                            if (item.isPresent()) {
-                                List<Float> embedding =
-                                        Arrays.stream(item.get().getEmbedding())
-                                                .map(Double::floatValue)
-                                                .toList();
-                                return Uni.createFrom().item(embedding);
-                            }
-                            return embeddingClient
-                                    .textToVector(text)
-                                    .onItem()
-                                    .transformToUni(
-                                            response -> {
-                                                return textEmbeddingCacheDB
-                                                        .save(
-                                                                simHash,
-                                                                text,
-                                                                response.getVectorList().stream()
-                                                                        .map(Float::doubleValue)
-                                                                        .toArray(Double[]::new))
-                                                        .onItem()
-                                                        .transformToUni(
-                                                                __ ->
-                                                                        Uni.createFrom()
-                                                                                .item(
-                                                                                        response
-                                                                                                .getVectorList()));
-                                            });
-                        });
+                .transform(EmbeddingOuterClass.TextVectorResponse::getVectorList);
     }
 }

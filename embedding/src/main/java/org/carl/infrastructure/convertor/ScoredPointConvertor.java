@@ -2,6 +2,7 @@ package org.carl.infrastructure.convertor;
 
 import io.qdrant.client.grpc.JsonWithInt;
 import io.qdrant.client.grpc.Points;
+
 import org.carl.client.dto.clientobject.ScoredPointCO;
 
 import java.util.ArrayList;
@@ -32,6 +33,9 @@ public class ScoredPointConvertor {
     }
 
     private static Map<String, Object> protobufStructToMap(Map<String, JsonWithInt.Value> payload) {
+        if (payload.isEmpty()) {
+            return null;
+        }
         Map<String, Object> map = new HashMap<>();
         payload.forEach(
                 (k, v) -> {

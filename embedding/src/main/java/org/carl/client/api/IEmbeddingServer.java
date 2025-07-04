@@ -1,11 +1,12 @@
 package org.carl.client.api;
 
 import io.smallrye.mutiny.Uni;
-import org.carl.client.dto.DictSearchQ;
-import org.carl.client.dto.FaceSearchQ;
-import org.carl.client.dto.FaceUpsertCmd;
-import org.carl.client.dto.ResumeSearchQ;
+
 import org.carl.client.dto.clientobject.ScoredPointCO;
+import org.carl.client.dto.cmd.CollectionCreateCmd;
+import org.carl.client.dto.cmd.PointUpsertCmd;
+import org.carl.client.dto.query.DictSearchQ;
+import org.carl.client.dto.query.PointsQ;
 import org.carl.component.dto.EntityResponse;
 import org.carl.component.dto.MultiEntityResponse;
 
@@ -13,9 +14,9 @@ import org.carl.component.dto.MultiEntityResponse;
 public interface IEmbeddingServer {
     Uni<MultiEntityResponse<ScoredPointCO>> dictSearch(DictSearchQ dictSearchQ);
 
-    Uni<MultiEntityResponse<ScoredPointCO>> faceSearch(FaceSearchQ faceSearchQ);
+    Uni<MultiEntityResponse<ScoredPointCO>> pointQuery(PointsQ pointsQ);
 
-    Uni<EntityResponse> faceUpsert(FaceUpsertCmd faceUpsertCmd);
+    Uni<EntityResponse> collectionCreate(CollectionCreateCmd collectionCreateCmd);
 
-    Uni<MultiEntityResponse<ScoredPointCO>> resumeSearch(ResumeSearchQ resumeSearchQ);
+    Uni<EntityResponse> pointUpsert(PointUpsertCmd pointUpsertCmd);
 }

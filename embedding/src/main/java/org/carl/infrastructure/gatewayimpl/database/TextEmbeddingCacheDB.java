@@ -1,24 +1,27 @@
 package org.carl.infrastructure.gatewayimpl.database;
 
+import static org.carl.generated.Tables.TEXT_EMBEDDING_CACHE;
+
 import io.smallrye.mutiny.Uni;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+
+import org.carl.generated.tables.pojos.TextEmbeddingCache;
 import org.carl.generated.tables.records.TextEmbeddingCacheRecord;
 import org.jooq.DSLContext;
 import org.jooq.impl.DSL;
 
-import java.util.Optional;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
-
-import static org.carl.generated.Tables.TEXT_EMBEDDING_CACHE;
 
 @ApplicationScoped
 public class TextEmbeddingCacheDB {
     @Inject DSLContext dslContext;
 
-    public Uni<Optional<TextEmbeddingCacheRecord>> getVectorWithSimHashCheck(long simHash) {
-        CompletionStage<Optional<TextEmbeddingCacheRecord>> vectors =
+    public Uni<List<TextEmbeddingCache>> getVectorWithSimHashCheck(long simHash) {
+        CompletionStage<List<TextEmbeddingCache>> vectors =
                 CompletableFuture.supplyAsync(
                                 () ->
                                         dslContext
@@ -30,7 +33,17 @@ public class TextEmbeddingCacheDB {
                                                                                 .SIM_HASH.bitXor(
                                                                                 simHash))
                                                                 .le(3))
-                                                .fetchOptionalInto(TEXT_EMBEDDING_CACHE))
+                                                .fetch()
+                                                .map(
+                                                        (r) -> {
+                                                            TextEmbeddingCache textEmbeddingCache =
+                                                                    new TextEmbeddingCache();
+                                                            textEmbeddingCache.setEmbedding(
+                                                                    r.get(
+                                                                            TEXT_EMBEDDING_CACHE
+                                                                                    .EMBEDDING));
+                                                            return textEmbeddingCache;
+                                                        }))
                         .minimalCompletionStage();
         return Uni.createFrom().completionStage(vectors);
     }

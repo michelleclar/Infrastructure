@@ -8,19 +8,19 @@ plugins {
 }
 
 group = "org.carl"
-version = "1.0-SNAPSHOT"
+version = "1.1"
 
 repositories {
     // NOTE: Save bandwidth
     mavenLocal()
-    maven { url = uri("https://maven.aliyun.com/repository/central") }
-    maven {
-        credentials {
-            username = findProperty("MAVEN_USERNAME").toString()
-            password = findProperty("MAVEN_PASSWORD").toString()
-        }
-        url = uri("https://packages.aliyun.com/659e01070cab697efe1345a8/maven/repo-wdhey")
-    }
+//    maven {
+//        credentials {
+//            username = System.getenv("ALIYUN_MAVEN_USERNAME").toString()
+//            password = System.getenv("ALIYUN_MAVEN_PASSWORD").toString()
+//        }
+//        url = uri("https://packages.aliyun.com/659e01070cab697efe1345a8/maven/repo-wdhey")
+//    }
+    mavenCentral()
 }
 val mainSrc = "src/main/java"
 val generatedDir = "src/main/generated"
@@ -44,7 +44,6 @@ idea {
 }
 
 tasks.withType<Test>().configureEach {
-    enabled = false
     useJUnitPlatform()
     systemProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager")
     systemProperty("TESTCONTAINERS_REUSE_ENABLE", "true")
@@ -56,6 +55,7 @@ dependencies {
     implementation(libs.infrastructure.component.qdrant.grpc)
     implementation(libs.infrastructure.component.embedding.grpc)
     implementation(libs.infrastructure.component.dto)
+    implementation(libs.infrastructure.component.utils)
     implementation("com.hankcs:hanlp:portable-1.8.6")
     implementation("org.ansj:ansj_seg:5.1.6")
     testImplementation(libs.bundles.test)
@@ -66,13 +66,6 @@ quarkus {
     quarkusBuildProperties.put("quarkus.grpc.codegen.proto-directory", "./protos")
 }
 
-tasks.quarkusBuild {
-    nativeArgs {
-        "quarkus.native.container-runtime-options" to "--platform=linux/amd64"
-        "container-build" to true
-//        "builder-image" to "quay.io/quarkus/ubi9-quarkus-mandrel-builder-image:jdk-21"
-    }
-}
 tasks.processResources {
     from("src/main/resources") {
         include("library/**")
@@ -85,7 +78,7 @@ jooq {
     configurations {
         create("main") {  // name of the jOOQ configuration
             // NOTE: native build log manager is diffed
-            generateSchemaSourceOnCompilation.set(true)  // default (can be omitted)
+            generateSchemaSourceOnCompilation.set(false)  // default (can be omitted)
 
             jooqConfiguration {
                 logging = org.jooq.meta.jaxb.Logging.WARN
@@ -120,10 +113,9 @@ jooq {
                     }
                     generate {
                         isDeprecated = false
-                        isRecords = true
-                        isImmutablePojos = true
+                        isImmutablePojos = false
                         isFluentSetters = true
-                        isDaos = true
+                        isPojos = true
                     }
                     target {
                         packageName = "org.carl.generated"
