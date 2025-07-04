@@ -1,4 +1,5 @@
-import com.google.protobuf.gradle.*
+import com.google.protobuf.gradle.id
+import com.google.protobuf.gradle.protobuf
 
 plugins {
     java
@@ -7,6 +8,7 @@ plugins {
 }
 dependencies {
     api(libs.quarkus.grpc)
+    implementation(project(":infrastructure-component-utils"))
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("io.vertx:vertx-junit5:4.5.13")

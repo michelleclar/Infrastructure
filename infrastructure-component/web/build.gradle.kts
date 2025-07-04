@@ -1,5 +1,5 @@
 dependencies {
     api(libs.bundles.web)
-    api(project(":infrastructure-component:tool"))
+    implementation(project(":infrastructure-component-utils"))
     testImplementation(project(":infrastructure-component:authorization"))
 }

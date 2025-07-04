@@ -1,6 +1,9 @@
 package org.carl.components.factory;
 
 import io.qdrant.client.grpc.Points.PointId;
+
+import org.carl.infrastructure.utils.StringUtils;
+
 import java.util.UUID;
 
 /** Convenience methods for constructing {@link PointId} */
@@ -25,5 +28,12 @@ public final class PointIdFactory {
      */
     public static PointId id(UUID id) {
         return PointId.newBuilder().setUuid(id.toString()).build();
+    }
+
+    public static PointId id(String id) {
+        if (StringUtils.isNumeric(id)) {
+            return id(Long.parseLong(id));
+        }
+        return id(UUID.fromString(id));
     }
 }

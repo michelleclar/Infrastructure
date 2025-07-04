@@ -1,7 +1,7 @@
 package org.carl.infrastructure.component.web.model;
 
 import org.carl.infrastructure.component.web.runtime.IRuntimeUser;
-import org.carl.infrastructure.tool.util.LinkedTable;
+import org.carl.infrastructure.utils.struct.LinkedTable;
 
 import java.util.StringJoiner;
 
