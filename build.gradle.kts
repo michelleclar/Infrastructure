@@ -5,6 +5,10 @@ plugins {
     id("org.kordamp.gradle.jandex") version "2.1.0"
     id("java-library")
 }
+
+tasks.named("jandex") {
+    enabled = false
+}
 subprojects {
     apply {
         plugin("com.diffplug.spotless")
@@ -51,11 +55,6 @@ subprojects {
 
     tasks.withType<Javadoc>().configureEach {
         options.encoding = "UTF-8"
-    }
-    tasks.withType<Test>().configureEach {
-        useJUnitPlatform()
-        systemProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager")
-        systemProperty("TESTCONTAINERS_REUSE_ENABLE", "true")
     }
     // NOTE: https://github.com/diffplug/spotless/tree/main/plugin-gradle
     spotless {

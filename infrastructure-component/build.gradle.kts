@@ -7,6 +7,9 @@ tasks.named("quarkusDependenciesBuild") {
     enabled = false
     dependsOn("jandex")
 }
+tasks.named("jandex") {
+    enabled = false
+}
 
 subprojects {
     apply(plugin = "org.kordamp.gradle.jandex")
@@ -45,6 +48,11 @@ subprojects {
         }
     }
 
+
+    tasks.withType<Test>().configureEach {
+        useJUnitPlatform()
+        systemProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager")
+    }
     val libs = rootProject.libs
     dependencies {
         implementation(enforcedPlatform(libs.quarkus.platform.bom))
