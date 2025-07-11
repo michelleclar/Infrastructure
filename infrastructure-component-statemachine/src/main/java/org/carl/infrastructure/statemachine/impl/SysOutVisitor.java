@@ -1,15 +1,13 @@
 package org.carl.infrastructure.statemachine.impl;
 
-import com.alibaba.cola.statemachine.State;
-import com.alibaba.cola.statemachine.StateMachine;
-import com.alibaba.cola.statemachine.Transition;
-import com.alibaba.cola.statemachine.Visitor;
+import org.carl.infrastructure.statemachine.State;
+import org.carl.infrastructure.statemachine.StateMachine;
+import org.carl.infrastructure.statemachine.Transition;
+import org.carl.infrastructure.statemachine.Visitor;
 
 /**
  * SysOutVisitor
  *
- * @author Frank Zhang
- * @date 2020-02-08 8:48 PM
  */
 public class SysOutVisitor implements Visitor {
 

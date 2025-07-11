@@ -1,9 +1,8 @@
 plugins {
-    java
+//    java
     idea
-    id("com.diffplug.spotless") version "7.0.0.BETA4"
     id("org.kordamp.gradle.jandex") version "2.1.0"
-    id("java-library")
+//    id("java-library")
 }
 
 tasks.named("jandex") {
@@ -11,7 +10,6 @@ tasks.named("jandex") {
 }
 subprojects {
     apply {
-        plugin("com.diffplug.spotless")
         plugin("java")
         plugin("idea")
         plugin("java-library")
@@ -24,7 +22,7 @@ subprojects {
 
 //        maven { url = uri("https://maven.aliyun.com/repository/public") }
         mavenLocal()
-        maven { url = uri("https://mirrors.cloud.tencent.com/repository/maven") }
+        maven { url = uri("https://mirrors.cloud.tencent.com/nexus/repository/maven-public") }
         mavenCentral()
     }
 
@@ -56,56 +54,7 @@ subprojects {
     tasks.withType<Javadoc>().configureEach {
         options.encoding = "UTF-8"
     }
-    // NOTE: https://github.com/diffplug/spotless/tree/main/plugin-gradle
-    spotless {
-        ratchetFrom = "origin/main"
 
-        java {
-            target("src/main/**/*.java","src/test/**/*.java")
-//            importOrder()
-            cleanthat()
-            googleJavaFormat().aosp()
-//            googleJavaFormat().aosp().reflowLongStrings().formatJavadoc(false).reorderImports(true)
-//                .groupArtifact("com.google.googlejavaformat:google-java-format")
-            formatAnnotations()
-            trimTrailingWhitespace()
-            endWithNewline()
-        }
-//        protobuf {
-//            target("**/*.proto")
-//            targetExclude("**/build/**", "**/build-*/**")
-//            buf()
-//        }
-        flexmark {
-            target("**/*.md")
-            targetExclude("**/build/**", "**/build-*/**")
-            flexmark()
-        }
-        sql {
-            target("src/main/resources/**/*.sql")
-            dbeaver()
-            prettier()
-        }
-        yaml {
-            target("src/main/resources/**/*.yaml")
-            jackson()
-            prettier()
-        }
-        shell {
-            target("src/main/resources/**/*.sh")
-            shfmt()
-        }
-    }
-//    afterEvaluate {
-//        tasks.findByName("spotlessApply")?.let { spotless ->
-//            tasks.withType<JavaCompile>().configureEach {
-//                finalizedBy(spotless)
-//            }
-//            tasks.withType<GroovyCompile>().configureEach {
-//                finalizedBy(spotless)
-//            }
-//        }
-//    }
     // NOTE: build pulsar
     configurations.configureEach {
         resolutionStrategy.dependencySubstitution {

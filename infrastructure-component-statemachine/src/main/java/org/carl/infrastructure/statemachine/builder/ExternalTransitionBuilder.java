@@ -3,8 +3,6 @@ package org.carl.infrastructure.statemachine.builder;
 /**
  * ExternalTransitionBuilder
  *
- * @author Frank Zhang
- * @date 2020-02-07 6:11 PM
  */
 public interface ExternalTransitionBuilder<S, E, C> {
     /**

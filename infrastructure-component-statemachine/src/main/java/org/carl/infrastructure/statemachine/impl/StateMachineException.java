@@ -1,11 +1,6 @@
 package org.carl.infrastructure.statemachine.impl;
 
-/**
- * StateMachineException
- *
- * @author Frank Zhang
- * @date 2020-02-08 5:28 PM
- */
+/** StateMachineException */
 public class StateMachineException extends RuntimeException {
     public StateMachineException(String message) {
         super(message);

@@ -5,11 +5,9 @@ import java.util.List;
 /**
  * StateMachine
  *
- * @author Frank Zhang
  * @param <S> the type of state
  * @param <E> the type of event
  * @param <C> the user defined context
- * @date 2020-02-07 2:13 PM
  */
 public interface StateMachine<S, E, C> extends Visitable {
 

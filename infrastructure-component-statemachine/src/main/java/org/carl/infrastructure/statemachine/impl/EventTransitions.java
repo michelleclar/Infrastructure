@@ -1,6 +1,6 @@
 package org.carl.infrastructure.statemachine.impl;
 
-import com.alibaba.cola.statemachine.Transition;
+import org.carl.infrastructure.statemachine.Transition;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,8 +11,6 @@ import java.util.List;
  *
  * <p>同一个Event可以触发多个Transitions，https://github.com/alibaba/COLA/pull/158
  *
- * @author Frank Zhang
- * @date 2021-05-28 5:17 PM
  */
 public class EventTransitions<S, E, C> {
     private HashMap<E, List<Transition<S, E, C>>> eventTransitions;

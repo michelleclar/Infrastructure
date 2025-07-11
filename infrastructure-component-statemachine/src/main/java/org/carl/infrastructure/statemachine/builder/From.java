@@ -3,8 +3,6 @@ package org.carl.infrastructure.statemachine.builder;
 /**
  * From
  *
- * @author Frank Zhang
- * @date 2020-02-07 6:13 PM
  */
 public interface From<S, E, C> {
     /**

@@ -1,19 +1,14 @@
 package org.carl.infrastructure.statemachine.impl;
 
-import com.alibaba.cola.statemachine.State;
-import com.alibaba.cola.statemachine.Transition;
-import com.alibaba.cola.statemachine.Visitor;
+import org.carl.infrastructure.statemachine.State;
+import org.carl.infrastructure.statemachine.Transition;
+import org.carl.infrastructure.statemachine.Visitor;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * StateImpl
- *
- * @author Frank Zhang
- * @date 2020-02-07 11:19 PM
- */
+/** StateImpl */
 public class StateImpl<S, E, C> implements State<S, E, C> {
     protected final S stateId;
     private EventTransitions eventTransitions = new EventTransitions();

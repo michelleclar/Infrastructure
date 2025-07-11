@@ -1,13 +1,8 @@
 package org.carl.infrastructure.statemachine.builder;
 
-import com.alibaba.cola.statemachine.StateMachine;
+import org.carl.infrastructure.statemachine.StateMachine;
 
-/**
- * StateMachineBuilder
- *
- * @author Frank Zhang
- * @date 2020-02-07 5:32 PM
- */
+/** StateMachineBuilder */
 public interface StateMachineBuilder<S, E, C> {
     /**
      * Builder for one transition

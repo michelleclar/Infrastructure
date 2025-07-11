@@ -1,17 +1,14 @@
 package org.carl.infrastructure.statemachine.impl;
 
-import com.alibaba.cola.statemachine.Action;
-import com.alibaba.cola.statemachine.Condition;
-import com.alibaba.cola.statemachine.State;
-import com.alibaba.cola.statemachine.Transition;
+import org.carl.infrastructure.statemachine.Action;
+import org.carl.infrastructure.statemachine.Condition;
+import org.carl.infrastructure.statemachine.State;
+import org.carl.infrastructure.statemachine.Transition;
 
 /**
  * TransitionImpl。
  *
  * <p>This should be designed to be immutable, so that there is no thread-safe risk
- *
- * @author Frank Zhang
- * @date 2020-02-07 10:32 PM
  */
 public class TransitionImpl<S, E, C> implements Transition<S, E, C> {
 

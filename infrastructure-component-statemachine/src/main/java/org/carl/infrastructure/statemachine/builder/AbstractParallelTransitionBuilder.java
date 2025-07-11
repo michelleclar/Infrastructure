@@ -1,8 +1,8 @@
 package org.carl.infrastructure.statemachine.builder;
 
-import com.alibaba.cola.statemachine.State;
-import com.alibaba.cola.statemachine.impl.StateHelper;
-import com.alibaba.cola.statemachine.impl.TransitionType;
+import org.carl.infrastructure.statemachine.State;
+import org.carl.infrastructure.statemachine.impl.StateHelper;
+import org.carl.infrastructure.statemachine.impl.TransitionType;
 
 import java.util.List;
 import java.util.Map;

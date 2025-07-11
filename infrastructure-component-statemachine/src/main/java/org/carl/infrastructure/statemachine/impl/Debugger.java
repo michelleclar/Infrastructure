@@ -3,8 +3,6 @@ package org.carl.infrastructure.statemachine.impl;
 /**
  * Debugger, This is used to decouple Logging framework dependency
  *
- * @author Frank Zhang
- * @date 2020-02-11 11:08 AM
  */
 public class Debugger {
 

@@ -1,6 +1,6 @@
 package org.carl.infrastructure.statemachine;
 
-import com.alibaba.cola.statemachine.impl.StateMachineException;
+import org.carl.infrastructure.statemachine.impl.StateMachineException;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -8,8 +8,6 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * StateMachineFactory
  *
- * @author Frank Zhang
- * @date 2020-02-08 10:21 PM
  */
 public class StateMachineFactory {
     static Map<String /* machineId */, StateMachine> stateMachineMap = new ConcurrentHashMap<>();

@@ -3,8 +3,6 @@ package org.carl.infrastructure.statemachine;
 /**
  * StateContext
  *
- * @author Frank Zhang
- * @date 2020-02-07 2:49 PM
  */
 public interface StateContext<S, E, C> {
     /**

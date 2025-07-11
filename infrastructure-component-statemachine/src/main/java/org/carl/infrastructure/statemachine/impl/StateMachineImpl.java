@@ -1,10 +1,10 @@
 package org.carl.infrastructure.statemachine.impl;
 
-import com.alibaba.cola.statemachine.State;
-import com.alibaba.cola.statemachine.StateMachine;
-import com.alibaba.cola.statemachine.Transition;
-import com.alibaba.cola.statemachine.Visitor;
-import com.alibaba.cola.statemachine.builder.FailCallback;
+import org.carl.infrastructure.statemachine.State;
+import org.carl.infrastructure.statemachine.StateMachine;
+import org.carl.infrastructure.statemachine.Transition;
+import org.carl.infrastructure.statemachine.Visitor;
+import org.carl.infrastructure.statemachine.builder.FailCallback;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,8 +17,6 @@ import java.util.Map;
  * <p>One side effect is since the state machine is stateless, we can not get current state from
  * State Machine.
  *
- * @author Frank Zhang
- * @date 2020-02-07 5:40 PM
  */
 public class StateMachineImpl<S, E, C> implements StateMachine<S, E, C> {
 

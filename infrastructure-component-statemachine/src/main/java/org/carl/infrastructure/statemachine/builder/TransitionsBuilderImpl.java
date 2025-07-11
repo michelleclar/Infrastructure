@@ -1,22 +1,17 @@
 package org.carl.infrastructure.statemachine.builder;
 
-import com.alibaba.cola.statemachine.Action;
-import com.alibaba.cola.statemachine.Condition;
-import com.alibaba.cola.statemachine.State;
-import com.alibaba.cola.statemachine.Transition;
-import com.alibaba.cola.statemachine.impl.StateHelper;
-import com.alibaba.cola.statemachine.impl.TransitionType;
+import org.carl.infrastructure.statemachine.Action;
+import org.carl.infrastructure.statemachine.Condition;
+import org.carl.infrastructure.statemachine.State;
+import org.carl.infrastructure.statemachine.Transition;
+import org.carl.infrastructure.statemachine.impl.StateHelper;
+import org.carl.infrastructure.statemachine.impl.TransitionType;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * TransitionsBuilderImpl
- *
- * @author Frank Zhang
- * @date 2020-02-08 7:43 PM
- */
+/** TransitionsBuilderImpl */
 public class TransitionsBuilderImpl<S, E, C> extends AbstractTransitionBuilder<S, E, C>
         implements ExternalTransitionsBuilder<S, E, C> {
     /** This is for fromAmong where multiple sources can be configured to point to one target */

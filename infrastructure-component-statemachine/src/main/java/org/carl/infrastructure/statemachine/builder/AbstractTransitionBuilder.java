@@ -1,8 +1,8 @@
 package org.carl.infrastructure.statemachine.builder;
 
-import com.alibaba.cola.statemachine.State;
-import com.alibaba.cola.statemachine.impl.StateHelper;
-import com.alibaba.cola.statemachine.impl.TransitionType;
+import org.carl.infrastructure.statemachine.State;
+import org.carl.infrastructure.statemachine.impl.StateHelper;
+import org.carl.infrastructure.statemachine.impl.TransitionType;
 
 import java.util.Map;
 
@@ -16,9 +16,6 @@ import java.util.Map;
  * relationship, why should we talk to each other, say a we are not suitable). With the abstract
  * class, multi-flow and single-flow only use to focus on their respective functions are
  * single-flow, or multi-flow. Conform to a single duty.
- *
- * @author welliem
- * @date 2023-07-14 12:13
  */
 abstract class AbstractTransitionBuilder<S, E, C>
         implements From<S, E, C>, On<S, E, C>, To<S, E, C> {

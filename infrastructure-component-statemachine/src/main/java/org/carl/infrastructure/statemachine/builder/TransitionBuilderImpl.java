@@ -1,20 +1,15 @@
 package org.carl.infrastructure.statemachine.builder;
 
-import com.alibaba.cola.statemachine.Action;
-import com.alibaba.cola.statemachine.Condition;
-import com.alibaba.cola.statemachine.State;
-import com.alibaba.cola.statemachine.Transition;
-import com.alibaba.cola.statemachine.impl.StateHelper;
-import com.alibaba.cola.statemachine.impl.TransitionType;
+import org.carl.infrastructure.statemachine.Action;
+import org.carl.infrastructure.statemachine.Condition;
+import org.carl.infrastructure.statemachine.State;
+import org.carl.infrastructure.statemachine.Transition;
+import org.carl.infrastructure.statemachine.impl.StateHelper;
+import org.carl.infrastructure.statemachine.impl.TransitionType;
 
 import java.util.Map;
 
-/**
- * TransitionBuilderImpl
- *
- * @author Frank Zhang
- * @date 2020-02-07 10:20 PM
- */
+/** TransitionBuilderImpl */
 class TransitionBuilderImpl<S, E, C> extends AbstractTransitionBuilder<S, E, C>
         implements ExternalTransitionBuilder<S, E, C>, InternalTransitionBuilder<S, E, C> {
 

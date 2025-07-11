@@ -1,15 +1,13 @@
 package org.carl.infrastructure.statemachine;
 
-import com.alibaba.cola.statemachine.impl.TransitionType;
+import org.carl.infrastructure.statemachine.impl.TransitionType;
 
 /**
  * {@code Transition} is something what a state machine associates with a state changes.
  *
- * @author Frank Zhang
  * @param <S> the type of state
  * @param <E> the type of event
  * @param <C> the type of user defined context, which is used to hold application data
- * @date 2020-02-07 2:20 PM
  */
 public interface Transition<S, E, C> {
     /**

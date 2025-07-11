@@ -1,11 +1,11 @@
 package org.carl.infrastructure.statemachine.builder;
 
-import com.alibaba.cola.statemachine.Action;
-import com.alibaba.cola.statemachine.Condition;
-import com.alibaba.cola.statemachine.State;
-import com.alibaba.cola.statemachine.Transition;
-import com.alibaba.cola.statemachine.impl.StateHelper;
-import com.alibaba.cola.statemachine.impl.TransitionType;
+import org.carl.infrastructure.statemachine.Action;
+import org.carl.infrastructure.statemachine.Condition;
+import org.carl.infrastructure.statemachine.State;
+import org.carl.infrastructure.statemachine.Transition;
+import org.carl.infrastructure.statemachine.impl.StateHelper;
+import org.carl.infrastructure.statemachine.impl.TransitionType;
 
 import java.util.List;
 import java.util.Map;

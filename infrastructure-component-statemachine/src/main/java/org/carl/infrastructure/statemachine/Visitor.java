@@ -3,8 +3,6 @@ package org.carl.infrastructure.statemachine;
 /**
  * Visitor
  *
- * @author Frank Zhang
- * @date 2020-02-08 8:41 PM
  */
 public interface Visitor {
 

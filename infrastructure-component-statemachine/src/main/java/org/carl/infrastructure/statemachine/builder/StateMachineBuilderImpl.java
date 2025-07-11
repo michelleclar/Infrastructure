@@ -1,10 +1,10 @@
 package org.carl.infrastructure.statemachine.builder;
 
-import com.alibaba.cola.statemachine.State;
-import com.alibaba.cola.statemachine.StateMachine;
-import com.alibaba.cola.statemachine.StateMachineFactory;
-import com.alibaba.cola.statemachine.impl.StateMachineImpl;
-import com.alibaba.cola.statemachine.impl.TransitionType;
+import org.carl.infrastructure.statemachine.State;
+import org.carl.infrastructure.statemachine.StateMachine;
+import org.carl.infrastructure.statemachine.StateMachineFactory;
+import org.carl.infrastructure.statemachine.impl.StateMachineImpl;
+import org.carl.infrastructure.statemachine.impl.TransitionType;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,8 +12,6 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * StateMachineBuilderImpl
  *
- * @author Frank Zhang
- * @date 2020-02-07 9:40 PM
  */
 public class StateMachineBuilderImpl<S, E, C> implements StateMachineBuilder<S, E, C> {
 
