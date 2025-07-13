@@ -61,6 +61,7 @@ dependencies {
     implementation(libs.infrastructure.component.qdrant.grpc)
     implementation(libs.infrastructure.component.embedding.grpc)
     implementation(libs.infrastructure.component.workflow)
+    implementation(libs.infrastructure.component.statemachine)
     implementation(libs.infrastructure.component.metrics)
     jooqGenerator(libs.infrastructure.component.persistence)
     testImplementation(libs.bundles.test)
