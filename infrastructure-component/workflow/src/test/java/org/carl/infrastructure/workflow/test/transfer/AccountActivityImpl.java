@@ -1,5 +1,5 @@
 // @@@SNIPSTART money-transfer-java-activity-implementation
-package transfer;
+package org.carl.infrastructure.workflow.test.transfer;
 
 import io.temporal.activity.*;
 

@@ -1,5 +1,5 @@
 // @@@SNIPSTART money-transfer-java-workflow-interface
-package transfer;
+package org.carl.infrastructure.workflow.test.transfer;
 
 import io.temporal.workflow.WorkflowInterface;
 import io.temporal.workflow.WorkflowMethod;

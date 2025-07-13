@@ -1,5 +1,5 @@
 // @@@SNIPSTART money-transfer-java-transaction-details
-package transfer;
+package org.carl.infrastructure.workflow.test.transfer;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 

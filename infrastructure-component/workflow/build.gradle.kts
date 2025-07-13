@@ -1,4 +1,5 @@
 dependencies {
-    implementation(libs.quarkus.temporal)
+    api(libs.quarkus.temporal)
+    api(project(":infrastructure-component-statemachine"))
     testImplementation(libs.quarkus.temporal.test)
 }

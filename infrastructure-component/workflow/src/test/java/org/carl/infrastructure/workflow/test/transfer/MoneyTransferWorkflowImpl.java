@@ -1,5 +1,5 @@
 // @@@SNIPSTART money-transfer-java-workflow-implementation
-package transfer;
+package org.carl.infrastructure.workflow.test.transfer;
 
 import io.temporal.activity.ActivityOptions;
 import io.temporal.common.RetryOptions;

@@ -1,5 +1,5 @@
 // @@@SNIPSTART money-transfer-java-worker
-package transfer;
+package org.carl.infrastructure.workflow.test.transfer;
 
 import io.temporal.client.WorkflowClient;
 import io.temporal.serviceclient.WorkflowServiceStubs;

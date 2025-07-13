@@ -1,5 +1,5 @@
 // @@@SNIPSTART money-transfer-java-coreTransactionDetails
-package transfer;
+package org.carl.infrastructure.workflow.test.transfer;
 
 public class CoreTransactionDetails implements TransactionDetails {
     private String sourceAccountId;
