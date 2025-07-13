@@ -1,8 +1,6 @@
 plugins {
-//    java
     idea
     id("org.kordamp.gradle.jandex") version "2.1.0"
-//    id("java-library")
 }
 
 tasks.named("jandex") {
@@ -18,11 +16,7 @@ subprojects {
     group = "org.carl"
     version = "1.0-BATE"
     repositories {
-        // NOTE: Save bandwidth
-
-//        maven { url = uri("https://maven.aliyun.com/repository/public") }
         mavenLocal()
-        maven { url = uri("https://mirrors.cloud.tencent.com/nexus/repository/maven-public") }
         mavenCentral()
     }
 
