@@ -5,10 +5,7 @@ import org.carl.infrastructure.statemachine.impl.StateMachineException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * StateMachineFactory
- *
- */
+/** StateMachineFactory */
 public class StateMachineFactory {
     static Map<String /* machineId */, StateMachine> stateMachineMap = new ConcurrentHashMap<>();
 
