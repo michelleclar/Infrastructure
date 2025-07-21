@@ -1,4 +1,12 @@
 services:
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./nginx/dev.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/certs:/etc/nginx/certs:ro
+    ports:
+      - "80:80"
+    restart: on-failure
   otel-lgtm:
     image: grafana/otel-lgtm:0.11.4
     container_name: otel-lgtm
@@ -16,7 +24,7 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: root
       KC_BOOTSTRAP_ADMIN_PASSWORD: root
     command: start-dev
-    restart: always
+    restart: on-failure
   consul:
     image: hashicorp/consul:1.20
     container_name: consul-scaffold
@@ -73,7 +81,7 @@ services:
     image: redis:7-alpine
     ports:
       - "6379:6379"
-    restart: always
+    restart: on-failure
   pg:
     container_name: postgres-scaffold
     image: postgres:17-alpine
@@ -104,7 +112,7 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=root
-    restart: always
+    restart: on-failure
   #    volumes:
   #      - ./mongodb:/data/db
   es:
@@ -118,14 +126,14 @@ services:
       xpack.security.enabled: false
     ports:
       - "19200:9200"
-    restart: always
+    restart: on-failure
   qdrant:
     container_name: qdrant-scaffold
     image: qdrant/qdrant
     ports:
       - "6333:6333"
       - "6334:6334"
-    restart: always
+    restart: on-failure
   migrate:
     depends_on:
       pg:
@@ -146,7 +154,7 @@ services:
     image: openfga/openfga:latest
     container_name: openfga-scaffold
     command: run
-    restart: always
+    restart: on-failure
     environment:
       - OPENFGA_DATASTORE_ENGINE=postgres
       - OPENFGA_DATASTORE_URI=postgres://root:root@postgres-scaffold:5432/openfga?sslmode=disable

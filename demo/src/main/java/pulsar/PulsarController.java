@@ -20,7 +20,7 @@ public class PulsarController {
     @POST
     @Produces
     public String executer() {
-        System.out.println(pulsarPriceProducer.generate());
+        //        System.out.println(pulsarPriceProducer.generate());
 
         return "success";
     }
