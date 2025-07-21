@@ -63,6 +63,7 @@ dependencies {
     implementation(libs.infrastructure.component.workflow)
     implementation(libs.infrastructure.component.statemachine)
     implementation(libs.infrastructure.component.metrics)
+    implementation(libs.infrastructure.component.pulsar)
     jooqGenerator(libs.infrastructure.component.persistence)
     testImplementation(libs.bundles.test)
 }

@@ -1,3 +1,3 @@
 dependencies {
-    implementation(libs.bundles.mq)
+    api(libs.bundles.mq)
 }
