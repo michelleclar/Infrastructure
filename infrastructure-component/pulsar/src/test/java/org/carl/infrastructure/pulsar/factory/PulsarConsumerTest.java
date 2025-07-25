@@ -1,11 +1,14 @@
 package org.carl.infrastructure.pulsar.factory;
 
 import static org.carl.infrastructure.pulsar.factory.PulsarProducerTest.TOPIC;
-import static org.junit.jupiter.api.Assertions.*;
 
 import io.quarkus.test.junit.QuarkusTest;
 
+import org.carl.infrastructure.pulsar.builder.MessageBuilder;
+import org.carl.infrastructure.pulsar.common.ex.ConsumerException;
 import org.carl.infrastructure.pulsar.config.GlobalShare;
+import org.carl.infrastructure.pulsar.core.IConsumer;
+import org.carl.infrastructure.pulsar.core.PulsarConsumer;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.ExecutionException;
@@ -37,23 +40,22 @@ class PulsarConsumerTest {
     void subscribeName() {}
 
     @Test
-    void testSubscribe() throws IConsumer.ConsumerException, InterruptedException {
+    void testSubscribe() throws ConsumerException, InterruptedException {
         IConsumer<String> pulsarConsumer = buildPulsarConsumer(TOPIC);
-        pulsarConsumer.subscribe();
-
+        IConsumer<String> subscribe = pulsarConsumer.subscribe();
         Thread.sleep(TimeUnit.MINUTES.toMillis(1));
+        subscribe.close();
     }
 
     @Test
-    void testReceive() throws IConsumer.ConsumerException, InterruptedException {
+    void testReceive() throws ConsumerException, InterruptedException {
         IConsumer<String> pulsarConsumer = buildPulsarConsumer(TOPIC);
         MessageBuilder.Message<String> receive = pulsarConsumer.receive();
         System.out.println(receive.getValue());
     }
 
     @Test
-    void receiveAsync()
-            throws IConsumer.ConsumerException, ExecutionException, InterruptedException {
+    void receiveAsync() throws ConsumerException, ExecutionException, InterruptedException {
         IConsumer<String> pulsarConsumer = buildPulsarConsumer(TOPIC);
         pulsarConsumer
                 .receiveAsync()

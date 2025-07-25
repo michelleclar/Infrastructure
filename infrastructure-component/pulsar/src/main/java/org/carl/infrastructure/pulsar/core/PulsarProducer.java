@@ -1,6 +1,10 @@
-package org.carl.infrastructure.pulsar.factory;
+package org.carl.infrastructure.pulsar.core;
 
 import org.apache.pulsar.client.api.*;
+import org.carl.infrastructure.pulsar.builder.MessageBuilder;
+import org.carl.infrastructure.pulsar.builder.PulsarMessageBuilder;
+import org.carl.infrastructure.pulsar.builder.PulsarProducerBuilder;
+import org.carl.infrastructure.pulsar.common.ex.ProducerException;
 import org.carl.infrastructure.pulsar.config.MsgArgsConfig;
 
 import java.util.List;
@@ -18,11 +22,15 @@ public class PulsarProducer<T> implements IProducer<T> {
             MsgArgsConfig.ProducerConfig config,
             String topic,
             Class<T> clazz)
-            throws PulsarClientException {
+            throws ProducerException {
         this.topic = topic;
         PulsarProducerBuilder<T> pulsarProducerBuilder =
                 PulsarProducerBuilder.create(pulsarClient, topic, clazz, config);
-        this.producer = pulsarProducerBuilder.createProducer().create();
+        try {
+            this.producer = pulsarProducerBuilder.createProducer().create();
+        } catch (PulsarClientException e) {
+            throw new ProducerException(e);
+        }
     }
 
     @Override

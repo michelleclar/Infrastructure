@@ -1,4 +1,4 @@
-package org.carl.infrastructure.pulsar.factory;
+package org.carl.infrastructure.pulsar.builder;
 
 import org.apache.pulsar.client.api.*;
 import org.carl.infrastructure.pulsar.config.GlobalShare;
@@ -7,7 +7,7 @@ import org.carl.infrastructure.pulsar.config.MsgArgsConfig;
 import java.util.concurrent.TimeUnit;
 
 /** 生产者构建器 提供流式 API 来发送消息 */
-class PulsarProducerBuilder<T> {
+public class PulsarProducerBuilder<T> {
 
     private final String topic;
     private final MsgArgsConfig.ProducerConfig producerConfig;

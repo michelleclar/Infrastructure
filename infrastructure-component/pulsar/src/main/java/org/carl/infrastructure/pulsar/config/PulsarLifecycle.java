@@ -8,6 +8,7 @@ import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 
 import org.apache.pulsar.client.api.PulsarClientException;
+import org.carl.infrastructure.pulsar.common.ex.ClientException;
 import org.carl.infrastructure.pulsar.factory.PulsarFactory;
 import org.jboss.logging.Logger;
 
@@ -21,9 +22,13 @@ public class PulsarLifecycle {
         globalShare.msgArgsConfig = msgArgsConfig;
         new PulsarConfigValidator(globalShare.msgArgsConfig).validate();
         try {
-            globalShare.pulsarClient = PulsarFactory.createClient(globalShare.msgArgsConfig);
+            globalShare.pulsarClient =
+                    PulsarFactory.createClient(
+                            globalShare.msgArgsConfig.client(),
+                            globalShare.msgArgsConfig.transaction(),
+                            globalShare.msgArgsConfig.monitoring());
             LOGGER.debugf("Pulsar client has been started successfully");
-        } catch (PulsarClientException e) {
+        } catch (ClientException e) {
             LOGGER.errorf(
                     e,
                     "Pulsar client has been started failed: args:[%s], exception:[%s]",

@@ -1,6 +1,10 @@
-package org.carl.infrastructure.pulsar.factory;
+package org.carl.infrastructure.pulsar.core;
 
 import org.apache.pulsar.client.api.*;
+import org.carl.infrastructure.pulsar.builder.MessageBuilder;
+import org.carl.infrastructure.pulsar.builder.PulsarConsumerBuilder;
+import org.carl.infrastructure.pulsar.builder.PulsarMessageBuilder;
+import org.carl.infrastructure.pulsar.common.ex.ConsumerException;
 import org.carl.infrastructure.pulsar.config.MsgArgsConfig;
 import org.carl.infrastructure.pulsar.config.TimeLimitedConsumerEventListener;
 import org.jboss.logging.Logger;

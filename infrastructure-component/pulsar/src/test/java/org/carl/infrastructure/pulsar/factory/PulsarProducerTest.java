@@ -1,11 +1,11 @@
 package org.carl.infrastructure.pulsar.factory;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import io.quarkus.test.junit.QuarkusTest;
 
 import org.apache.pulsar.client.api.PulsarClientException;
+import org.carl.infrastructure.pulsar.common.ex.ProducerException;
 import org.carl.infrastructure.pulsar.config.GlobalShare;
+import org.carl.infrastructure.pulsar.core.PulsarProducer;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.ExecutionException;
@@ -21,7 +21,7 @@ class PulsarProducerTest {
     }
 
     @Test
-    void testSendMessage() throws IProducer.ProducerException, PulsarClientException {
+    void testSendMessage() throws ProducerException, PulsarClientException {
         PulsarProducer<String> pulsarProducer = buildPulsarProducer(TOPIC);
         pulsarProducer.sendMessage("hello");
         pulsarProducer.sendMessage("product");
@@ -32,7 +32,7 @@ class PulsarProducerTest {
 
     @Test
     void testSendMessageAsync()
-            throws IProducer.ProducerException,
+            throws ProducerException,
                     PulsarClientException,
                     InterruptedException,
                     ExecutionException {
@@ -40,7 +40,7 @@ class PulsarProducerTest {
         pulsarProducer.sendMessageAsync("hello").get();
     }
 
-    private PulsarProducer<String> buildPulsarProducer(String topic) throws PulsarClientException {
+    private PulsarProducer<String> buildPulsarProducer(String topic) throws ProducerException {
         return new PulsarProducer<>(
                 GlobalShare.getInstance().client(),
                 GlobalShare.getInstance().producerConfig(),

@@ -1,4 +1,4 @@
-package org.carl.infrastructure.pulsar.factory;
+package org.carl.infrastructure.pulsar.builder;
 
 import org.apache.pulsar.client.api.*;
 import org.carl.infrastructure.pulsar.config.GlobalShare;
@@ -8,7 +8,7 @@ import org.jboss.logging.Logger;
 import java.util.concurrent.TimeUnit;
 
 /** 消费者构建器 提供流式 API 来配置和创建消费者 */
-class PulsarConsumerBuilder<T> {
+public class PulsarConsumerBuilder<T> {
 
     private final MsgArgsConfig.ConsumerConfig consumerConfig;
     private static final Logger logger = Logger.getLogger(ProcessorBuilder.class);

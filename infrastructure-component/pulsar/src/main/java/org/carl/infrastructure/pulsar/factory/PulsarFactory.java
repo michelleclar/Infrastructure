@@ -1,8 +1,15 @@
 package org.carl.infrastructure.pulsar.factory;
 
 import org.apache.pulsar.client.api.*;
+import org.carl.infrastructure.pulsar.common.ex.ClientException;
+import org.carl.infrastructure.pulsar.common.ex.ProducerException;
+import org.carl.infrastructure.pulsar.config.GlobalShare;
 import org.carl.infrastructure.pulsar.config.MsgArgsConfig;
 import org.carl.infrastructure.pulsar.config.PulsarClientFactory;
+import org.carl.infrastructure.pulsar.core.IConsumer;
+import org.carl.infrastructure.pulsar.core.IProducer;
+import org.carl.infrastructure.pulsar.core.PulsarConsumer;
+import org.carl.infrastructure.pulsar.core.PulsarProducer;
 import org.jboss.logging.Logger;
 
 /** Pulsar 工厂类 简化 PulsarClient 和 PulsarMessageManager 的创建 */
@@ -10,41 +17,92 @@ public class PulsarFactory {
 
     private static final Logger logger = Logger.getLogger(PulsarFactory.class);
 
-    /**
-     * @param msgArgsConfig {@link MsgArgsConfig}
-     * @return {@link PulsarClient}
-     */
-    public static PulsarClient createClient(MsgArgsConfig msgArgsConfig)
-            throws PulsarClientException {
+    public static PulsarClient createClient(
+            MsgArgsConfig.ClientConfig clientConfig,
+            MsgArgsConfig.TransactionConfig transactionConfig,
+            MsgArgsConfig.MonitoringConfig monitoringConfig)
+            throws ClientException {
 
-        logger.debugf("Creating Pulsar client with args: {%s}", msgArgsConfig);
-        ClientBuilder build =
-                PulsarClientFactory.getInstance()
-                        .processConnect(msgArgsConfig.client())
-                        .process(msgArgsConfig.transaction())
-                        .process(msgArgsConfig.monitoring())
-                        .build();
-        return build.build();
+        logger.debugf(
+                "Creating Pulsar client with args: \n client: [%s] transaction: [%s] monitor: [%s]",
+                clientConfig, transactionConfig, monitoringConfig);
+        ClientBuilder build;
+        try {
+            build =
+                    PulsarClientFactory.getInstance()
+                            .processConnect(clientConfig)
+                            .process(transactionConfig)
+                            .process(monitoringConfig)
+                            .build();
+        } catch (PulsarClientException.UnsupportedAuthenticationException e) {
+            throw new ClientException(e);
+        }
+        try {
+            return build.build();
+        } catch (PulsarClientException e) {
+            throw new ClientException(e);
+        }
     }
 
-    public static <T> Consumer<T> createConsumer(MsgArgsConfig.ConsumerConfig consumerConfig) {
-        return null;
+    public static IConsumer<byte[]> createConsumer(String topic) {
+        return new PulsarConsumer<>(
+                GlobalShare.getInstance().client(),
+                GlobalShare.getInstance().consumerConfig(),
+                topic,
+                byte[].class);
     }
 
-    public static Consumer<byte[]> createConsumer(
-            String topic, MessageListener<byte[]> messageListener, String subscriptionName)
-            throws PulsarClientException {
-        //        return
-        // PulsarConsumerBuilder.create(topic).build(subscriptionName,messageListener);
-        return null;
+    public static <T> IConsumer<T> createConsumer(Class<T> clazz, String topic) {
+        return new PulsarConsumer<>(
+                GlobalShare.getInstance().client(),
+                GlobalShare.getInstance().consumerConfig(),
+                topic,
+                clazz);
     }
 
-    public static Producer<byte[]> createProducer(String topic) throws PulsarClientException {
-        //        return ProducerBuilder.create(topic).createProducer();
-        return null;
+    public static <T> IConsumer<T> createConsumer(
+            PulsarClient client, Class<T> clazz, String topic) {
+        return new PulsarConsumer<>(
+                client, GlobalShare.getInstance().consumerConfig(), topic, clazz);
     }
 
-    public static <T> Producer<T> createProducer(MsgArgsConfig.ProducerConfig producerConfig) {
-        return null;
+    public static <T> IConsumer<T> createConsumer(
+            PulsarClient client,
+            MsgArgsConfig.ConsumerConfig consumerConfig,
+            Class<T> clazz,
+            String topic) {
+        return new PulsarConsumer<>(client, consumerConfig, topic, clazz);
+    }
+
+    public static <T> IProducer<T> createProducer(Class<T> clazz, String topic)
+            throws ProducerException {
+        return new PulsarProducer<>(
+                GlobalShare.getInstance().client(),
+                GlobalShare.getInstance().producerConfig(),
+                topic,
+                clazz);
+    }
+
+    public static <T> IProducer<T> createProducer(PulsarClient client, Class<T> clazz, String topic)
+            throws ProducerException {
+        return new PulsarProducer<>(
+                client, GlobalShare.getInstance().producerConfig(), topic, clazz);
+    }
+
+    public static <T> IProducer<T> createProducer(
+            PulsarClient client,
+            MsgArgsConfig.ProducerConfig producerConfig,
+            Class<T> clazz,
+            String topic)
+            throws ProducerException {
+        return new PulsarProducer<>(client, producerConfig, topic, clazz);
+    }
+
+    public static IProducer<byte[]> createProducer(String topic) throws ProducerException {
+        return new PulsarProducer<>(
+                GlobalShare.getInstance().client(),
+                GlobalShare.getInstance().producerConfig(),
+                topic,
+                byte[].class);
     }
 }
