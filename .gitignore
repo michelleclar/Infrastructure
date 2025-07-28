@@ -52,3 +52,4 @@ bin/
 /oidc/.idea/modules.xml
 /oidc/.idea/vcs.xml
 **/generated/
+/.kiro/

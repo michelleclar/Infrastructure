@@ -64,6 +64,7 @@ dependencies {
     implementation(libs.infrastructure.component.statemachine)
     implementation(libs.infrastructure.component.metrics)
     implementation(libs.infrastructure.component.pulsar)
+    implementation(libs.infrastructure.component.ruleengine)
     jooqGenerator(libs.infrastructure.component.persistence)
     testImplementation(libs.bundles.test)
 }
@@ -97,7 +98,7 @@ jooq {
     configurations {
         create("main") {  // name of the jOOQ configuration
             // NOTE: native build log manager is diffed
-            generateSchemaSourceOnCompilation.set(true)  // default (can be omitted)
+            generateSchemaSourceOnCompilation.set(false)  // default (can be omitted)
 
             jooqConfiguration {
                 logging = org.jooq.meta.jaxb.Logging.WARN
