@@ -24,9 +24,7 @@ public class PublishController {
     public Uni<String> publish(@RequestBody PublishRequest request) {
         WorkflowExecution we =
                 TXWorkflowBuilder.of(ContentPublishingStateMachine.STATEMACHINE)
-                        .txStamp(
-                                ContentPublishingStateMachine.STATEMACHINE.getMachineId()
-                                        + request.getContext().getEntityId())
+                        .entityId(request.getContext().getEntityId())
                         .fireEvent(request.getStatus(), request.getEvent(), request.getContext());
 
         logger.infof("Publish workflow started: [%s],[%s]", we.getRunId(), we.getWorkflowId());
