@@ -2,6 +2,7 @@ package org.carl.infrastructure.pulsar.config;
 
 import org.apache.pulsar.client.api.PulsarClient;
 
+// FIXME: remove
 public class GlobalShare {
     private static final GlobalShare INSTANCE;
 

@@ -233,12 +233,6 @@ public interface MsgArgsConfig {
         @WithDefault("LATEST")
         @WithName("subscription-initial-position")
         SubscriptionInitialPosition subscriptionInitialPosition();
-
-        /** 模式匹配订阅模式 */
-        @WithDefault("PERSISTENT")
-        @WithName("pattern-auto-discovery-period")
-        Duration patternAutoDiscoveryPeriod();
-
         /** 优先级 */
         @WithDefault("0")
         int priority();

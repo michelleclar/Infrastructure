@@ -37,7 +37,7 @@ public class ContentPublishingStateMachineImplStateMachineTest {
         ContentPublishingStatusEnum statusEnum = ContentPublishingStatusEnum.DRAFT;
         ContentPublishingEventEnum event = ContentPublishingEventEnum.SUBMIT;
         TXWorkflowBuilder.of(build)
-                .txStamp(contentPublishingStateMachine.machineId() + entityId)
+                .entityId(contentPublishingStateMachine.machineId() + entityId)
                 .fireEvent(statusEnum, event, context);
     }
 }

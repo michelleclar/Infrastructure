@@ -37,7 +37,8 @@ public class PulsarConsumer<T> implements IConsumer<T>, AutoCloseable {
         this.pulsarClient = pulsarClient;
         this.consumerConfig = consumerConfig;
         this.topic = topic;
-        this.pulsarConsumerBuilder = PulsarConsumerBuilder.create(pulsarClient, topic, clazz);
+        this.pulsarConsumerBuilder =
+                PulsarConsumerBuilder.create(pulsarClient, topic, clazz, consumerConfig);
         this.consumerSize = 1;
     }
 

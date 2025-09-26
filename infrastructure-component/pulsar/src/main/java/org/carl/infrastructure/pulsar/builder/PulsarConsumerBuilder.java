@@ -108,87 +108,87 @@ public class PulsarConsumerBuilder<T> {
         return consumerConfig;
     }
     //
-    //    /** 设置订阅名称 */
-    //    public ConsumerBuilder<T> subscription(String subscription) {
-    //        this.subscription = subscription;
-    //        return this;
-    //    }
+    // /** 设置订阅名称 */
+    // public ConsumerBuilder<T> subscription(String subscription) {
+    // this.subscription = subscription;
+    // return this;
+    // }
     //
-    //    /** 设置订阅类型为独占模式 */
-    //    public ConsumerBuilder<T> exclusive() {
-    //        this.subscriptionType = SubscriptionType.Exclusive;
-    //        return this;
-    //    }
+    // /** 设置订阅类型为独占模式 */
+    // public ConsumerBuilder<T> exclusive() {
+    // this.subscriptionType = SubscriptionType.Exclusive;
+    // return this;
+    // }
     //
-    //    /** 设置订阅类型为共享模式 */
-    //    public ConsumerBuilder<T> shared() {
-    //        this.subscriptionType = SubscriptionType.Shared;
-    //        return this;
-    //    }
+    // /** 设置订阅类型为共享模式 */
+    // public ConsumerBuilder<T> shared() {
+    // this.subscriptionType = SubscriptionType.Shared;
+    // return this;
+    // }
     //
-    //    /** 设置订阅类型为故障转移模式 */
-    //    public ConsumerBuilder<T> failover() {
-    //        this.subscriptionType = SubscriptionType.Failover;
-    //        return this;
-    //    }
+    // /** 设置订阅类型为故障转移模式 */
+    // public ConsumerBuilder<T> failover() {
+    // this.subscriptionType = SubscriptionType.Failover;
+    // return this;
+    // }
     //
-    //    /** 设置订阅类型为按键共享模式 */
-    //    public ConsumerBuilder<T> keyShared() {
-    //        this.subscriptionType = SubscriptionType.Key_Shared;
-    //        return this;
-    //    }
+    // /** 设置订阅类型为按键共享模式 */
+    // public ConsumerBuilder<T> keyShared() {
+    // this.subscriptionType = SubscriptionType.Key_Shared;
+    // return this;
+    // }
     //
-    //    /** 设置消息处理器 */
-    //    public ConsumerBuilder<T> handler(Function<T, Void> handler) {
-    //        this.messageHandler = handler;
-    //        return this;
-    //    }
+    // /** 设置消息处理器 */
+    // public ConsumerBuilder<T> handler(Function<T, Void> handler) {
+    // this.messageHandler = handler;
+    // return this;
+    // }
     //
-    //    /** 设置消息处理器（简化版，无返回值） */
-    //    public ConsumerBuilder<T> handler(java.util.function.Consumer<T> handler) {
-    //        this.messageHandler =
-    //                message -> {
-    //                    handler.accept(message);
-    //                    return null;
-    //                };
-    //        return this;
-    //    }
+    // /** 设置消息处理器（简化版，无返回值） */
+    // public ConsumerBuilder<T> handler(java.util.function.Consumer<T> handler) {
+    // this.messageHandler =
+    // message -> {
+    // handler.accept(message);
+    // return null;
+    // };
+    // return this;
+    // }
     //
-    //    /** 设置确认超时时间（秒） */
-    //    public ConsumerBuilder<T> ackTimeout(int seconds) {
-    //        this.config.ackTimeout(seconds);
-    //        return this;
-    //    }
+    // /** 设置确认超时时间（秒） */
+    // public ConsumerBuilder<T> ackTimeout(int seconds) {
+    // this.config.ackTimeout(seconds);
+    // return this;
+    // }
     //
-    //    /** 设置最大重试次数 */
-    //    public ConsumerBuilder<T> maxRetries(int retries) {
-    //        this.config.maxRetries(retries);
-    //        return this;
-    //    }
+    // /** 设置最大重试次数 */
+    // public ConsumerBuilder<T> maxRetries(int retries) {
+    // this.config.maxRetries(retries);
+    // return this;
+    // }
     //
-    //    /** 设置死信队列主题 */
-    //    public ConsumerBuilder<T> deadLetterTopic(String topic) {
-    //        this.config.deadLetterTopic(topic);
-    //        return this;
-    //    }
+    // /** 设置死信队列主题 */
+    // public ConsumerBuilder<T> deadLetterTopic(String topic) {
+    // this.config.deadLetterTopic(topic);
+    // return this;
+    // }
     //
-    //    /** 设置消费者优先级（用于 Failover 模式） */
-    //    public ConsumerBuilder<T> priority(int priority) {
-    //        this.config.priority(priority);
-    //        return this;
-    //    }
+    // /** 设置消费者优先级（用于 Failover 模式） */
+    // public ConsumerBuilder<T> priority(int priority) {
+    // this.config.priority(priority);
+    // return this;
+    // }
     //
-    //    /** 构建并启动消费者 */
-    //    public Consumer<byte[]> subscribe() throws PulsarClientException {
-    //        if (subscription == null || subscription.isEmpty()) {
-    //            throw new IllegalArgumentException("Subscription name is required");
-    //        }
+    // /** 构建并启动消费者 */
+    // public Consumer<byte[]> subscribe() throws PulsarClientException {
+    // if (subscription == null || subscription.isEmpty()) {
+    // throw new IllegalArgumentException("Subscription name is required");
+    // }
     //
-    //        if (messageHandler == null) {
-    //            throw new IllegalArgumentException("Message handler is required");
-    //        }
+    // if (messageHandler == null) {
+    // throw new IllegalArgumentException("Message handler is required");
+    // }
     //
-    //        return messageManager.createConsumer(
-    //                topic, subscription, subscriptionType, messageHandler, messageType, config);
-    //    }
+    // return messageManager.createConsumer(
+    // topic, subscription, subscriptionType, messageHandler, messageType, config);
+    // }
 }

@@ -53,3 +53,5 @@ bin/
 /oidc/.idea/vcs.xml
 **/generated/
 /.kiro/
+/.qoder/
+/infrastructure-component/workflow/src/main/gen/

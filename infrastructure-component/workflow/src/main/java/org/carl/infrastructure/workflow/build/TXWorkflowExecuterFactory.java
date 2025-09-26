@@ -12,7 +12,7 @@ public class TXWorkflowExecuterFactory {
 
     static <S, E, C> ITransactionalWorkflow build(
             StateMachine<S, E, C> stateMachine, String workflowStamp) {
-        WorkerManger.registerWorker(stateMachine.getMachineId());
+        //        WorkerManger.registerWorker(stateMachine.getMachineId());
         return workflowClient.newWorkflowStub(
                 ITransactionalWorkflow.class,
                 buildOptions(workflowStamp, stateMachine.getMachineId()));

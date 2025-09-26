@@ -2,7 +2,6 @@ package org.carl.infrastructure.pulsar.factory;
 
 import io.quarkus.test.junit.QuarkusTest;
 
-import org.apache.pulsar.client.api.PulsarClientException;
 import org.carl.infrastructure.pulsar.common.ex.ProducerException;
 import org.carl.infrastructure.pulsar.config.GlobalShare;
 import org.carl.infrastructure.pulsar.core.PulsarProducer;
@@ -15,13 +14,13 @@ class PulsarProducerTest {
     public static final String TOPIC = "testTopic";
 
     @Test
-    void testPulsarProducer() throws PulsarClientException {
+    void testPulsarProducer() throws ProducerException {
         PulsarProducer<String> pulsarProducer = buildPulsarProducer(TOPIC);
         System.out.println(pulsarProducer);
     }
 
     @Test
-    void testSendMessage() throws ProducerException, PulsarClientException {
+    void testSendMessage() throws ProducerException {
         PulsarProducer<String> pulsarProducer = buildPulsarProducer(TOPIC);
         pulsarProducer.sendMessage("hello");
         pulsarProducer.sendMessage("product");
@@ -31,11 +30,7 @@ class PulsarProducerTest {
     }
 
     @Test
-    void testSendMessageAsync()
-            throws ProducerException,
-                    PulsarClientException,
-                    InterruptedException,
-                    ExecutionException {
+    void testSendMessageAsync() throws ProducerException, InterruptedException, ExecutionException {
         PulsarProducer<String> pulsarProducer = buildPulsarProducer(TOPIC);
         pulsarProducer.sendMessageAsync("hello").get();
     }
