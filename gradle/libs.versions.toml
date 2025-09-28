@@ -58,6 +58,7 @@ quarkus-temporal = { module = "io.quarkiverse.temporal:quarkus-temporal", versio
 quarkus-temporal-test = { module = "io.quarkiverse.temporal:quarkus-temporal-test", version.ref = "temporal" }
 quarkus-smallrye-fault-tolerance = { module = "io.quarkus:quarkus-smallrye-fault-tolerance", version.ref = "quarkus" }
 openfga = { module = "dev.openfga:openfga-sdk", version.require = "0.8.1" }
+stork = { module = "io.quarkus:quarkus-smallrye-stork", version.ref = "quarkus" }
 consul-stork = { module = "io.smallrye.stork:stork-service-discovery-consul", version.ref = "quarkus" }
 consul = { module = "io.quarkiverse.config:quarkus-config-consul", version.ref = "quarkus" }
 consul-client = { module = "io.smallrye.reactive:smallrye-mutiny-vertx-consul-client", version.ref = "quarkus" }
@@ -95,7 +96,8 @@ base = [
 
 auth = ["quarkus-oidc", "quarkus-keycloak"]
 
-register-center-consul = ["consul", "consul-stork", "consul-client"]
+discover = ["stork", "consul", "consul-stork", "consul-client"]
+
 
 persistence = [
     "quarkus-jdbc-postgresql",

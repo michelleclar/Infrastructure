@@ -2,71 +2,62 @@ package org.carl.infrastructure.discover;
 
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
+import io.vertx.core.Vertx;
 import io.vertx.ext.consul.ConsulClient;
+import io.vertx.ext.consul.ConsulClientOptions;
 import io.vertx.ext.consul.ServiceOptions;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
-import jakarta.enterprise.inject.Instance;
 
-import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
-
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 @ApplicationScoped
 public class ServiceLifecycle {
 
+    @ConfigProperty(name = "consul.host")
+    String host;
+
+    @ConfigProperty(name = "consul.port")
+    int port;
+
     @ConfigProperty(name = "quarkus.application.name")
     String appName;
 
-    private int port;
+    @ConfigProperty(name = "quarkus.http.port")
+    int appPort;
 
     private final Logger logger;
-    private final Instance<ConsulClient> consulClient;
-    private final ScheduledExecutorService executor;
+    private ConsulClient consulClient;
 
-    public ServiceLifecycle(
-            Logger logger, Instance<ConsulClient> consulClient, ScheduledExecutorService executor) {
+    public ServiceLifecycle(Logger logger) {
         this.logger = logger;
-        this.consulClient = consulClient;
-        this.executor = executor;
     }
 
-    void onStart(@Observes StartupEvent ev) {
-        if (consulClient.isResolvable()) {
-            executor.schedule(
-                    () -> {
-                        port =
-                                ConfigProvider.getConfig()
-                                        .getValue("quarkus.http.port", Integer.class);
-                        consulClient.get().putValue("config", appName);
-                        consulClient
-                                .get()
-                                .registerService(
-                                        new ServiceOptions()
-                                                .setPort(port)
-                                                .setAddress("localhost")
-                                                .setName(appName)
-                                                .setId(appName + "-" + port),
-                                        result ->
-                                                logger.infof(
-                                                        "Service %s-%d registered", appName, port));
-                    },
-                    3000,
-                    TimeUnit.MILLISECONDS);
-        }
+    void onStart(@Observes StartupEvent ev, Vertx vertx) {
+        this.consulClient =
+                ConsulClient.create(vertx, new ConsulClientOptions().setHost(host).setPort(port));
+
+        consulClient.putValue("config", appName);
+        consulClient.registerService(
+                new ServiceOptions()
+                        .setPort(appPort)
+                        .setAddress("localhost")
+                        .setName(appName)
+                        .setId(appName + "-" + appPort),
+                result -> logger.infof("Service %s-%d registered", appName, appPort));
     }
 
     void onStop(@Observes ShutdownEvent ev) {
-        if (consulClient.isResolvable()) {
-            consulClient
-                    .get()
-                    .deregisterService(
-                            appName + "-" + port,
-                            result -> logger.infof("Service %s-%d deregistered", appName, port));
-        }
+        this.consulClient.deregisterService(
+                appName + "-" + appPort,
+                result -> {
+                    if (result.succeeded()) {
+                        logger.infof("Service %s-%d deregistered", appName, port);
+                    } else {
+                        logger.errorf("Service %s-%d deregistered failed", appName, port);
+                    }
+                });
     }
 }
