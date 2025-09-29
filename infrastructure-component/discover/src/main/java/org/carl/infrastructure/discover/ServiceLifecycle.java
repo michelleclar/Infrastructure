@@ -13,6 +13,10 @@ import jakarta.enterprise.event.Observes;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
 @ApplicationScoped
 public class ServiceLifecycle {
 
@@ -35,29 +39,91 @@ public class ServiceLifecycle {
         this.logger = logger;
     }
 
-    void onStart(@Observes StartupEvent ev, Vertx vertx) {
+    void onStart(@Observes StartupEvent ev)
+            throws InterruptedException, ExecutionException, TimeoutException {
         this.consulClient =
-                ConsulClient.create(vertx, new ConsulClientOptions().setHost(host).setPort(port));
+                ConsulClient.create(
+                        Vertx.vertx(),
+                        new ConsulClientOptions().setTimeout(5000L).setHost(host).setPort(port));
 
-        consulClient.putValue("config", appName);
-        consulClient.registerService(
-                new ServiceOptions()
-                        .setPort(appPort)
-                        .setAddress("localhost")
-                        .setName(appName)
-                        .setId(appName + "-" + appPort),
-                result -> logger.infof("Service %s-%d registered", appName, appPort));
+        if (logger.isDebugEnabled()) {
+            this.consulClient
+                    .agentInfo()
+                    .andThen(
+                            result -> {
+                                if (result.succeeded()) {
+                                    logger.debugf("Consul info: %s", result.result());
+                                }
+                            });
+            consulClient
+                    .getValues(getConfigPrefix())
+                    .andThen(
+                            result -> {
+                                if (result.succeeded()) {
+                                    result.result()
+                                            .getList()
+                                            .forEach(
+                                                    o -> {
+                                                        logger.debugf(
+                                                                "Consul key: [%s],value: [%s]",
+                                                                o.getKey(), o.getValue());
+                                                    });
+                                }
+                            })
+                    .toCompletionStage()
+                    .toCompletableFuture()
+                    .get(5, TimeUnit.SECONDS);
+        }
+        consulClient
+                .registerService(
+                        new ServiceOptions()
+                                .setPort(appPort)
+                                .setAddress("localhost")
+                                .setName(appName)
+                                .setId(getDiscoverServerName()))
+                .andThen(
+                        result -> {
+                            if (result.succeeded()) {
+                                logger.infof("Service %s-%d registered", appName, appPort);
+                            } else {
+                                logger.errorf(
+                                        result.cause(),
+                                        "Service %s-%d registered failed",
+                                        appName,
+                                        appPort);
+                            }
+                        })
+                .toCompletionStage()
+                .toCompletableFuture()
+                .get(5, TimeUnit.SECONDS);
     }
 
-    void onStop(@Observes ShutdownEvent ev) {
-        this.consulClient.deregisterService(
-                appName + "-" + appPort,
-                result -> {
-                    if (result.succeeded()) {
-                        logger.infof("Service %s-%d deregistered", appName, port);
-                    } else {
-                        logger.errorf("Service %s-%d deregistered failed", appName, port);
-                    }
-                });
+    void onStop(@Observes ShutdownEvent ev)
+            throws InterruptedException, ExecutionException, TimeoutException {
+        this.consulClient
+                .deregisterService(getDiscoverServerName())
+                .andThen(
+                        result -> {
+                            if (result.succeeded()) {
+                                logger.infof("Service %s-%d deregistered", appName, appPort);
+                            } else {
+                                logger.errorf(
+                                        result.cause(),
+                                        "Service %s-%d deregistered failed",
+                                        appName,
+                                        appPort);
+                            }
+                        })
+                .toCompletionStage()
+                .toCompletableFuture()
+                .get(5, TimeUnit.SECONDS);
+    }
+
+    public String getDiscoverServerName() {
+        return appName + "-" + appPort;
+    }
+
+    public String getConfigPrefix() {
+        return "config/" + appName;
     }
 }
