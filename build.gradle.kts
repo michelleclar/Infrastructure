@@ -16,8 +16,8 @@ subprojects {
     group = "org.carl"
     version = "1.0-BATE"
     repositories {
-        mavenLocal()
         mavenCentral()
+        mavenLocal()
     }
 
     java {

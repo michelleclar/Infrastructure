@@ -1,4 +1,4 @@
-package org.carl.infrastructure.pulsar.core;
+package org.carl.infrastructure.pulsar.builder;
 
 public interface ITransactional {
     void commit() throws Exception;

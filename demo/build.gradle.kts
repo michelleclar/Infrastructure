@@ -13,9 +13,9 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     // NOTE: Save bandwidth
-    mavenLocal()
 //    maven { url = uri("https://maven.aliyun.com/repository/public") }
     mavenCentral()
+    mavenLocal()
     maven {
         credentials {
             username = System.getenv("ALIYUN_MAVEN_USERNAME").toString()

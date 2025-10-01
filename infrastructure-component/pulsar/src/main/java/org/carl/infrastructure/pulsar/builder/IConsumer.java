@@ -1,9 +1,7 @@
-package org.carl.infrastructure.pulsar.core;
+package org.carl.infrastructure.pulsar.builder;
 
-import org.carl.infrastructure.pulsar.builder.MessageBuilder;
 import org.carl.infrastructure.pulsar.common.ex.ConsumerException;
 
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -13,23 +11,6 @@ import java.util.concurrent.TimeUnit;
  * @param <T> 消息类型
  */
 public interface IConsumer<T> {
-    // ==== 构建 ====
-    IConsumer<T> subscribeName(String subscribeName);
-
-    IConsumer<T> subscribe() throws ConsumerException;
-
-    IConsumer<T> subscribe(int consumerSize) throws ConsumerException;
-
-    /**
-     * 设置最大消费时间,达到时间后停止订阅
-     *
-     * @param consumerSize 消费者数量
-     * @param deliver 执行时间
-     * @param timeUnit 时间单位
-     * @return this
-     */
-    IConsumer<T> subscribe(int consumerSize, long deliver, TimeUnit timeUnit)
-            throws ConsumerException;
 
     // ===== 基础消费功能 =====
 
@@ -49,7 +30,7 @@ public interface IConsumer<T> {
      * @return 接收到的消息，超时返回 null
      * @throws ConsumerException 接收异常
      */
-    MessageBuilder.Message<T> receive(long timeout, TimeUnit unit) throws ConsumerException;
+    MessageBuilder.Message<T> receive(int timeout, TimeUnit unit) throws ConsumerException;
 
     /**
      * 异步接收消息
@@ -58,44 +39,7 @@ public interface IConsumer<T> {
      */
     CompletableFuture<MessageBuilder.Message<T>> receiveAsync() throws ConsumerException;
 
-    /**
-     * 设置消息监听器（推模式）
-     *
-     * @param listener 消息监听器
-     * @return
-     */
-    IConsumer<T> setMessageListener(MessageListener<T> listener);
-
     // ===== 批量消费功能 =====
-
-    /**
-     * 批量接收消息
-     *
-     * @param maxMessages 最大消息数
-     * @return 消息列表
-     * @throws ConsumerException 接收异常
-     */
-    List<MessageBuilder.Message<T>> batchReceive(int maxMessages) throws ConsumerException;
-
-    /**
-     * 批量接收消息，带超时
-     *
-     * @param maxMessages 最大消息数
-     * @param timeout 超时时间
-     * @param unit 时间单位
-     * @return 消息列表
-     * @throws ConsumerException 接收异常
-     */
-    List<MessageBuilder.Message<T>> batchReceive(int maxMessages, long timeout, TimeUnit unit)
-            throws ConsumerException;
-
-    /**
-     * 异步批量接收消息
-     *
-     * @param maxMessages 最大消息数
-     * @return 消息列表的 Future
-     */
-    CompletableFuture<List<MessageBuilder.Message<T>>> batchReceiveAsync(int maxMessages);
 
     // ===== 消息确认功能 =====
 
@@ -114,22 +58,6 @@ public interface IConsumer<T> {
      * @return 确认完成的 Future
      */
     CompletableFuture<Void> acknowledgeAsync(MessageBuilder.Message<T> message);
-
-    /**
-     * 批量确认消息
-     *
-     * @param messages 要确认的消息列表
-     * @throws ConsumerException 确认异常
-     */
-    void acknowledge(List<MessageBuilder.Message<T>> messages) throws ConsumerException;
-
-    /**
-     * 异步批量确认消息
-     *
-     * @param messages 要确认的消息列表
-     * @return 确认完成的 Future
-     */
-    CompletableFuture<Void> acknowledgeAsync(List<MessageBuilder.Message<T>> messages);
 
     /**
      * 累积确认消息（确认到指定消息为止的所有消息）
@@ -154,13 +82,6 @@ public interface IConsumer<T> {
      */
     void negativeAcknowledge(MessageBuilder.Message<T> message);
 
-    /**
-     * 批量否定确认消息
-     *
-     * @param messages 要否定确认的消息列表
-     */
-    void negativeAcknowledge(List<MessageBuilder.Message<T>> messages);
-
     // ===== 消费者控制功能 =====
 
     /** 暂停消费 */
@@ -168,13 +89,6 @@ public interface IConsumer<T> {
 
     /** 恢复消费 */
     void resume();
-
-    /**
-     * 检查是否已暂停
-     *
-     * @return 是否已暂停
-     */
-    boolean isPaused();
 
     /**
      * 重置消费位置到指定时间戳
@@ -192,20 +106,6 @@ public interface IConsumer<T> {
      */
     void seek(String messageId) throws ConsumerException;
 
-    /**
-     * 重置到最早位置
-     *
-     * @throws ConsumerException 重置异常
-     */
-    void seekToBeginning() throws ConsumerException;
-
-    /**
-     * 重置到最新位置
-     *
-     * @throws ConsumerException 重置异常
-     */
-    void seekToEnd() throws ConsumerException;
-
     // ===== 消费者信息功能 =====
 
     /**
@@ -222,35 +122,6 @@ public interface IConsumer<T> {
      * @return 是否已连接
      */
     boolean isConnected();
-
-    /**
-     * 获取主题名称
-     *
-     * @return 主题名称
-     */
-    String getTopic();
-
-    /**
-     * 获取订阅名称
-     *
-     * @return 订阅名称
-     */
-    String getSubscription();
-
-    /**
-     * 获取消费者名称
-     *
-     * @return 消费者名称
-     */
-    String getConsumerName();
-
-    /**
-     * 获取订阅类型
-     *
-     * @return 订阅类型
-     */
-    SubscriptionType getSubscriptionType();
-
     /**
      * 关闭消费者
      *
@@ -279,7 +150,8 @@ public interface IConsumer<T> {
          * @param consumer 消费者实例
          * @param message 接收到的消息
          */
-        void received(IConsumer<T> consumer, MessageBuilder.Message<T> message);
+        void received(IConsumer<T> consumer, MessageBuilder.Message<T> message)
+                throws ConsumerException;
 
         /**
          * 消费异常时的回调
@@ -309,6 +181,38 @@ public interface IConsumer<T> {
         SHARED, // 共享订阅
         FAILOVER, // 故障转移订阅
         KEY_SHARED // 按键共享订阅
+    }
+
+    enum SubscriptionMode {
+        // Make the subscription to be backed by a durable cursor that will retain messages and
+        // persist the current
+        // position
+        Durable,
+
+        // Lightweight subscription mode that doesn't have a durable cursor associated
+        NonDurable
+    }
+
+    enum SubscriptionInitialPosition {
+        /**
+         * The latest position which means the start consuming position will be the last message.
+         */
+        Latest(0),
+
+        /**
+         * The earliest position which means the start consuming position will be the first message.
+         */
+        Earliest(1);
+
+        private final int value;
+
+        SubscriptionInitialPosition(int value) {
+            this.value = value;
+        }
+
+        public final int getValue() {
+            return value;
+        }
     }
 
     /** 消费者统计信息 */
@@ -369,5 +273,4 @@ public interface IConsumer<T> {
          */
         long getLastAckedTimestamp();
     }
-
 }

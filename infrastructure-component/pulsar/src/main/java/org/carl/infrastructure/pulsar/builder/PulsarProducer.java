@@ -1,11 +1,7 @@
-package org.carl.infrastructure.pulsar.core;
+package org.carl.infrastructure.pulsar.builder;
 
 import org.apache.pulsar.client.api.*;
-import org.carl.infrastructure.pulsar.builder.MessageBuilder;
-import org.carl.infrastructure.pulsar.builder.PulsarMessageBuilder;
-import org.carl.infrastructure.pulsar.builder.PulsarProducerBuilder;
 import org.carl.infrastructure.pulsar.common.ex.ProducerException;
-import org.carl.infrastructure.pulsar.config.MsgArgsConfig;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -15,22 +11,9 @@ import java.util.function.Consumer;
 public class PulsarProducer<T> implements IProducer<T> {
 
     private final Producer<T> producer;
-    private final String topic;
 
-    public PulsarProducer(
-            PulsarClient pulsarClient,
-            MsgArgsConfig.ProducerConfig config,
-            String topic,
-            Class<T> clazz)
-            throws ProducerException {
-        this.topic = topic;
-        PulsarProducerBuilder<T> pulsarProducerBuilder =
-                PulsarProducerBuilder.create(pulsarClient, topic, clazz, config);
-        try {
-            this.producer = pulsarProducerBuilder.createProducer().create();
-        } catch (PulsarClientException e) {
-            throw new ProducerException(e);
-        }
+    PulsarProducer(Producer<T> producer) {
+        this.producer = producer;
     }
 
     @Override
@@ -195,11 +178,6 @@ public class PulsarProducer<T> implements IProducer<T> {
     @Override
     public boolean isConnected() {
         return producer.isConnected();
-    }
-
-    @Override
-    public String getTopic() {
-        return topic;
     }
 
     @Override

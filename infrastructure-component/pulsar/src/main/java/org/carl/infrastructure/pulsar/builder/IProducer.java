@@ -1,6 +1,5 @@
-package org.carl.infrastructure.pulsar.core;
+package org.carl.infrastructure.pulsar.builder;
 
-import org.carl.infrastructure.pulsar.builder.MessageBuilder;
 import org.carl.infrastructure.pulsar.common.ex.ProducerException;
 
 import java.util.List;
@@ -50,7 +49,7 @@ public interface IProducer<T> extends AutoCloseable {
      *
      * <p>非阻塞发送，立即返回 Future 对象
      *
-     * @param messageBuilder 消息构建器，包含消息内容和发送配置
+     * @param value 消息构建器，包含消息内容和发送配置
      * @return 发送结果的 Future，可用于获取异步发送结果
      */
     CompletableFuture<SendResult<T>> sendMessageAsync(T value) throws ProducerException;
@@ -203,15 +202,6 @@ public interface IProducer<T> extends AutoCloseable {
      * @return 是否已连接到消息中间件
      */
     boolean isConnected();
-
-    /**
-     * 获取主题名称
-     *
-     * <p>返回生产者绑定的主题名称
-     *
-     * @return 主题名称
-     */
-    String getTopic();
 
     /**
      * 获取生产者名称

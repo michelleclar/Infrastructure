@@ -229,10 +229,14 @@ public interface MessageBuilder<T> {
      *
      * <p>不可变的消息对象，包含所有消息信息
      *
+     * <p>TODO: 如果适配多个消息队列中间件,可能需要一个消息类型标志位
+     *
      * @param <T> 消息类型
      */
     interface Message<T> {
         T getValue();
+
+        Object getSourceMessage();
 
         String getMessageId();
 

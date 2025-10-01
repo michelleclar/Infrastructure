@@ -173,6 +173,7 @@ public class PulsarMessageBuilder<T> implements MessageBuilder<T> {
         private final long sequenceId;
         private final String messageId;
         private final String topic;
+        private Object sourceMessage;
 
         public PulsarMessage(
                 T value,
@@ -192,6 +193,16 @@ public class PulsarMessageBuilder<T> implements MessageBuilder<T> {
         @Override
         public T getValue() {
             return value;
+        }
+
+        @Override
+        public Object getSourceMessage() {
+            return sourceMessage;
+        }
+
+        /** TODO:设置消息源 */
+        public void setSourceMessage(Object sourceMessage) {
+            this.sourceMessage = sourceMessage;
         }
 
         @Override
@@ -247,6 +258,19 @@ public class PulsarMessageBuilder<T> implements MessageBuilder<T> {
         @Override
         public boolean hasEventTime() {
             return eventTime > 0;
+        }
+
+        public static <T> Message<T> wrapper(org.apache.pulsar.client.api.Message<T> msg) {
+            PulsarMessage<T> tPulsarMessage =
+                    new PulsarMessage<>(
+                            msg.getValue(),
+                            msg.getKey(),
+                            msg.getEventTime(),
+                            msg.getSequenceId(),
+                            msg.getMessageId().toString(),
+                            msg.getTopicName());
+            tPulsarMessage.setSourceMessage(msg);
+            return tPulsarMessage;
         }
     }
 }

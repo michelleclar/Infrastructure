@@ -86,7 +86,6 @@ web = [
     "quarkus-reactive-routes",
     "quarkus-vertx",
     "quarkus-smallrye-fault-tolerance",
-    "quarkus-temporal"
 ]
 
 # base bundle
