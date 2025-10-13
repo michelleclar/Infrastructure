@@ -1,6 +1,6 @@
 [versions]
 testcontainers = "1.20.4"
-quarkus = "3.19.3"
+quarkus = "3.28.3"
 commons = "4.4"
 xml = "4.0.2"
 guava = "33.2.1-jre"

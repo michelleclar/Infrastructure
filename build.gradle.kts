@@ -1,6 +1,6 @@
 plugins {
     idea
-    id("org.kordamp.gradle.jandex") version "2.1.0"
+    id("org.kordamp.gradle.jandex") version "2.2.0"
 }
 
 tasks.named("jandex") {
