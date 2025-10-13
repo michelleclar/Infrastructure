@@ -4,6 +4,7 @@ carl = '1.0-BATE'
 testcontainers = "1.20.4"
 [libraries]
 quarkus-platform-bom = { module = "io.quarkus.platform:quarkus-bom", version.ref = "quarkus" }
+infrastructure-component-dto = { module = "org.carl:infrastructure-component-dto", version.ref = "carl" }
 infrastructure-component-authorization = { module = "org.carl:infrastructure-component-authorization", version.ref = "carl" }
 infrastructure-component-broadcast = { module = "org.carl:infrastructure-component-broadcast", version.ref = "carl" }
 infrastructure-component-cache = { module = "org.carl:infrastructure-component-cache", version.ref = "carl" }

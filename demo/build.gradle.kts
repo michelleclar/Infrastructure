@@ -52,6 +52,7 @@ tasks.withType<Test>().configureEach {
 }
 dependencies {
     implementation(enforcedPlatform(libs.quarkus.platform.bom))
+    implementation(libs.infrastructure.component.dto)
     implementation(libs.infrastructure.component.authorization)
     implementation(libs.infrastructure.component.broadcast)
     implementation(libs.infrastructure.component.cache)

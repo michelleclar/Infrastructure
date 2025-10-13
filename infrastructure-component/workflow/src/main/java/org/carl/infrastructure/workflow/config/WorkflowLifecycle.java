@@ -11,8 +11,6 @@ import org.apache.pulsar.client.api.PulsarClient;
 import org.carl.infrastructure.pulsar.common.ex.ConsumerException;
 import org.carl.infrastructure.pulsar.common.ex.ProducerException;
 import org.carl.infrastructure.pulsar.config.MsgArgsConfig;
-import org.carl.infrastructure.pulsar.factory.PulsarFactory;
-import org.carl.infrastructure.workflow.event.EntityEvent;
 import org.carl.infrastructure.workflow.persistence.WorkflowRepository;
 import org.jboss.logging.Logger;
 
@@ -37,29 +35,33 @@ public class WorkflowLifecycle {
         GlobalShare.getInstance().workflowArgsConfig = workflowArgsConfig;
         if (GlobalShare.getInstance().workflowArgsConfig.enable().log()) {
             String topic = "workflow-event";
-            GlobalShare.getInstance().consumer =
-                    PulsarFactory.createConsumer(
-                            pulsarClient, msgArgsConfig.consumer(), EntityEvent.class, topic);
-            GlobalShare.getInstance().producer =
-                    PulsarFactory.createProducer(
-                            pulsarClient, msgArgsConfig.producer(), EntityEvent.class, topic);
-            GlobalShare.getInstance()
-                    .consumer
-                    .subscribeName("sub-workflow-event")
-                    .setMessageListener(
-                            (consumer, message) -> {
-                                switch (message.getValue().getEventTypeEnum()) {
-                                    case snapshot -> {
-                                        workflowRepository.upsertEntityStateSnapshot(
-                                                message.getValue().getEntityStateSnapshotDto());
-                                    }
-                                    case transfer -> {
-                                        workflowRepository.updateCompensationStatus(
-                                                message.getValue().getEntityCompensationDto());
-                                    }
-                                }
-                            })
-                    .subscribe();
+            //            GlobalShare.getInstance().consumer =
+            //                    PulsarFactory.createConsumer(
+            //                            pulsarClient, msgArgsConfig.consumer(), EntityEvent.class,
+            // topic);
+            //            GlobalShare.getInstance().producer =
+            //                    PulsarFactory.createProducer(
+            //                            pulsarClient, msgArgsConfig.producer(), EntityEvent.class,
+            // topic);
+            //            GlobalShare.getInstance()
+            //                    .consumer
+            //                    .subscribeName("sub-workflow-event")
+            //                    .setMessageListener(
+            //                            (consumer, message) -> {
+            //                                switch (message.getValue().getEventTypeEnum()) {
+            //                                    case snapshot -> {
+            //                                        workflowRepository.upsertEntityStateSnapshot(
+            //
+            // message.getValue().getEntityStateSnapshotDto());
+            //                                    }
+            //                                    case transfer -> {
+            //                                        workflowRepository.updateCompensationStatus(
+            //
+            // message.getValue().getEntityCompensationDto());
+            //                                    }
+            //                                }
+            //                            })
+            //                    .subscribe();
         }
         WorkerManger.workflowClient = client;
     }

@@ -1,7 +1,7 @@
 package org.carl.infrastructure.workflow.config;
 
-import org.carl.infrastructure.pulsar.core.IConsumer;
-import org.carl.infrastructure.pulsar.core.IProducer;
+import org.carl.infrastructure.pulsar.builder.IConsumer;
+import org.carl.infrastructure.pulsar.builder.IProducer;
 import org.carl.infrastructure.workflow.event.EntityEvent;
 
 // FIXME: remove
