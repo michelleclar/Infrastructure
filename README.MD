@@ -20,14 +20,14 @@
 
 - [x] dto
 - [x] authorization
-- [x] broadcast
+- [ ] broadcast
 - [x] cache
-- [ ] discover
+- [x] discover
 - [x] persistence
 - [ ] search
 - [ ] tool
 - [x] web
-- [ ] pulsar
+- [x] pulsar
 - [x] metrics
 - [x] workflow
 - [ ] statemachine
@@ -40,7 +40,7 @@
 ./gradlew build \
   -Dquarkus.package.jar.enabled=false \
   -Dquarkus.native.enabled=true
-  
+
 docker build -f src/main/docker/Dockerfile.native-micro -t embedding/embedding-native-micro:1.0 .
 ```
 
@@ -53,7 +53,7 @@ docker build -f src/main/docker/Dockerfile.native-micro -t embedding/embedding-n
   -Dquarkus.native.enabled=true \
   -Dquarkus.native.container-build=true \
   -Dquarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel-builder-image:jdk-21.0.5
-  
+
 docker build -f src/main/docker/Dockerfile.native-micro -t embedding/embedding-native-micro:1.0 .
 ```
 
