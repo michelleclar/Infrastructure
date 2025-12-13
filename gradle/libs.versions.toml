@@ -17,6 +17,7 @@ quarkus-config-yaml = { module = "io.quarkus:quarkus-arc", version.ref = "quarku
 quarkus-rest = { module = "io.quarkus:quarkus-rest", version.ref = "quarkus" }
 quarkus-reactive-routes = { module = "io.quarkus:quarkus-reactive-routes", version.ref = "quarkus" }
 quarkus-vertx = { module = "io.quarkus:quarkus-vertx", version.ref = "quarkus" }
+quarkus-httpclient = { module = "io.quarkus:quarkus-apache-httpclient", version.ref = "quarkus" }
 quarkus-jsonp = { module = "io.quarkus:quarkus-jsonp", version.ref = "quarkus" }
 quarkus-jackson = { module = "io.quarkus:quarkus-rest-jackson", version.ref = "quarkus" }
 quarkus-panache = { module = "io.quarkus:quarkus-hibernate-orm-panache", version.ref = "quarkus" }
@@ -57,7 +58,7 @@ quarkus-smtp = { module = "io.quarkus:quarkus-mailer", version.ref = "quarkus" }
 quarkus-temporal = { module = "io.quarkiverse.temporal:quarkus-temporal", version.ref = "temporal" }
 quarkus-temporal-test = { module = "io.quarkiverse.temporal:quarkus-temporal-test", version.ref = "temporal" }
 quarkus-smallrye-fault-tolerance = { module = "io.quarkus:quarkus-smallrye-fault-tolerance", version.ref = "quarkus" }
-openfga = { module = "dev.openfga:openfga-sdk", version.require = "0.8.1" }
+openfga = { module = "dev.openfga:openfga-sdk", version.require = "0.9.3" }
 stork = { module = "io.quarkus:quarkus-smallrye-stork", version.ref = "quarkus" }
 consul-stork = { module = "io.smallrye.stork:stork-service-discovery-consul", version.ref = "quarkus" }
 consul = { module = "io.quarkiverse.config:quarkus-config-consul", version.ref = "quarkus" }
@@ -86,6 +87,7 @@ web = [
     "quarkus-reactive-routes",
     "quarkus-vertx",
     "quarkus-smallrye-fault-tolerance",
+    "quarkus-httpclient"
 ]
 
 # base bundle
@@ -93,7 +95,7 @@ base = [
     "xml-bind",
 ]
 
-auth = ["quarkus-oidc", "quarkus-keycloak"]
+auth = ["quarkus-oidc", "quarkus-keycloak", "openfga"]
 
 discover = ["stork", "consul", "consul-stork", "consul-client"]
 
