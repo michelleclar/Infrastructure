@@ -15,6 +15,8 @@
 | metrics        | 提供应用监控和指标收集功能   | quarkus-observability-devservices-lgtm, quarkus-opentelemetry |
 | workflow       | 提供工作流编排和执行功能    | quarkus-temporal                                              |
 | statemachine   | 状态机功能           | 无                                                             |
+| pdp            | 决策引擎            | 无                                                             |
+| log            | 日志              | JBoss,Slf4j                                                   |
 
 ## 完成度
 
@@ -31,6 +33,9 @@
 - [x] metrics
 - [x] workflow
 - [ ] statemachine
+- [ ] log
+- [ ] pdp
+- [ ] user
 
 ### deploy native
 
