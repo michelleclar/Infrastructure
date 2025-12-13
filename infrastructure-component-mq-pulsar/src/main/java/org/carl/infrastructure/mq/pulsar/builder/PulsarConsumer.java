@@ -8,8 +8,6 @@ import org.carl.infrastructure.mq.common.ex.ConsumerException;
 import org.carl.infrastructure.mq.consumer.ConsumerStats;
 import org.carl.infrastructure.mq.consumer.IConsumer;
 import org.carl.infrastructure.mq.model.Message;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
@@ -18,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * 设计思路 链式调用,仿照uni api设计,每次subscribe会创建一个新consumer,
  *
- * <p>按照{@link ConsumerBuilder}{@link Consumer} 重新设计
+ * <p>按照{@link org.apache.pulsar.client.api.ConsumerBuilder}{@link Consumer} 重新设计
  *
  * <p>ack在新的consume中 进行关闭
  *
@@ -26,10 +24,9 @@ import java.util.concurrent.TimeUnit;
  */
 @NotThreadSafe
 public record PulsarConsumer<T>(Consumer<T> consumer) implements IConsumer<T>, AutoCloseable {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PulsarConsumer.class);
 
     @Override
-    public org.carl.infrastructure.mq.model.Message<T> receive() throws ConsumerException {
+    public Message<T> receive() throws ConsumerException {
         try {
             // TODO: messageListen need empty
             var receive = consumer.receive();
@@ -64,6 +61,7 @@ public record PulsarConsumer<T>(Consumer<T> consumer) implements IConsumer<T>, A
                 throw new ConsumerException(e);
             }
         } else {
+
             throw new ConsumerException("message type error,not instance Message");
         }
     }

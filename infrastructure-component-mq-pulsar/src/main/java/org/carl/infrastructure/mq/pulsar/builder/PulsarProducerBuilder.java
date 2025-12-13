@@ -1,14 +1,14 @@
 package org.carl.infrastructure.mq.pulsar.builder;
 
 import org.apache.pulsar.client.api.*;
+import org.carl.infrastructure.logging.ILogger;
+import org.carl.infrastructure.logging.LoggerFactory;
 import org.carl.infrastructure.mq.common.ex.ProducerException;
 import org.carl.infrastructure.mq.producer.*;
 import org.carl.infrastructure.mq.producer.CompressionType;
 import org.carl.infrastructure.mq.producer.HashingScheme;
 import org.carl.infrastructure.mq.producer.MessageRoutingMode;
 import org.carl.infrastructure.mq.producer.ProducerAccessMode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 /** 生产者构建器 提供流式 API 来发送消息 */
 public class PulsarProducerBuilder<T> implements IProducerBuilder<T> {
 
-    private static final Logger log = LoggerFactory.getLogger(PulsarProducerBuilder.class);
+    private static final ILogger log = LoggerFactory.getLogger(PulsarProducerBuilder.class);
     private final PulsarClient pulsarClient;
     private final Schema<T> schema;
     private final ProducerBuilder<T> producerBuilder;

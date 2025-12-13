@@ -1,14 +1,14 @@
 package org.carl.infrastructure.mq.pulsar.builder;
 
 import org.apache.pulsar.client.api.*;
+import org.carl.infrastructure.logging.ILogger;
+import org.carl.infrastructure.logging.LoggerFactory;
 import org.carl.infrastructure.mq.common.ex.ConsumerException;
 import org.carl.infrastructure.mq.consumer.IConsumer;
 import org.carl.infrastructure.mq.consumer.IConsumerBuilder;
 import org.carl.infrastructure.mq.consumer.SubscriptionInitialPosition;
 import org.carl.infrastructure.mq.consumer.SubscriptionMode;
 import org.carl.infrastructure.mq.consumer.SubscriptionType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
  */
 public class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
 
-    private static final Logger logger = LoggerFactory.getLogger(PulsarConsumerBuilder.class);
+    private static final ILogger log = LoggerFactory.getLogger(PulsarConsumerBuilder.class);
     private final Schema<T> schema;
     private final PulsarClient pulsarClient;
     private org.carl.infrastructure.mq.consumer.MessageListener<T> messageListener;
@@ -91,7 +91,7 @@ public class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
                                         PulsarConsumer<T> pulsarConsumer = consumerFuture.get();
                                         messageListener.onException(pulsarConsumer, e);
                                     } catch (Exception ex) {
-                                        logger.error(
+                                        log.error(
                                                 "Failed to get consumer reference for exception handling",
                                                 ex);
                                     }
@@ -109,7 +109,7 @@ public class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
                                         PulsarConsumer<T> pulsarConsumer = consumerFuture.get();
                                         messageListener.onException(pulsarConsumer, e);
                                     } catch (Exception ex) {
-                                        logger.error(
+                                        log.error(
                                                 "Failed to get consumer reference for exception handling",
                                                 ex);
                                     }
@@ -131,7 +131,7 @@ public class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
             }
         } catch (PulsarClientException e) {
             logErrorTopic();
-            logger.error("subscribe failed ", e);
+            log.error("subscribe failed ", e);
             throw new ConsumerException(e);
         }
     }
@@ -165,7 +165,7 @@ public class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
                                     } catch (Exception ex) {
                                         // 如果获取 consumer 失败，记录日志
                                         logErrorTopic();
-                                        logger.error(
+                                        log.error(
                                                 "Failed to get consumer reference for exception handling",
                                                 ex);
                                     }
@@ -184,7 +184,7 @@ public class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
                                         messageListener.onException(pulsarConsumer, e);
                                     } catch (Exception ex) {
                                         logErrorTopic();
-                                        logger.error(
+                                        log.error(
                                                 "Failed to get consumer reference for exception handling",
                                                 ex);
                                     }
@@ -210,7 +210,7 @@ public class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
             }
         } catch (PulsarClientException e) {
             logErrorTopic();
-            logger.error("Consumer subscribe failed ", e);
+            log.error("Consumer subscribe failed ", e);
             throw new ConsumerException(e);
         }
     }
@@ -491,9 +491,9 @@ public class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
 
     private void logErrorTopic() {
         if (this.topics.isEmpty()) {
-            logger.error("Consumer topic is null");
+            log.error("Consumer topic is null");
             return;
         }
-        logger.error("Consumer topic {}", this.topics);
+        log.error("Consumer topic {}", this.topics);
     }
 }
