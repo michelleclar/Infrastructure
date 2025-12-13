@@ -1,19 +1,13 @@
 plugins {
-    id("org.kordamp.gradle.jandex") version "2.2.0"
+//    id("org.kordamp.gradle.jandex") version "2.2.0"
     alias(libs.plugins.quarkus)
     id("maven-publish")
-}
-tasks.named("quarkusDependenciesBuild") {
-    enabled = false
-    dependsOn("jandex")
-}
-tasks.named("jandex") {
-    enabled = false
 }
 
 subprojects {
     apply(plugin = "org.kordamp.gradle.jandex")
     apply(plugin = "maven-publish")
+    apply(plugin = "io.quarkus")
     // NOTE: Don't apply Quarkus plugin to all subprojects
     // Each subproject that needs Quarkus should apply it explicitly
 //    tasks.named<Jar>("sourcesJar") {
