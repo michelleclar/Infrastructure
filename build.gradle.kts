@@ -60,4 +60,10 @@ subprojects {
                 .withoutClassifier()
         }
     }
+    dependencies {
+        // 为所有子项目添加日志模块依赖,但排除 log 模块自己
+        if (project.name != "infrastructure-component-log") {
+            implementation(project(":infrastructure-component-log"))
+        }
+    }
 }

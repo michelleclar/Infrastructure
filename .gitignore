@@ -55,3 +55,4 @@ bin/
 /.kiro/
 /.qoder/
 /infrastructure-component/workflow/src/main/gen/
+/.qoderignore
