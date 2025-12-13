@@ -2,10 +2,7 @@ package org.carl.infrastructure.mq.config;
 
 import org.carl.infrastructure.mq.pulsar.config.PulsarConfig;
 
-/**
- * MsgArgsConfig 到 PulsarMsgConfig 的转换器
- * 将 Quarkus ConfigMapping 配置对象转换为可变的 MsgConfig 实现
- */
+/** MsgArgsConfig 到 PulsarMsgConfig 的转换器 将 Quarkus ConfigMapping 配置对象转换为可变的 MsgConfig 实现 */
 public class MsgConfigConverter {
 
     /**
@@ -19,8 +16,7 @@ public class MsgConfigConverter {
             throw new IllegalArgumentException("MsgArgsConfig cannot be null");
         }
 
-       PulsarConfig msgConfig =
-            new PulsarConfig();
+        PulsarConfig msgConfig = new PulsarConfig();
 
         // 转换客户端配置
         msgConfig.setClientConfig(convertClientConfig(argsConfig.client()));
@@ -43,13 +39,10 @@ public class MsgConfigConverter {
         return msgConfig;
     }
 
-    /**
-     * 转换客户端配置
-     */
+    /** 转换客户端配置 */
     private static PulsarConfig.PulsarClientConfig convertClientConfig(
             MsgArgsConfig.ClientConfig source) {
-        PulsarConfig.PulsarClientConfig target =
-            new PulsarConfig.PulsarClientConfig();
+        PulsarConfig.PulsarClientConfig target = new PulsarConfig.PulsarClientConfig();
 
         target.setServiceUrl(source.serviceUrl());
         source.authPluginClassName().ifPresent(target::setAuthPluginClassName);
@@ -71,13 +64,9 @@ public class MsgConfigConverter {
         return target;
     }
 
-    /**
-     * 转换 TLS 配置
-     */
-    private static PulsarConfig.PulsarTlsConfig convertTlsConfig(
-            MsgArgsConfig.TlsConfig source) {
-       PulsarConfig.PulsarTlsConfig target =
-            new PulsarConfig.PulsarTlsConfig();
+    /** 转换 TLS 配置 */
+    private static PulsarConfig.PulsarTlsConfig convertTlsConfig(MsgArgsConfig.TlsConfig source) {
+        PulsarConfig.PulsarTlsConfig target = new PulsarConfig.PulsarTlsConfig();
 
         target.setEnabled(source.enabled());
         source.trustCertsFilePath().ifPresent(target::setTrustCertsFilePath);
@@ -87,13 +76,10 @@ public class MsgConfigConverter {
         return target;
     }
 
-    /**
-     * 转换生产者配置
-     */
+    /** 转换生产者配置 */
     private static PulsarConfig.PulsarProducerConfig convertProducerConfig(
             MsgArgsConfig.ProducerConfig source) {
-        PulsarConfig.PulsarProducerConfig target =
-            new PulsarConfig.PulsarProducerConfig();
+        PulsarConfig.PulsarProducerConfig target = new PulsarConfig.PulsarProducerConfig();
 
         target.setSendTimeout(source.sendTimeout());
         target.setBatchingEnabled(source.batchingEnabled());
@@ -112,14 +98,10 @@ public class MsgConfigConverter {
         return target;
     }
 
-
-    /**
-     * 转换消费者配置
-     */
+    /** 转换消费者配置 */
     private static PulsarConfig.PulsarConsumerConfig convertConsumerConfig(
             MsgArgsConfig.ConsumerConfig source) {
-        PulsarConfig.PulsarConsumerConfig target =
-            new PulsarConfig.PulsarConsumerConfig();
+        PulsarConfig.PulsarConsumerConfig target = new PulsarConfig.PulsarConsumerConfig();
 
         target.setAckTimeout(source.ackTimeout());
         target.setAckTimeoutTickTime(source.ackTimeoutTickTime());
@@ -144,13 +126,10 @@ public class MsgConfigConverter {
         return target;
     }
 
-    /**
-     * 转换事务配置
-     */
+    /** 转换事务配置 */
     private static PulsarConfig.PulsarTransactionConfig convertTransactionConfig(
             MsgArgsConfig.TransactionConfig source) {
-        PulsarConfig.PulsarTransactionConfig target =
-            new PulsarConfig.PulsarTransactionConfig();
+        PulsarConfig.PulsarTransactionConfig target = new PulsarConfig.PulsarTransactionConfig();
 
         target.setEnabled(source.enabled());
         target.setCoordinatorTopic(source.coordinatorTopic());
@@ -162,13 +141,10 @@ public class MsgConfigConverter {
         return target;
     }
 
-    /**
-     * 转换监控配置
-     */
+    /** 转换监控配置 */
     private static PulsarConfig.PulsarMonitoringConfig convertMonitoringConfig(
             MsgArgsConfig.MonitoringConfig source) {
-        PulsarConfig.PulsarMonitoringConfig target =
-            new PulsarConfig.PulsarMonitoringConfig();
+        PulsarConfig.PulsarMonitoringConfig target = new PulsarConfig.PulsarMonitoringConfig();
 
         target.setMetricsEnabled(source.metricsEnabled());
         target.setStatsInterval(source.statsInterval());
@@ -179,13 +155,10 @@ public class MsgConfigConverter {
         return target;
     }
 
-    /**
-     * 转换重试配置
-     */
+    /** 转换重试配置 */
     private static PulsarConfig.PulsarRetryConfig convertRetryConfig(
             MsgArgsConfig.RetryConfig source) {
-        PulsarConfig.PulsarRetryConfig target =
-            new PulsarConfig.PulsarRetryConfig();
+        PulsarConfig.PulsarRetryConfig target = new PulsarConfig.PulsarRetryConfig();
 
         target.setMaxAttempts(source.maxAttempts());
         target.setInitialDelay(source.initialDelay());
