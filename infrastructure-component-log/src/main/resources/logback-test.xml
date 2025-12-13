@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Logback配置文件 - 用于SLF4J测试环境 -->
+<configuration>
+
+    <!-- 控制台输出配置 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <!-- 自定义日志格式 -->
+            <!--
+                格式说明:
+                %d{yyyy-MM-dd HH:mm:ss.SSS} - 时间戳
+                [%thread] - 线程名
+                %-5level - 日志级别(左对齐,5个字符宽度)
+                %logger{36} - Logger名称(最多36个字符)
+                - %msg - 日志消息
+                %n - 换行符
+            -->
+
+            <!-- 方案1: 简洁格式 (推荐) -->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] %logger{36} - %msg%n</pattern>
+
+            <!-- 方案2: 带线程信息的格式 -->
+            <!-- <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%-5level] %logger{36} - %msg%n</pattern> -->
+
+            <!-- 方案3: 更简洁的格式 -->
+            <!-- <pattern>%d{HH:mm:ss.SSS} [%-5level] %logger{20} - %msg%n</pattern> -->
+
+            <!-- 方案4: 带颜色的格式 (终端支持ANSI颜色) -->
+            <!-- <pattern>%d{HH:mm:ss.SSS} %highlight([%-5level]) %cyan(%logger{20}) - %msg%n</pattern> -->
+        </encoder>
+    </appender>
+
+    <!-- 文件输出配置 (可选) -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/application.log</file>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%-5level] %logger{50} - %msg%n</pattern>
+        </encoder>
+
+        <!-- 滚动策略 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/application.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <!-- 设置特定包的日志级别 -->
+    <logger name="org.carl.infrastructure.logging" level="DEBUG"/>
+    <logger name="org.carl.infrastructure.logging.adapter" level="INFO"/>
+
+    <!-- 根Logger配置 -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <!-- 取消注释以启用文件输出 -->
+        <!-- <appender-ref ref="FILE"/> -->
+    </root>
+
+</configuration>
