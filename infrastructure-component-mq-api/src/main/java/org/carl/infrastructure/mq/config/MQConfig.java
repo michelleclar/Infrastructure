@@ -8,8 +8,9 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
-/** Pulsar 配置参数 使用 Quarkus ConfigMapping 进行配置绑定 */
+/** MQ config */
 public interface MQConfig {
+    Optional<String> name();
 
     /** 客户端配置 */
     ClientConfig client();

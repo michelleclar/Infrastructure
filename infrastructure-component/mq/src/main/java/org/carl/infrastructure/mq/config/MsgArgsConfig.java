@@ -12,338 +12,358 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 
-/** Pulsar 配置参数 使用 Quarkus ConfigMapping 进行配置绑定 */
+/**
+ * Pulsar MQ 配置参数
+ *
+ * <p>该接口用于将 Quarkus 配置系统中的 application.yaml / properties 绑定为 {@link MQConfig} 的具体实现。
+ *
+ * <p>领域语义、字段含义、业务注释： 👉 统一定义在 MQConfig 及其子接口中
+ *
+ * <p>本接口只关注：
+ *
+ * <ul>
+ *   <li>配置前缀
+ *   <li>字段映射名称
+ *   <li>默认值
+ * </ul>
+ */
 @ConfigMapping(prefix = "msg")
-public interface MsgArgsConfig {
+public interface MsgArgsConfig extends MQConfig {
 
-    /** 客户端配置 */
+    /** {@inheritDoc} */
+    @Override
+    @WithName("name")
+    Optional<String> name();
+
+    /** {@inheritDoc} */
     @WithName("client")
     ClientConfig client();
 
-    /** 生产者默认配置 */
+    /** {@inheritDoc} */
     @WithName("producer")
     ProducerConfig producer();
 
-    /** 消费者默认配置 */
+    /** {@inheritDoc} */
     @WithName("consumer")
     ConsumerConfig consumer();
 
-    /** 事务配置 */
+    /** {@inheritDoc} */
     TransactionConfig transaction();
 
-    /** 客户端配置接口 */
-    interface ClientConfig {
+    /** {@inheritDoc} */
+    MonitoringConfig monitoring();
 
-        /** Pulsar 服务地址 */
+    /** {@inheritDoc} */
+    RetryConfig retry();
+
+    /** {@inheritDoc} */
+    interface ClientConfig extends MQConfig.ClientConfig {
+
+        /** {@inheritDoc} */
         @WithDefault("pulsar://localhost:6650")
         @WithName("service-url")
         String serviceUrl();
 
-        /** 认证插件类名 */
+        /** {@inheritDoc} */
         @WithName("auth-plugin-class-name")
         Optional<String> authPluginClassName();
 
-        /** 认证参数 */
+        /** {@inheritDoc} */
         @WithName("auth-params")
         Optional<String> authParams();
 
-        /** 认证 Token */
+        /** {@inheritDoc} */
         @WithName("auth-token")
         Optional<String> authToken();
 
-        /** 操作超时时间 */
+        /** {@inheritDoc} */
         @WithDefault("30s")
         @WithName("operation-timeout")
         Duration operationTimeout();
 
-        /** 连接超时时间 */
+        /** {@inheritDoc} */
         @WithDefault("10s")
         @WithName("connection-timeout")
         Duration connectionTimeout();
 
-        /** 最大连接数 */
+        /** {@inheritDoc} */
         @WithDefault("1")
         @WithName("connections-per-broker")
         int connectionsPerBroker();
 
-        /** 是否启用 TCP 无延迟 */
+        /** {@inheritDoc} */
         @WithDefault("true")
         @WithName("tcp-no-delay")
         boolean tcpNoDelay();
 
-        /** 保活间隔 */
+        /** {@inheritDoc} */
         @WithDefault("30s")
         @WithName("keep-alive-interval")
         Duration keepAliveInterval();
 
-        /** 内存限制（字节） */
+        /** {@inheritDoc} */
         @WithDefault("67108864") // 64MB
         @WithName("memory-limit")
         long memoryLimit();
 
-        /** 最大查找请求数 */
+        /** {@inheritDoc} */
         @WithDefault("50000")
         @WithName("max-lookup-requests")
         int maxLookupRequests();
 
-        /** 最大查找重定向次数 */
+        /** {@inheritDoc} */
         @WithDefault("20")
         @WithName("max-lookup-redirects")
         int maxLookupRedirects();
 
-        /** 最大并发查找请求数 */
+        /** {@inheritDoc} */
         @WithDefault("5000")
         @WithName("max-concurrent-lookup-requests")
         int maxConcurrentLookupRequests();
 
-        /** TLS 配置 */
+        /** {@inheritDoc} */
         TlsConfig tls();
     }
 
-    /** TLS 配置接口 */
-    interface TlsConfig {
+    /** {@inheritDoc} */
+    interface TlsConfig extends MQConfig.TlsConfig {
 
-        /** 是否启用 TLS */
+        /** {@inheritDoc} */
         @WithDefault("false")
         boolean enabled();
 
-        /** 信任证书文件路径 */
+        /** {@inheritDoc} */
         @WithName("trust-certs-file-path")
         Optional<String> trustCertsFilePath();
 
-        /** 是否允许不安全连接 */
+        /** {@inheritDoc} */
         @WithDefault("false")
         @WithName("allow-insecure-connection")
         boolean allowInsecureConnection();
 
-        /** 是否启用主机名验证 */
+        /** {@inheritDoc} */
         @WithDefault("false")
         @WithName("enable-hostname-verification")
         boolean enableHostnameVerification();
     }
 
-    /** 生产者配置接口 */
-    interface ProducerConfig {
+    /** {@inheritDoc} */
+    interface ProducerConfig extends MQConfig.ProducerConfig {
 
-        /** 发送超时时间 */
+        /** {@inheritDoc} */
         @WithDefault("30s")
         @WithName("send-timeout")
         Duration sendTimeout();
 
-        /** 是否启用批量发送 */
+        /** {@inheritDoc} */
         @WithDefault("true")
         @WithName("batching-enabled")
         boolean batchingEnabled();
 
-        /** 批量最大消息数 */
+        /** {@inheritDoc} */
         @WithDefault("1000")
         @WithName("batching-max-messages")
         int batchingMaxMessages();
 
-        /** 批量最大发布延迟 */
+        /** {@inheritDoc} */
         @WithDefault("1ms")
         @WithName("batching-max-publish-delay")
         Duration batchingMaxPublishDelay();
 
-        /** 批量最大字节数 */
+        /** {@inheritDoc} */
         @WithDefault("131072") // 128KB
         @WithName("batching-max-bytes")
         int batchingMaxBytes();
 
-        /** 最大待发送消息数 */
+        /** {@inheritDoc} */
         @WithDefault("1000")
         @WithName("max-pending-messages")
         int maxPendingMessages();
 
-        /** 待发送消息队列满时的处理策略 */
+        /** {@inheritDoc} */
         @WithDefault("BLOCK")
         @WithName("block-if-queue-full")
         String blockIfQueueFull();
 
-        /** 压缩类型 */
+        /** {@inheritDoc} */
         @WithDefault("none")
         @WithName("compression-type")
         CompressionType compressionType();
 
-        /** 是否启用分块 */
+        /** {@inheritDoc} */
         @WithDefault("false")
         @WithName("chunking-enabled")
         boolean chunkingEnabled();
 
-        /** 最大消息大小 */
+        /** {@inheritDoc} */
         @WithDefault("5242880") // 5MB
         @WithName("chunk-max-message-size")
         int chunkMaxMessageSize();
     }
 
-    /** 消费者配置接口 */
-    interface ConsumerConfig {
-        /** 是否自动ACK */
+    /** {@inheritDoc} */
+    interface ConsumerConfig extends MQConfig.ConsumerConfig {
+        /** {@inheritDoc} */
         @WithDefault("true")
         @WithName("auto-ack")
-        boolean autoAck();
+        Boolean autoAck();
 
-        /** 确认超时时间 */
+        /** {@inheritDoc} */
         @WithDefault("30s")
         @WithName("ack-timeout")
         Duration ackTimeout();
 
-        /** 确认超时重新投递延迟 */
+        /** {@inheritDoc} */
         @WithDefault("1s")
         @WithName("ack-timeout-tick-time")
         Duration ackTimeoutTickTime();
 
-        /** 否定确认重新投递延迟 */
+        /** {@inheritDoc} */
         @WithDefault("1m")
         @WithName("negative-ack-redelivery-delay")
         Duration negativeAckRedeliveryDelay();
 
-        /** 接收队列大小 */
+        /** {@inheritDoc} */
         @WithDefault("1000")
         @WithName("receiver-queue-size")
         int receiverQueueSize();
 
-        /** 最大重新投递次数 */
+        /** {@inheritDoc} */
         @WithDefault("3")
         @WithName("max-redeliver-count")
         int maxRedeliverCount();
 
-        /** 死信队列主题后缀 */
+        /** {@inheritDoc} */
         @WithDefault("-dlq")
         @WithName("dead-letter-topic-suffix")
         String deadLetterTopicSuffix();
 
-        /** 重试队列主题后缀 */
+        /** {@inheritDoc} */
         @WithDefault("-retry")
         @WithName("retry-topic-suffix")
         String retryTopicSuffix();
 
-        /** 是否启用批量接收 */
+        /** {@inheritDoc} */
         @WithDefault("false")
         @WithName("batch-receive-enabled")
         boolean batchReceiveEnabled();
 
-        /** 批量接收最大消息数 */
+        /** {@inheritDoc} */
         @WithDefault("100")
         @WithName("batch-receive-max-messages")
         int batchReceiveMaxMessages();
 
-        /** 批量接收超时时间 */
+        /** {@inheritDoc} */
         @WithDefault("100ms")
         @WithName("batch-receive-timeout")
         Duration batchReceiveTimeout();
 
-        /** 订阅初始位置 */
+        /** {@inheritDoc} */
         @WithDefault("LATEST")
         @WithName("subscription-initial-position")
         SubscriptionInitialPosition subscriptionInitialPosition();
-        /** 优先级 */
+
+        /** {@inheritDoc} */
         @WithDefault("0")
         int priority();
 
-        /** 是否只读复制 */
+        /** {@inheritDoc} */
         @WithDefault("false")
         @WithName("read-compacted")
         boolean readCompacted();
 
-        /** 是否只读复制 */
+        /** {@inheritDoc} */
         @WithDefault("Exclusive")
         @WithName("subscription-type")
         SubscriptionType subscriptionType();
     }
 
-    /** 事务配置接口 */
-    interface TransactionConfig {
+    /** {@inheritDoc} */
+    interface TransactionConfig extends MQConfig.TransactionConfig {
 
-        /** 是否启用事务 */
+        /** {@inheritDoc} */
         @WithDefault("false")
         boolean enabled();
 
-        /** 事务协调器主题 */
+        /** {@inheritDoc} */
         @WithDefault("persistent://pulsar/system/transaction_coordinator_assign")
         @WithName("coordinator-topic")
         String coordinatorTopic();
 
-        /** 默认事务超时时间 */
+        /** {@inheritDoc} */
         @WithDefault("60s")
         @WithName("timeout")
         Duration timeout();
 
-        /** 事务缓冲区快照段大小 */
+        /** {@inheritDoc} */
         @WithDefault("262144") // 256KB
         @WithName("buffer-snapshot-segment-size")
         int bufferSnapshotSegmentSize();
 
-        /** 事务缓冲区快照最小时间间隔 */
+        /** {@inheritDoc} */
         @WithDefault("5s")
         @WithName("buffer-snapshot-min-time-in-millis")
         Duration bufferSnapshotMinTime();
 
-        /** 事务缓冲区快照最大事务数 */
+        /** {@inheritDoc} */
         @WithDefault("1000")
         @WithName("buffer-snapshot-max-transaction-count")
         int bufferSnapshotMaxTransactionCount();
     }
 
-    /** 监控配置 */
-    MonitoringConfig monitoring();
+    /** {@inheritDoc} */
+    interface MonitoringConfig extends MQConfig.MonitoringConfig {
 
-    /** 监控配置接口 */
-    interface MonitoringConfig {
-
-        /** 是否启用指标收集 */
+        /** {@inheritDoc} */
         @WithDefault("true")
         @WithName("metrics-enabled")
         boolean metricsEnabled();
 
-        /** 统计间隔 */
+        /** {@inheritDoc} */
         @WithDefault("60s")
         @WithName("stats-interval")
         Duration statsInterval();
 
-        /** 是否启用主题级别统计 */
+        /** {@inheritDoc} */
         @WithDefault("true")
         @WithName("topic-level-metrics-enabled")
         boolean topicLevelMetricsEnabled();
 
-        /** 是否启用消费者级别统计 */
+        /** {@inheritDoc} */
         @WithDefault("true")
         @WithName("consumer-level-metrics-enabled")
         boolean consumerLevelMetricsEnabled();
 
-        /** 是否启用生产者级别统计 */
+        /** {@inheritDoc} */
         @WithDefault("true")
         @WithName("producer-level-metrics-enabled")
         boolean producerLevelMetricsEnabled();
     }
 
-    /** 重试策略配置 */
-    RetryConfig retry();
+    /** {@inheritDoc} */
+    interface RetryConfig extends MQConfig.RetryConfig {
 
-    /** 重试策略配置接口 */
-    interface RetryConfig {
-
-        /** 默认最大重试次数 */
+        /** {@inheritDoc} */
         @WithDefault("3")
         @WithName("max-attempts")
         int maxAttempts();
 
-        /** 初始重试延迟 */
+        /** {@inheritDoc} */
         @WithDefault("1s")
         @WithName("initial-delay")
         Duration initialDelay();
 
-        /** 最大重试延迟 */
+        /** {@inheritDoc} */
         @WithDefault("30s")
         @WithName("max-delay")
         Duration maxDelay();
 
-        /** 重试延迟倍数 */
+        /** {@inheritDoc} */
         @WithDefault("2.0")
         @WithName("multiplier")
         double multiplier();
 
-        /** 可重试的异常类型 */
+        /** {@inheritDoc} */
         @WithName("retryable-exceptions")
         Optional<List<String>> retryableExceptions();
     }

@@ -8,6 +8,9 @@ import org.carl.infrastructure.logging.LoggerFactory;
 import org.carl.infrastructure.mq.client.MQClient;
 import org.carl.infrastructure.mq.common.ex.MQClientException;
 import org.carl.infrastructure.mq.config.MQConfig;
+import org.carl.infrastructure.mq.pulsar.config.ResourcesManager;
+
+import java.util.UUID;
 
 public class MQClientBuilder {
 
@@ -33,7 +36,12 @@ public class MQClientBuilder {
         }
         try {
             PulsarClient pulsarClient = build.build();
-            return new PulsarMQClient(pulsarClient, config.producer(), config.consumer());
+            PulsarMQClient pulsarMQClient =
+                    new PulsarMQClient(pulsarClient, config.producer(), config.consumer());
+            ResourcesManager.add(
+                    config.name().isEmpty() ? UUID.randomUUID().toString() : config.name().get(),
+                    pulsarMQClient);
+            return pulsarMQClient;
         } catch (PulsarClientException e) {
             throw new MQClientException(e);
         }

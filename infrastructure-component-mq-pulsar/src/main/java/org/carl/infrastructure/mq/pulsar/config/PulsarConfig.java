@@ -11,6 +11,7 @@ import java.util.Optional;
 
 public class PulsarConfig implements MQConfig {
 
+    private String name;
     private PulsarClientConfig clientConfig;
     private PulsarProducerConfig producerConfig;
     private PulsarConsumerConfig consumerConfig;
@@ -64,6 +65,11 @@ public class PulsarConfig implements MQConfig {
     }
 
     @Override
+    public Optional<String> name() {
+        return Optional.ofNullable(this.name);
+    }
+
+    @Override
     public ClientConfig client() {
         return clientConfig;
     }
@@ -91,6 +97,10 @@ public class PulsarConfig implements MQConfig {
     @Override
     public RetryConfig retry() {
         return retryConfig;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public void setClientConfig(PulsarClientConfig clientConfig) {
@@ -528,7 +538,6 @@ public class PulsarConfig implements MQConfig {
             this.batchReceiveEnabled = batchReceiveEnabled;
         }
 
-
         public void setBatchReceiveMaxMessages(int batchReceiveMaxMessages) {
             this.batchReceiveMaxMessages = batchReceiveMaxMessages;
         }
@@ -726,7 +735,7 @@ public class PulsarConfig implements MQConfig {
         private Duration initialDelay = Duration.ofMillis(100);
         private Duration maxDelay = Duration.ofSeconds(10);
         private double multiplier = 2.0;
-        private Optional<List<String>> retryableExceptions = Optional.empty();
+        private List<String> retryableExceptions;
 
         @Override
         public int maxAttempts() {
@@ -750,48 +759,27 @@ public class PulsarConfig implements MQConfig {
 
         @Override
         public Optional<List<String>> retryableExceptions() {
-            return retryableExceptions;
-        }
-
-        // Getters and Setters
-        public int getMaxAttempts() {
-            return maxAttempts;
+            return Optional.ofNullable(retryableExceptions);
         }
 
         public void setMaxAttempts(int maxAttempts) {
             this.maxAttempts = maxAttempts;
         }
 
-        public Duration getInitialDelay() {
-            return initialDelay;
-        }
-
         public void setInitialDelay(Duration initialDelay) {
             this.initialDelay = initialDelay;
-        }
-
-        public Duration getMaxDelay() {
-            return maxDelay;
         }
 
         public void setMaxDelay(Duration maxDelay) {
             this.maxDelay = maxDelay;
         }
 
-        public double getMultiplier() {
-            return multiplier;
-        }
-
         public void setMultiplier(double multiplier) {
             this.multiplier = multiplier;
         }
 
-        public Optional<List<String>> getRetryableExceptions() {
-            return retryableExceptions;
-        }
-
         public void setRetryableExceptions(List<String> retryableExceptions) {
-            this.retryableExceptions = Optional.ofNullable(retryableExceptions);
+            this.retryableExceptions = retryableExceptions;
         }
     }
 }
