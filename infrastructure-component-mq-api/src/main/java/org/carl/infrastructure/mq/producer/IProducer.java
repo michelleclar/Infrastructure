@@ -1,6 +1,7 @@
 package org.carl.infrastructure.mq.producer;
 
 import org.carl.infrastructure.mq.common.ex.ProducerException;
+import org.carl.infrastructure.mq.config.MQConfig;
 import org.carl.infrastructure.mq.model.Message;
 import org.carl.infrastructure.mq.model.MessageBuilder;
 
@@ -23,6 +24,7 @@ import java.util.function.Consumer;
  * @param <T> 消息类型
  */
 public interface IProducer<T> extends AutoCloseable {
+    MQConfig.ProducerConfig config();
 
     // ===== 基础发送功能 =====
 
@@ -364,5 +366,4 @@ public interface IProducer<T> extends AutoCloseable {
          */
         int getPendingMessages();
     }
-
 }

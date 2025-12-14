@@ -1,11 +1,13 @@
 package org.carl.infrastructure.mq.consumer;
 
 import org.carl.infrastructure.mq.common.ex.ConsumerException;
+import org.carl.infrastructure.mq.config.MQConfig;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 /**
@@ -54,7 +56,12 @@ public interface IConsumerBuilder<T> extends Cloneable {
      * @param config configuration to load
      * @return the consumer builder instance
      */
+    @Deprecated
     IConsumerBuilder<T> loadConf(Map<String, Object> config);
+
+    IConsumerBuilder<T> conf(Consumer<MQConfig.ConsumerConfig> config);
+
+    IConsumerBuilder<T> overiteConf(MQConfig.ConsumerConfig config);
 
     @Deprecated
     IConsumer<T> subscribe() throws ConsumerException;

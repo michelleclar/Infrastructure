@@ -93,49 +93,24 @@ public class PulsarConfig implements MQConfig {
         return retryConfig;
     }
 
-    // Getter and Setter methods
-    public PulsarClientConfig getClientConfig() {
-        return clientConfig;
-    }
-
     public void setClientConfig(PulsarClientConfig clientConfig) {
         this.clientConfig = clientConfig;
-    }
-
-    public PulsarProducerConfig getProducerConfig() {
-        return producerConfig;
     }
 
     public void setProducerConfig(PulsarProducerConfig producerConfig) {
         this.producerConfig = producerConfig;
     }
 
-    public PulsarConsumerConfig getConsumerConfig() {
-        return consumerConfig;
-    }
-
     public void setConsumerConfig(PulsarConsumerConfig consumerConfig) {
         this.consumerConfig = consumerConfig;
-    }
-
-    public PulsarTransactionConfig getTransactionConfig() {
-        return transactionConfig;
     }
 
     public void setTransactionConfig(PulsarTransactionConfig transactionConfig) {
         this.transactionConfig = transactionConfig;
     }
 
-    public PulsarMonitoringConfig getMonitoringConfig() {
-        return monitoringConfig;
-    }
-
     public void setMonitoringConfig(PulsarMonitoringConfig monitoringConfig) {
         this.monitoringConfig = monitoringConfig;
-    }
-
-    public PulsarRetryConfig getRetryConfig() {
-        return retryConfig;
     }
 
     public void setRetryConfig(PulsarRetryConfig retryConfig) {
@@ -146,9 +121,9 @@ public class PulsarConfig implements MQConfig {
 
     public static class PulsarClientConfig implements ClientConfig {
         private String serviceUrl = "pulsar://localhost:6650";
-        private Optional<String> authPluginClassName = Optional.empty();
-        private Optional<String> authParams = Optional.empty();
-        private Optional<String> authToken = Optional.empty();
+        private String authPluginClassName;
+        private String authParams;
+        private String authToken;
         private Duration operationTimeout = Duration.ofSeconds(30);
         private Duration connectionTimeout = Duration.ofSeconds(10);
         private int connectionsPerBroker = 1;
@@ -167,17 +142,17 @@ public class PulsarConfig implements MQConfig {
 
         @Override
         public Optional<String> authPluginClassName() {
-            return authPluginClassName;
+            return Optional.ofNullable(authPluginClassName);
         }
 
         @Override
         public Optional<String> authParams() {
-            return authParams;
+            return Optional.ofNullable(authParams);
         }
 
         @Override
         public Optional<String> authToken() {
-            return authToken;
+            return Optional.ofNullable(authToken);
         }
 
         @Override
@@ -230,113 +205,56 @@ public class PulsarConfig implements MQConfig {
             return tlsConfig;
         }
 
-        // Getters and Setters
-        public String getServiceUrl() {
-            return serviceUrl;
-        }
-
         public void setServiceUrl(String serviceUrl) {
             this.serviceUrl = serviceUrl;
         }
 
-        public Optional<String> getAuthPluginClassName() {
-            return authPluginClassName;
-        }
-
         public void setAuthPluginClassName(String authPluginClassName) {
-            this.authPluginClassName = Optional.of(authPluginClassName);
-        }
-
-        public Optional<String> getAuthParams() {
-            return authParams;
+            this.authPluginClassName = authPluginClassName;
         }
 
         public void setAuthParams(String authParams) {
-            this.authParams = Optional.of(authParams);
-        }
-
-        public Optional<String> getAuthToken() {
-            return authToken;
+            this.authParams = authParams;
         }
 
         public void setAuthToken(String authToken) {
-            this.authToken = Optional.of(authToken);
-        }
-
-        public Duration getOperationTimeout() {
-            return operationTimeout;
+            this.authToken = authToken;
         }
 
         public void setOperationTimeout(Duration operationTimeout) {
             this.operationTimeout = operationTimeout;
         }
 
-        public Duration getConnectionTimeout() {
-            return connectionTimeout;
-        }
-
         public void setConnectionTimeout(Duration connectionTimeout) {
             this.connectionTimeout = connectionTimeout;
-        }
-
-        public int getConnectionsPerBroker() {
-            return connectionsPerBroker;
         }
 
         public void setConnectionsPerBroker(int connectionsPerBroker) {
             this.connectionsPerBroker = connectionsPerBroker;
         }
 
-        public boolean isTcpNoDelay() {
-            return tcpNoDelay;
-        }
-
         public void setTcpNoDelay(boolean tcpNoDelay) {
             this.tcpNoDelay = tcpNoDelay;
-        }
-
-        public Duration getKeepAliveInterval() {
-            return keepAliveInterval;
         }
 
         public void setKeepAliveInterval(Duration keepAliveInterval) {
             this.keepAliveInterval = keepAliveInterval;
         }
 
-        public long getMemoryLimit() {
-            return memoryLimit;
-        }
-
         public void setMemoryLimit(long memoryLimit) {
             this.memoryLimit = memoryLimit;
-        }
-
-        public int getMaxLookupRequests() {
-            return maxLookupRequests;
         }
 
         public void setMaxLookupRequests(int maxLookupRequests) {
             this.maxLookupRequests = maxLookupRequests;
         }
 
-        public int getMaxLookupRedirects() {
-            return maxLookupRedirects;
-        }
-
         public void setMaxLookupRedirects(int maxLookupRedirects) {
             this.maxLookupRedirects = maxLookupRedirects;
         }
 
-        public int getMaxConcurrentLookupRequests() {
-            return maxConcurrentLookupRequests;
-        }
-
         public void setMaxConcurrentLookupRequests(int maxConcurrentLookupRequests) {
             this.maxConcurrentLookupRequests = maxConcurrentLookupRequests;
-        }
-
-        public PulsarTlsConfig getTlsConfig() {
-            return tlsConfig;
         }
 
         public void setTlsConfig(PulsarTlsConfig tlsConfig) {
@@ -346,7 +264,7 @@ public class PulsarConfig implements MQConfig {
 
     public static class PulsarTlsConfig implements TlsConfig {
         private boolean enabled = false;
-        private Optional<String> trustCertsFilePath = Optional.empty();
+        private String trustCertsFilePath;
         private boolean allowInsecureConnection = false;
         private boolean enableHostnameVerification = true;
 
@@ -357,7 +275,7 @@ public class PulsarConfig implements MQConfig {
 
         @Override
         public Optional<String> trustCertsFilePath() {
-            return trustCertsFilePath;
+            return Optional.ofNullable(trustCertsFilePath);
         }
 
         @Override
@@ -370,37 +288,20 @@ public class PulsarConfig implements MQConfig {
             return enableHostnameVerification;
         }
 
-        // Getters and Setters
-        public boolean isEnabled() {
-            return enabled;
-        }
-
         public void setEnabled(boolean enabled) {
             this.enabled = enabled;
         }
 
-        public Optional<String> getTrustCertsFilePath() {
-            return trustCertsFilePath;
-        }
-
         public void setTrustCertsFilePath(String trustCertsFilePath) {
-            this.trustCertsFilePath = Optional.ofNullable(trustCertsFilePath);
-        }
-
-        public boolean isAllowInsecureConnection() {
-            return allowInsecureConnection;
-        }
-
-        public void setAllowInsecureConnection(boolean allowInsecureConnection) {
-            this.allowInsecureConnection = allowInsecureConnection;
-        }
-
-        public boolean isEnableHostnameVerification() {
-            return enableHostnameVerification;
+            this.trustCertsFilePath = trustCertsFilePath;
         }
 
         public void setEnableHostnameVerification(boolean enableHostnameVerification) {
             this.enableHostnameVerification = enableHostnameVerification;
+        }
+
+        public void setAllowInsecureConnection(boolean allowInsecureConnection) {
+            this.allowInsecureConnection = allowInsecureConnection;
         }
     }
 
@@ -466,81 +367,40 @@ public class PulsarConfig implements MQConfig {
             return chunkMaxMessageSize;
         }
 
-        // Getters and Setters
-        public Duration getSendTimeout() {
-            return sendTimeout;
-        }
-
         public void setSendTimeout(Duration sendTimeout) {
             this.sendTimeout = sendTimeout;
-        }
-
-        public boolean isBatchingEnabled() {
-            return batchingEnabled;
         }
 
         public void setBatchingEnabled(boolean batchingEnabled) {
             this.batchingEnabled = batchingEnabled;
         }
 
-        public int getBatchingMaxMessages() {
-            return batchingMaxMessages;
-        }
-
         public void setBatchingMaxMessages(int batchingMaxMessages) {
             this.batchingMaxMessages = batchingMaxMessages;
-        }
-
-        public Duration getBatchingMaxPublishDelay() {
-            return batchingMaxPublishDelay;
         }
 
         public void setBatchingMaxPublishDelay(Duration batchingMaxPublishDelay) {
             this.batchingMaxPublishDelay = batchingMaxPublishDelay;
         }
 
-        public int getBatchingMaxBytes() {
-            return batchingMaxBytes;
-        }
-
         public void setBatchingMaxBytes(int batchingMaxBytes) {
             this.batchingMaxBytes = batchingMaxBytes;
-        }
-
-        public int getMaxPendingMessages() {
-            return maxPendingMessages;
         }
 
         public void setMaxPendingMessages(int maxPendingMessages) {
             this.maxPendingMessages = maxPendingMessages;
         }
 
-        public String getBlockIfQueueFull() {
-            return blockIfQueueFull;
-        }
-
         public void setBlockIfQueueFull(String blockIfQueueFull) {
             this.blockIfQueueFull = blockIfQueueFull;
-        }
-
-        public CompressionType getCompressionType() {
-            return compressionType;
         }
 
         public void setCompressionType(CompressionType compressionType) {
             this.compressionType = compressionType;
         }
 
-        public boolean isChunkingEnabled() {
-            return chunkingEnabled;
-        }
-
         public void setChunkingEnabled(boolean chunkingEnabled) {
             this.chunkingEnabled = chunkingEnabled;
-        }
-
-        public int getChunkMaxMessageSize() {
-            return chunkMaxMessageSize;
         }
 
         public void setChunkMaxMessageSize(int chunkMaxMessageSize) {
@@ -564,6 +424,7 @@ public class PulsarConfig implements MQConfig {
         private int priority = 0;
         private boolean readCompacted = false;
         private SubscriptionType subscriptionType = SubscriptionType.EXCLUSIVE;
+        private boolean autoAck = false;
 
         @Override
         public Duration ackTimeout() {
@@ -635,89 +496,45 @@ public class PulsarConfig implements MQConfig {
             return subscriptionType;
         }
 
-        // Getters and Setters
-        public Duration getAckTimeout() {
-            return ackTimeout;
-        }
-
         public void setAckTimeout(Duration ackTimeout) {
             this.ackTimeout = ackTimeout;
-        }
-
-        public Duration getAckTimeoutTickTime() {
-            return ackTimeoutTickTime;
         }
 
         public void setAckTimeoutTickTime(Duration ackTimeoutTickTime) {
             this.ackTimeoutTickTime = ackTimeoutTickTime;
         }
 
-        public Duration getNegativeAckRedeliveryDelay() {
-            return negativeAckRedeliveryDelay;
-        }
-
         public void setNegativeAckRedeliveryDelay(Duration negativeAckRedeliveryDelay) {
             this.negativeAckRedeliveryDelay = negativeAckRedeliveryDelay;
-        }
-
-        public int getReceiverQueueSize() {
-            return receiverQueueSize;
         }
 
         public void setReceiverQueueSize(int receiverQueueSize) {
             this.receiverQueueSize = receiverQueueSize;
         }
 
-        public int getMaxRedeliverCount() {
-            return maxRedeliverCount;
-        }
-
         public void setMaxRedeliverCount(int maxRedeliverCount) {
             this.maxRedeliverCount = maxRedeliverCount;
-        }
-
-        public String getDeadLetterTopicSuffix() {
-            return deadLetterTopicSuffix;
         }
 
         public void setDeadLetterTopicSuffix(String deadLetterTopicSuffix) {
             this.deadLetterTopicSuffix = deadLetterTopicSuffix;
         }
 
-        public String getRetryTopicSuffix() {
-            return retryTopicSuffix;
-        }
-
         public void setRetryTopicSuffix(String retryTopicSuffix) {
             this.retryTopicSuffix = retryTopicSuffix;
-        }
-
-        public boolean isBatchReceiveEnabled() {
-            return batchReceiveEnabled;
         }
 
         public void setBatchReceiveEnabled(boolean batchReceiveEnabled) {
             this.batchReceiveEnabled = batchReceiveEnabled;
         }
 
-        public int getBatchReceiveMaxMessages() {
-            return batchReceiveMaxMessages;
-        }
 
         public void setBatchReceiveMaxMessages(int batchReceiveMaxMessages) {
             this.batchReceiveMaxMessages = batchReceiveMaxMessages;
         }
 
-        public Duration getBatchReceiveTimeout() {
-            return batchReceiveTimeout;
-        }
-
         public void setBatchReceiveTimeout(Duration batchReceiveTimeout) {
             this.batchReceiveTimeout = batchReceiveTimeout;
-        }
-
-        public SubscriptionInitialPosition getSubscriptionInitialPosition() {
-            return subscriptionInitialPosition;
         }
 
         public void setSubscriptionInitialPosition(
@@ -725,28 +542,20 @@ public class PulsarConfig implements MQConfig {
             this.subscriptionInitialPosition = subscriptionInitialPosition;
         }
 
-        public int getPriority() {
-            return priority;
-        }
-
         public void setPriority(int priority) {
             this.priority = priority;
-        }
-
-        public boolean isReadCompacted() {
-            return readCompacted;
         }
 
         public void setReadCompacted(boolean readCompacted) {
             this.readCompacted = readCompacted;
         }
 
-        public SubscriptionType getSubscriptionType() {
-            return subscriptionType;
-        }
-
         public void setSubscriptionType(SubscriptionType subscriptionType) {
             this.subscriptionType = subscriptionType;
+        }
+
+        public void setAutoAck(boolean autoAck) {
+            this.autoAck = autoAck;
         }
     }
 

@@ -1,4 +1,4 @@
-package org.carl.infrastructure.mq.pulsar.config;
+package org.carl.infrastructure.mq.pulsar.builder;
 
 import io.opentelemetry.api.OpenTelemetry;
 
@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
-public class PulsarClientFactory {
+class PulsarClientFactory {
     private final ClientBuilder clientBuilder;
 
     public static PulsarClientFactory getInstance() {

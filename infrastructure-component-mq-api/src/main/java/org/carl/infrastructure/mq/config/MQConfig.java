@@ -23,6 +23,12 @@ public interface MQConfig {
     /** 事务配置 */
     TransactionConfig transaction();
 
+    /** 监控配置 */
+    MonitoringConfig monitoring();
+
+    /** 重试策略配置 */
+    RetryConfig retry();
+
     /** 客户端配置接口 */
     interface ClientConfig {
 
@@ -122,6 +128,10 @@ public interface MQConfig {
     /** 消费者配置接口 */
     interface ConsumerConfig {
 
+        default Boolean autoAck() {
+            return false;
+        }
+
         /** 确认超时时间 */
         Duration ackTimeout();
 
@@ -187,9 +197,6 @@ public interface MQConfig {
         int bufferSnapshotMaxTransactionCount();
     }
 
-    /** 监控配置 */
-    MonitoringConfig monitoring();
-
     /** 监控配置接口 */
     interface MonitoringConfig {
 
@@ -208,9 +215,6 @@ public interface MQConfig {
         /** 是否启用生产者级别统计 */
         boolean producerLevelMetricsEnabled();
     }
-
-    /** 重试策略配置 */
-    RetryConfig retry();
 
     /** 重试策略配置接口 */
     interface RetryConfig {

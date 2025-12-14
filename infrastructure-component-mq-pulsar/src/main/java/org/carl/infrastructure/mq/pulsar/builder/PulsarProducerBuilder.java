@@ -4,6 +4,7 @@ import org.apache.pulsar.client.api.*;
 import org.carl.infrastructure.logging.ILogger;
 import org.carl.infrastructure.logging.LoggerFactory;
 import org.carl.infrastructure.mq.common.ex.ProducerException;
+import org.carl.infrastructure.mq.config.MQConfig;
 import org.carl.infrastructure.mq.producer.*;
 import org.carl.infrastructure.mq.producer.CompressionType;
 import org.carl.infrastructure.mq.producer.HashingScheme;
@@ -13,34 +14,40 @@ import org.carl.infrastructure.mq.producer.ProducerAccessMode;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /** 生产者构建器 提供流式 API 来发送消息 */
-public class PulsarProducerBuilder<T> implements IProducerBuilder<T> {
+class PulsarProducerBuilder<T> implements IProducerBuilder<T> {
 
     private static final ILogger log = LoggerFactory.getLogger(PulsarProducerBuilder.class);
     private final PulsarClient pulsarClient;
     private final Schema<T> schema;
     private final ProducerBuilder<T> producerBuilder;
+    private MQConfig.ProducerConfig producerConfig;
 
-    public static <T> PulsarProducerBuilder<T> create(PulsarClient client, Class<T> clazz) {
-        return new PulsarProducerBuilder<>(client, Schema.AVRO(clazz));
+    public static <T> PulsarProducerBuilder<T> create(
+            PulsarClient client, Class<T> clazz, MQConfig.ProducerConfig producerConfig) {
+        return new PulsarProducerBuilder<>(client, Schema.AVRO(clazz), producerConfig);
     }
 
-    public static PulsarProducerBuilder<byte[]> create(PulsarClient client) {
-        return new PulsarProducerBuilder<>(client, Schema.AUTO_PRODUCE_BYTES());
+    public static PulsarProducerBuilder<byte[]> create(
+            PulsarClient client, MQConfig.ProducerConfig producerConfig) {
+        return new PulsarProducerBuilder<>(client, Schema.AUTO_PRODUCE_BYTES(), producerConfig);
     }
 
-    public PulsarProducerBuilder(PulsarClient client, Schema<T> schema) {
+    public PulsarProducerBuilder(
+            PulsarClient client, Schema<T> schema, MQConfig.ProducerConfig producerConfig) {
         this.pulsarClient = client;
         this.schema = schema;
         this.producerBuilder = pulsarClient.newProducer(schema);
+        this.producerConfig = producerConfig;
     }
 
     @Override
     public IProducer<T> create() throws ProducerException {
         try {
             Producer<T> tProducer = producerBuilder.create();
-            return new PulsarProducer<>(tProducer);
+            return new PulsarProducer<>(tProducer, producerConfig);
         } catch (PulsarClientException e) {
             throw new ProducerException(e);
         }
@@ -51,7 +58,7 @@ public class PulsarProducerBuilder<T> implements IProducerBuilder<T> {
         producerBuilder.topic(topicName);
         try {
             Producer<T> tProducer = producerBuilder.create();
-            return new PulsarProducer<>(tProducer);
+            return new PulsarProducer<>(tProducer, producerConfig);
         } catch (PulsarClientException e) {
             log.error(e.getMessage(), e);
             throw new ProducerException(e);
@@ -60,7 +67,9 @@ public class PulsarProducerBuilder<T> implements IProducerBuilder<T> {
 
     @Override
     public CompletableFuture<IProducer<T>> createAsync() {
-        return producerBuilder.createAsync().thenApply(PulsarProducer::new);
+        return producerBuilder
+                .createAsync()
+                .thenApply(producer -> new PulsarProducer<>(producer, producerConfig));
     }
 
     @Override
@@ -70,8 +79,20 @@ public class PulsarProducerBuilder<T> implements IProducerBuilder<T> {
     }
 
     @Override
+    public IProducerBuilder<T> conf(Consumer<MQConfig.ProducerConfig> config) {
+        config.accept(this.producerConfig);
+        return this;
+    }
+
+    @Override
+    public IProducerBuilder<T> overiteConf(MQConfig.ProducerConfig config) {
+        this.producerConfig = config;
+        return this;
+    }
+
+    @Override
     public IProducerBuilder<T> clone() {
-        return new PulsarProducerBuilder<>(pulsarClient, schema);
+        return new PulsarProducerBuilder<>(pulsarClient, schema, producerConfig);
     }
 
     @Override

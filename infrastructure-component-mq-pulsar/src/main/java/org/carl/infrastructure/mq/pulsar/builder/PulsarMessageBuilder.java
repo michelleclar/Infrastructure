@@ -6,7 +6,7 @@ import org.carl.infrastructure.mq.model.MessageBuilder;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PulsarMessageBuilder<T> implements MessageBuilder<T> {
+class PulsarMessageBuilder<T> implements MessageBuilder<T> {
     private T value;
     private final Map<String, String> payload = new HashMap<>();
     private String key;

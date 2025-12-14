@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
  * @param <T>
  */
 @NotThreadSafe
-public record PulsarConsumer<T>(Consumer<T> consumer) implements IConsumer<T>, AutoCloseable {
+record PulsarConsumer<T>(Consumer<T> consumer) implements IConsumer<T>, AutoCloseable {
 
     @Override
     public Message<T> receive() throws ConsumerException {

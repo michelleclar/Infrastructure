@@ -5,8 +5,8 @@ import org.carl.infrastructure.mq.common.ex.ConsumerException;
 import org.carl.infrastructure.mq.common.ex.MQClientException;
 import org.carl.infrastructure.mq.config.MQConfig;
 import org.carl.infrastructure.mq.consumer.IConsumer;
+import org.carl.infrastructure.mq.pulsar.builder.MQClientBuilder;
 import org.carl.infrastructure.mq.pulsar.config.PulsarConfig;
-import org.carl.infrastructure.mq.pulsar.factory.MQClientFactory;
 import org.carl.infrastructure.pulsar.model.TestUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,7 @@ public class ConsumerTest {
     public void setUp() throws MQClientException {
         //        MsgConfig pulsarMsgConfig = new PulsarMsgConfig("pulsar://172.16.252.194:16650");
         MQConfig pulsarMsgConfig = new PulsarConfig("pulsar://180.184.66.147:6650");
-        client = MQClientFactory.createClient(pulsarMsgConfig);
+        client = MQClientBuilder.createClient(pulsarMsgConfig);
     }
 
     //    @AfterEach

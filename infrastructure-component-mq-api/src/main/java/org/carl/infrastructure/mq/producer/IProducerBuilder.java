@@ -1,13 +1,14 @@
 package org.carl.infrastructure.mq.producer;
 
 import org.carl.infrastructure.mq.common.ex.ProducerException;
+import org.carl.infrastructure.mq.config.MQConfig;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public interface IProducerBuilder<T> {
-
     @Deprecated
     IProducer<T> create() throws ProducerException;
 
@@ -15,7 +16,12 @@ public interface IProducerBuilder<T> {
 
     CompletableFuture<IProducer<T>> createAsync();
 
+    @Deprecated
     IProducerBuilder<T> loadConf(Map<String, Object> config);
+
+    IProducerBuilder<T> conf(Consumer<MQConfig.ProducerConfig> config);
+
+    IProducerBuilder<T> overiteConf(MQConfig.ProducerConfig config);
 
     IProducerBuilder<T> clone();
 

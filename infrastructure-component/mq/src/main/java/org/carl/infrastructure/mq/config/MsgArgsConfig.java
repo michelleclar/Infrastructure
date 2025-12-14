@@ -178,6 +178,10 @@ public interface MsgArgsConfig {
 
     /** 消费者配置接口 */
     interface ConsumerConfig {
+        /** 是否自动ACK */
+        @WithDefault("true")
+        @WithName("auto-ack")
+        boolean autoAck();
 
         /** 确认超时时间 */
         @WithDefault("30s")

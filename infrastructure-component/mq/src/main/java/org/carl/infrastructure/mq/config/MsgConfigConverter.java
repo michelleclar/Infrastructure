@@ -113,7 +113,7 @@ public class MsgConfigConverter {
         target.setBatchReceiveEnabled(source.batchReceiveEnabled());
         target.setBatchReceiveMaxMessages(source.batchReceiveMaxMessages());
         target.setBatchReceiveTimeout(source.batchReceiveTimeout());
-
+        target.setAutoAck(source.autoAck());
         // 转换订阅初始位置枚举
         target.setSubscriptionInitialPosition(source.subscriptionInitialPosition());
 

@@ -1,10 +1,8 @@
 package org.carl.infrastructure.mq.pulsar.builder;
 
-import org.apache.pulsar.client.api.MessageId;
-import org.apache.pulsar.client.api.Producer;
-import org.apache.pulsar.client.api.PulsarClientException;
-import org.apache.pulsar.client.api.TypedMessageBuilder;
+import org.apache.pulsar.client.api.*;
 import org.carl.infrastructure.mq.common.ex.ProducerException;
+import org.carl.infrastructure.mq.config.MQConfig;
 import org.carl.infrastructure.mq.model.Message;
 import org.carl.infrastructure.mq.model.MessageBuilder;
 import org.carl.infrastructure.mq.producer.IProducer;
@@ -17,9 +15,16 @@ import java.util.function.Consumer;
 public class PulsarProducer<T> implements IProducer<T> {
 
     private final Producer<T> producer;
+    private final MQConfig.ProducerConfig config;
 
-    PulsarProducer(Producer<T> producer) {
+    PulsarProducer(Producer<T> producer, MQConfig.ProducerConfig config) {
         this.producer = producer;
+        this.config = config;
+    }
+
+    @Override
+    public MQConfig.ProducerConfig config() {
+        return config;
     }
 
     @Override

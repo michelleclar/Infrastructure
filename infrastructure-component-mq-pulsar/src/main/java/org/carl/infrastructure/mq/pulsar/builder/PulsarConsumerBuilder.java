@@ -4,6 +4,7 @@ import org.apache.pulsar.client.api.*;
 import org.carl.infrastructure.logging.ILogger;
 import org.carl.infrastructure.logging.LoggerFactory;
 import org.carl.infrastructure.mq.common.ex.ConsumerException;
+import org.carl.infrastructure.mq.config.MQConfig;
 import org.carl.infrastructure.mq.consumer.IConsumer;
 import org.carl.infrastructure.mq.consumer.IConsumerBuilder;
 import org.carl.infrastructure.mq.consumer.SubscriptionInitialPosition;
@@ -22,44 +23,37 @@ import java.util.regex.Pattern;
  *
  * <p>pulsar consumer builder 装饰器
  */
-public class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
+class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
 
     private static final ILogger log = LoggerFactory.getLogger(PulsarConsumerBuilder.class);
     private final Schema<T> schema;
     private final PulsarClient pulsarClient;
     private org.carl.infrastructure.mq.consumer.MessageListener<T> messageListener;
     private List<String> topics;
-
+    private MQConfig.ConsumerConfig consumerConfig;
     private final ConsumerBuilder<T> consumerBuilder;
 
-    public static <T> PulsarConsumerBuilder<T> create(PulsarClient client, Class<T> clazz) {
-        return new PulsarConsumerBuilder<>(client, Schema.AVRO(clazz));
+    public static <T> PulsarConsumerBuilder<T> create(
+            PulsarClient client, Class<T> clazz, MQConfig.ConsumerConfig consumerConfig) {
+        return new PulsarConsumerBuilder<>(client, Schema.AVRO(clazz), consumerConfig);
     }
 
-    public static PulsarConsumerBuilder<byte[]> create(PulsarClient client) {
-        return new PulsarConsumerBuilder<>(client, Schema.AUTO_PRODUCE_BYTES());
-    }
-
-    private PulsarConsumerBuilder(PulsarClient client, Schema<T> schema) {
-        this.pulsarClient = client;
-        this.schema = schema;
-        this.consumerBuilder = client.newConsumer(schema);
+    public static PulsarConsumerBuilder<byte[]> create(
+            PulsarClient client, MQConfig.ConsumerConfig consumerConfig) {
+        return new PulsarConsumerBuilder<>(client, Schema.AUTO_PRODUCE_BYTES(), consumerConfig);
     }
 
     private PulsarConsumerBuilder(
-            PulsarClient client, Schema<T> schema, ConsumerBuilder<T> consumerBuilder) {
+            PulsarClient client, Schema<T> schema, MQConfig.ConsumerConfig consumerConfig) {
         this.pulsarClient = client;
         this.schema = schema;
-        this.consumerBuilder = consumerBuilder;
+        this.consumerConfig = consumerConfig;
+        this.consumerBuilder = client.newConsumer(schema);
     }
 
     @Override
     public IConsumerBuilder<T> clone() {
-        if (this.consumerBuilder != null) {
-            return new PulsarConsumerBuilder<>(
-                    this.pulsarClient, this.schema, this.consumerBuilder.clone());
-        }
-        return new PulsarConsumerBuilder<>(pulsarClient, schema);
+        return new PulsarConsumerBuilder<>(this.pulsarClient, this.schema, this.consumerConfig);
     }
 
     @Override
@@ -69,8 +63,21 @@ public class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
     }
 
     @Override
+    public IConsumerBuilder<T> conf(java.util.function.Consumer<MQConfig.ConsumerConfig> config) {
+        config.accept(consumerConfig);
+        return this;
+    }
+
+    @Override
+    public IConsumerBuilder<T> overiteConf(MQConfig.ConsumerConfig config) {
+        this.consumerConfig = config;
+        return this;
+    }
+
+    @Override
     public IConsumer<T> subscribe() throws ConsumerException {
         try {
+            boolean autoAck = this.consumerConfig.autoAck();
             if (messageListener != null) {
                 final CompletableFuture<PulsarConsumer<T>> consumerFuture =
                         new CompletableFuture<>();
@@ -84,9 +91,9 @@ public class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
                                     messageListener.received(
                                             pulsarConsumer,
                                             PulsarMessageBuilder.PulsarMessage.wrapper(msg));
-                                    //                            consumer.acknowledge(msg);
+                                    if (autoAck) consumer.acknowledge(msg);
                                 } catch (Exception e) {
-                                    //                            consumer.negativeAcknowledge(msg);
+                                    if (autoAck) consumer.negativeAcknowledge(msg);
                                     try {
                                         PulsarConsumer<T> pulsarConsumer = consumerFuture.get();
                                         messageListener.onException(pulsarConsumer, e);

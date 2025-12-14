@@ -25,8 +25,8 @@ publishing {
     }
 }
 dependencies {
-    api("org.apache.pulsar:pulsar-client:4.1.2")
-    implementation(project(":infrastructure-component-mq-api"))
+    implementation("org.apache.pulsar:pulsar-client:4.1.2")
+    api(project(":infrastructure-component-mq-api"))
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")

@@ -1,4 +1,4 @@
-package org.carl.infrastructure.mq.pulsar.factory;
+package org.carl.infrastructure.mq.pulsar.builder;
 
 import org.apache.pulsar.client.api.ClientBuilder;
 import org.apache.pulsar.client.api.PulsarClient;
@@ -8,12 +8,10 @@ import org.carl.infrastructure.logging.LoggerFactory;
 import org.carl.infrastructure.mq.client.MQClient;
 import org.carl.infrastructure.mq.common.ex.MQClientException;
 import org.carl.infrastructure.mq.config.MQConfig;
-import org.carl.infrastructure.mq.pulsar.builder.PulsarMQClient;
-import org.carl.infrastructure.mq.pulsar.config.PulsarClientFactory;
 
-public class MQClientFactory {
+public class MQClientBuilder {
 
-    private static final ILogger logger = LoggerFactory.getLogger(MQClientFactory.class);
+    private static final ILogger logger = LoggerFactory.getLogger(MQClientBuilder.class);
 
     public static MQClient createClient(MQConfig config) throws MQClientException {
 
@@ -35,7 +33,7 @@ public class MQClientFactory {
         }
         try {
             PulsarClient pulsarClient = build.build();
-            return new PulsarMQClient(pulsarClient);
+            return new PulsarMQClient(pulsarClient, config.producer(), config.consumer());
         } catch (PulsarClientException e) {
             throw new MQClientException(e);
         }

@@ -2,41 +2,58 @@ package org.carl.infrastructure.mq.pulsar.builder;
 
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
+import org.apache.pulsar.shade.net.jcip.annotations.NotThreadSafe;
 import org.carl.infrastructure.logging.ILogger;
 import org.carl.infrastructure.logging.LoggerFactory;
 import org.carl.infrastructure.mq.client.MQClient;
 import org.carl.infrastructure.mq.common.ex.MQClientException;
+import org.carl.infrastructure.mq.config.MQConfig;
 import org.carl.infrastructure.mq.consumer.IConsumerBuilder;
 import org.carl.infrastructure.mq.producer.IProducerBuilder;
+import org.carl.infrastructure.mq.pulsar.config.PulsarConfig;
 
 import java.util.concurrent.CompletableFuture;
 
-public class PulsarMQClient implements MQClient {
+@NotThreadSafe
+class PulsarMQClient implements MQClient {
     private final ILogger log = LoggerFactory.getLogger(PulsarMQClient.class);
     private final PulsarClient pulsarClient;
+    private final MQConfig.ProducerConfig producerConfig;
+    private final MQConfig.ConsumerConfig consumerConfig;
 
     public PulsarMQClient(PulsarClient pulsarClient) {
         this.pulsarClient = pulsarClient;
+        this.producerConfig = new PulsarConfig.PulsarProducerConfig();
+        this.consumerConfig = new PulsarConfig.PulsarConsumerConfig();
+    }
+
+    public PulsarMQClient(
+            PulsarClient pulsarClient,
+            MQConfig.ProducerConfig producerConfig,
+            MQConfig.ConsumerConfig consumerConfig) {
+        this.pulsarClient = pulsarClient;
+        this.producerConfig = producerConfig;
+        this.consumerConfig = consumerConfig;
     }
 
     @Override
     public IProducerBuilder<byte[]> newProducer() {
-        return PulsarProducerBuilder.create(pulsarClient);
+        return PulsarProducerBuilder.create(pulsarClient, producerConfig);
     }
 
     @Override
     public <T> IProducerBuilder<T> newProducer(Class<T> clazz) {
-        return PulsarProducerBuilder.create(pulsarClient, clazz);
+        return PulsarProducerBuilder.create(pulsarClient, clazz, producerConfig);
     }
 
     @Override
     public IConsumerBuilder<byte[]> newConsumer() {
-        return PulsarConsumerBuilder.create(pulsarClient);
+        return PulsarConsumerBuilder.create(pulsarClient, consumerConfig);
     }
 
     @Override
     public <T> IConsumerBuilder<T> newConsumer(Class<T> clazz) {
-        return PulsarConsumerBuilder.create(pulsarClient, clazz);
+        return PulsarConsumerBuilder.create(pulsarClient, clazz, consumerConfig);
     }
 
     @Override

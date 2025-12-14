@@ -4,8 +4,8 @@ import org.carl.infrastructure.mq.client.MQClient;
 import org.carl.infrastructure.mq.common.ex.MQClientException;
 import org.carl.infrastructure.mq.config.MQConfig;
 import org.carl.infrastructure.mq.producer.IProducer;
+import org.carl.infrastructure.mq.pulsar.builder.MQClientBuilder;
 import org.carl.infrastructure.mq.pulsar.config.PulsarConfig;
-import org.carl.infrastructure.mq.pulsar.factory.MQClientFactory;
 import org.carl.infrastructure.pulsar.model.TestUser;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,7 +19,7 @@ public class ProducerTest {
         //        MsgConfig pulsarMsgConfig = new PulsarMsgConfig("pulsar://172.16.252.194:16650");
         MQConfig pulsarMsgConfig = new PulsarConfig("pulsar://180.184.66.147:6650");
 
-        client = MQClientFactory.createClient(pulsarMsgConfig);
+        client = MQClientBuilder.createClient(pulsarMsgConfig);
     }
 
     @AfterEach

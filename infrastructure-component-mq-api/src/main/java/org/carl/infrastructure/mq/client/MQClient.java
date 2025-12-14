@@ -11,7 +11,6 @@ public interface MQClient extends AutoCloseable {
     static IClientBuilder builder() {
         return null;
     }
-
     IProducerBuilder<byte[]> newProducer();
 
     <T> IProducerBuilder<T> newProducer(Class<T> clazz);

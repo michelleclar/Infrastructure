@@ -6,8 +6,8 @@ import jakarta.inject.Inject;
 
 import org.carl.infrastructure.mq.client.MQClient;
 import org.carl.infrastructure.mq.common.ex.MQClientException;
+import org.carl.infrastructure.mq.pulsar.builder.MQClientBuilder;
 import org.carl.infrastructure.mq.pulsar.config.PulsarConfig;
-import org.carl.infrastructure.mq.pulsar.factory.MQClientFactory;
 
 public class PulsarClientProvide {
 
@@ -18,6 +18,6 @@ public class PulsarClientProvide {
     public MQClient get() throws MQClientException {
         // TODO MsgConfig
         PulsarConfig convert = MsgConfigConverter.convert(msgArgsConfig);
-        return MQClientFactory.createClient(convert);
+        return MQClientBuilder.createClient(convert);
     }
 }
