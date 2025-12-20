@@ -445,6 +445,17 @@ public class RedisClient implements AutoCloseable {
         }
 
         /**
+         * Try to acquire the lock with a specific lease time. No auto-renewal.
+         *
+         * @param waitTime Max time to wait for lock
+         * @param leaseTime Time until lock expires
+         * @return Future<Boolean> true if acquired
+         */
+        public Future<Boolean> tryLock(Duration waitTime, Duration leaseTime) {
+            return tryLockInternal(waitTime.toMillis(), leaseTime.toMillis(), false);
+        }
+
+        /**
          * Try to acquire the lock with auto-renewal (watchdog). The lock will be renewed
          * periodically as long as this instance is alive and not unlocked.
          *
@@ -454,6 +465,17 @@ public class RedisClient implements AutoCloseable {
         public Future<Boolean> tryLock(long waitTime) {
             // Default lease time for watchdog is 30 seconds, renew every 10 seconds
             return tryLockInternal(waitTime, 30000, true);
+        }
+
+        /**
+         * Try to acquire the lock with auto-renewal (watchdog). The lock will be renewed
+         * periodically as long as this instance is alive and not unlocked.
+         *
+         * @param waitTime Max time to wait for lock
+         * @return Future<Boolean> true if acquired
+         */
+        public Future<Boolean> tryLock(Duration waitTime) {
+            return tryLock(waitTime.toMillis());
         }
 
         private Future<Boolean> tryLockInternal(

@@ -294,6 +294,19 @@ public class RedisClientTest {
     }
 
     @Test
+    public void testDistributedLockDuration() throws Exception {
+        String key = "test:lock:duration:" + UUID.randomUUID();
+        RedisClient.RedisLock lock = redisClient.getLock(key);
+
+        // 1. Try acquire lock with Duration (5s wait, 10s lease)
+        boolean acquired = lock.tryLock(Duration.ofSeconds(5), Duration.ofSeconds(10))
+                .toCompletionStage().toCompletableFuture().get();
+        assertTrue(acquired);
+
+        lock.unlock().toCompletionStage().toCompletableFuture().get();
+    }
+
+    @Test
     public void testDistributedLockWatchdog() throws Exception {
         String key = "test:lock:watchdog:" + UUID.randomUUID();
         RedisClient.RedisLock lock = redisClient.getLock(key);
