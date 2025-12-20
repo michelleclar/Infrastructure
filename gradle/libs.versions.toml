@@ -1,6 +1,6 @@
 [versions]
 testcontainers = "1.20.4"
-quarkus = "3.28.3"
+quarkus = "3.30.4"
 commons = "4.4"
 xml = "4.0.2"
 guava = "33.2.1-jre"
@@ -8,6 +8,7 @@ jdbi = "3.49.0"
 velocity = "2.4.1"
 jooq = "3.20.3"
 temporal = "0.1.2"
+vertx-redis = "5.0.6"
 [libraries]
 quarkus-platform-bom = { module = "io.quarkus.platform:quarkus-bom", version.ref = "quarkus" }
 quarkus-camel-platform-bom = { module = "io.quarkus.platform:quarkus-camel-bom", version.ref = "quarkus" }
@@ -65,6 +66,7 @@ consul = { module = "io.quarkiverse.config:quarkus-config-consul", version.ref =
 consul-client = { module = "io.smallrye.reactive:smallrye-mutiny-vertx-consul-client", version.ref = "quarkus" }
 vertx-client = { module = "io.smallrye.reactive:smallrye-mutiny-vertx-web-client", version.ref = "quarkus" }
 velocity = { module = "org.apache.velocity:velocity-engine-core", version.ref = "velocity" }
+vertx-redis-client = { module = "io.vertx:vertx-redis-client", version.ref = "vertx-redis" }
 
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 commons = { module = "org.apache.commons:commons-collections4", version.ref = "commons" }
