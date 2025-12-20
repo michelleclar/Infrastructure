@@ -21,7 +21,11 @@ public abstract class ResourceIPermission implements IPermission {
 
     @Override
     public Boolean hasPermission(IUserIdentity identity, @Nonnull String requiredAction) {
-        return null;
+        return false;
+    }
+
+    public Boolean hasPermission(IUserIdentity identity) {
+        return false;
     }
 
     public String getResourceId() {

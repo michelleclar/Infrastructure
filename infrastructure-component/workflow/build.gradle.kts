@@ -8,7 +8,7 @@ dependencies {
     api(libs.quarkus.temporal)
     api(project(":infrastructure-component-statemachine"))
     implementation(project(":infrastructure-component:persistence"))
-    implementation(project(":infrastructure-component:pulsar"))
+    implementation(project(":infrastructure-component:mq"))
     jooqGenerator(project(":infrastructure-component:persistence"))
     testImplementation(libs.quarkus.temporal.test)
 }

@@ -4,13 +4,8 @@ import io.temporal.api.common.v1.WorkflowExecution;
 import io.temporal.client.WorkflowClient;
 import io.temporal.workflow.Functions;
 
-import org.carl.infrastructure.pulsar.common.ex.ProducerException;
 import org.carl.infrastructure.statemachine.StateMachine;
-import org.carl.infrastructure.workflow.config.GlobalShare;
 import org.carl.infrastructure.workflow.core.ITransactionalWorkflow;
-import org.carl.infrastructure.workflow.event.EntityEvent;
-import org.carl.infrastructure.workflow.event.EntityEventFactory;
-import org.carl.infrastructure.workflow.persistence.domain.snapshot.EntityStateSnapshotDto;
 import org.jboss.logging.Logger;
 
 public class TXWorkflowExecuter<S, E, C> {
@@ -44,23 +39,24 @@ public class TXWorkflowExecuter<S, E, C> {
                     "TX workflowId:[%s], workflowRunId: [%s]",
                     start.getWorkflowId(), start.getRunId());
         }
-        if (GlobalShare.getInstance().enable().log()) {
-            EntityStateSnapshotDto dto = new EntityStateSnapshotDto();
-            dto.setWorkflowId(start.getWorkflowId())
-                    .setWorkflowRunId(start.getRunId())
-                    .setEntityId(this.entityId)
-                    .setEntityType(this.stateMachine.getMachineId())
-                    .setCurrentState(from.toString())
-                    // TODO: Check this
-                    .setStateData(ctx.toString())
-                    .setWorkflowStamp(workflowStampID);
-            EntityEvent entityEvent = EntityEventFactory.create(dto);
-            try {
-                GlobalShare.getInstance().getProducer().sendMessageAsync(entityEvent);
-            } catch (ProducerException e) {
-                throw new RuntimeException(e);
-            }
-        }
+        // FIXME
+        //        if (GlobalShare.getInstance().enable().log()) {
+        //            EntityStateSnapshotDto dto = new EntityStateSnapshotDto();
+        //            dto.setWorkflowId(start.getWorkflowId())
+        //                    .setWorkflowRunId(start.getRunId())
+        //                    .setEntityId(this.entityId)
+        //                    .setEntityType(this.stateMachine.getMachineId())
+        //                    .setCurrentState(from.toString())
+        //                    // TODO: Check this
+        //                    .setStateData(ctx.toString())
+        //                    .setWorkflowStamp(workflowStampID);
+        //            EntityEvent entityEvent = EntityEventFactory.create(dto);
+        //            try {
+        //                GlobalShare.getInstance().getProducer().sendMessageAsync(entityEvent);
+        //            } catch (ProducerException e) {
+        //                throw new RuntimeException(e);
+        //            }
+        //        }
 
         return start;
     }

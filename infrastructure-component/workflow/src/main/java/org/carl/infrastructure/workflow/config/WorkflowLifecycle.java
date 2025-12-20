@@ -7,10 +7,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 
-import org.apache.pulsar.client.api.PulsarClient;
-import org.carl.infrastructure.pulsar.common.ex.ConsumerException;
-import org.carl.infrastructure.pulsar.common.ex.ProducerException;
-import org.carl.infrastructure.pulsar.config.MsgArgsConfig;
+import org.carl.infrastructure.mq.config.MsgArgsConfig;
 import org.carl.infrastructure.workflow.persistence.WorkflowRepository;
 import org.jboss.logging.Logger;
 
@@ -23,17 +20,15 @@ import org.jboss.logging.Logger;
 public class WorkflowLifecycle {
     private static final Logger LOGGER = Logger.getLogger(WorkflowLifecycle.class);
     @Inject WorkflowArgsConfig workflowArgsConfig;
-    @Inject PulsarClient pulsarClient;
     @Inject WorkflowRepository workflowRepository;
     @Inject MsgArgsConfig msgArgsConfig;
     @Inject WorkflowClient client;
 
-    void onStart(@Observes StartupEvent ev) throws ProducerException, ConsumerException {
+    void onStart(@Observes StartupEvent ev) {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debugf("workflow started args :[%s]", workflowArgsConfig);
         }
-        GlobalShare.getInstance().workflowArgsConfig = workflowArgsConfig;
-        if (GlobalShare.getInstance().workflowArgsConfig.enable().log()) {
+        if (workflowArgsConfig.enable().log()) {
             String topic = "workflow-event";
             //            GlobalShare.getInstance().consumer =
             //                    PulsarFactory.createConsumer(

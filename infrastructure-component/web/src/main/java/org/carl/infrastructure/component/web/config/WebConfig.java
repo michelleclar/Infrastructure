@@ -5,8 +5,8 @@ import io.smallrye.config.WithDefault;
 
 import java.util.Objects;
 
-@ConfigMapping(prefix = "scaffold")
-public interface ScaffoldConfig extends IProfile {
+@ConfigMapping(prefix = "web")
+public interface WebConfig extends IProfile {
 
     @WithDefault("1")
     String superUserId();
@@ -17,8 +17,8 @@ public interface ScaffoldConfig extends IProfile {
     @WithDefault("true")
     boolean useSession();
 
-    default boolean isSuperUser(String userID) {
-        Objects.requireNonNull(userID, "test userID is null");
-        return userID.equals(superUserId());
+    default boolean isSuperUser(String userId) {
+        Objects.requireNonNull(userId, "test userID is null");
+        return userId.equals(superUserId());
     }
 }

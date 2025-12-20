@@ -1,5 +1,9 @@
 package org.carl.infrastructure.authorization;
 
+import io.quarkus.security.identity.SecurityIdentity;
+
+import org.carl.infrastructure.authorization.modle.UserIdentity;
+
 /**
  * get identity {role,promise...}
  *
@@ -17,6 +21,12 @@ public interface AuthProvider {
      */
     IUserIdentity getIdentity(String token);
 
+    default IUserIdentity getIdentity() {
+        return new UserIdentity(getSecurityIdentity());
+    }
+
+    SecurityIdentity getSecurityIdentity();
+
     /**
      * module permission
      *
@@ -24,7 +34,11 @@ public interface AuthProvider {
      * @param permission {@link ModulePermission}
      * @return boolean
      */
-    boolean hasModulePermission(String userId, ModulePermission permission);
+    default boolean hasModulePermission(ModulePermission permission) {
+        return permission.hasPermission(getIdentity());
+    }
 
-    boolean canAccess(String userId, ResourceIPermission permission);
+    default boolean canAccess(ResourceIPermission permission) {
+        return permission.hasPermission(getIdentity());
+    }
 }

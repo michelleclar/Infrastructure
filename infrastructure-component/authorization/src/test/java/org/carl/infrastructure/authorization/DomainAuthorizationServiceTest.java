@@ -1,25 +1,27 @@
 package org.carl.infrastructure.authorization;
 
+import io.quarkus.security.identity.SecurityIdentity;
+
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 import org.carl.infrastructure.authorization.modle.Permission;
 
 import java.util.Set;
 
 class DomainAuthorizationServiceTest {}
+
 @ApplicationScoped
 class UserAuthorizationService implements IModuleAuthorizationServiceAbility {
-    private final IUserIdentity identity;
     final String module = "user";
 
-    public UserAuthorizationService(IUserIdentity identity) {
-        this.identity = identity;
-    }
+    @Inject
+    public UserAuthorizationService() {}
 
     @Override
     public <T extends Enum<T> & IModuleEnum> boolean check(T requiredPermission) {
         Set<Permission> userPermissions =
-                identity.getPermissions().getOrDefault(this.module, Set.of());
+                getIdentity().getPermissions().getOrDefault(this.module, Set.of());
         for (Permission userPermission : userPermissions) {
             if (userPermission.hasPermission(requiredPermission)) {
                 return true;
@@ -31,5 +33,15 @@ class UserAuthorizationService implements IModuleAuthorizationServiceAbility {
     @Override
     public String getModule() {
         return module;
+    }
+
+    @Override
+    public IUserIdentity getIdentity(String token) {
+        return null;
+    }
+
+    @Override
+    public SecurityIdentity getSecurityIdentity() {
+        return null;
     }
 }

@@ -2,10 +2,6 @@ package org.carl.infrastructure.workflow.config;
 
 import io.temporal.common.interceptors.WorkflowClientCallsInterceptorBase;
 
-import org.carl.infrastructure.pulsar.common.ex.ProducerException;
-import org.carl.infrastructure.workflow.event.EntityEvent;
-import org.carl.infrastructure.workflow.event.EntityEventFactory;
-import org.carl.infrastructure.workflow.persistence.domain.snapshot.EntityStateTransitionDto;
 import org.jboss.logging.Logger;
 
 import java.util.concurrent.TimeoutException;
@@ -55,21 +51,25 @@ public class WorkflowClientCallsInterceptor extends WorkflowClientCallsIntercept
             if (r != null) {
                 LOGGER.infof("Workflow completed successfully: {}", workflowId);
                 // TODO: send event message on complete
-                if (GlobalShare.getInstance().enable().log()) {
-                    EntityStateTransitionDto entityStateTransitionDto =
-                            new EntityStateTransitionDto();
-                    entityStateTransitionDto.setEntityId(workflowId);
-                    entityStateTransitionDto.setWorkflowId(workflowId);
-                    entityStateTransitionDto.setToState(r.toString());
-                    EntityEvent entityEvent = EntityEventFactory.create(entityStateTransitionDto);
-                    GlobalShare.getInstance().getProducer().sendMessageAsync(entityEvent);
-                }
+                // FIXME: replace properties
+                //                if (GlobalShare.getInstance().enable().log()) {
+                //                    EntityStateTransitionDto entityStateTransitionDto =
+                //                            new EntityStateTransitionDto();
+                //                    entityStateTransitionDto.setEntityId(workflowId);
+                //                    entityStateTransitionDto.setWorkflowId(workflowId);
+                //                    entityStateTransitionDto.setToState(r.toString());
+                //                    EntityEvent entityEvent =
+                // EntityEventFactory.create(entityStateTransitionDto);
+                //                    //FIXME: replace bean utils
+                ////
+                // GlobalShare.getInstance().getProducer().sendMessageAsync(entityEvent);
+                //                }
             } else {
                 LOGGER.warnf("Workflow completed with null result: {}", workflowId);
             }
 
             return result;
-        } catch (TimeoutException | ProducerException e) {
+        } catch (TimeoutException e) {
             LOGGER.warnf("Timeout waiting for workflow result: {}", workflowId);
             throw new RuntimeException(e);
         }

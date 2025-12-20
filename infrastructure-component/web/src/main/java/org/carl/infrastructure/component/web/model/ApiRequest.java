@@ -1,6 +1,6 @@
 package org.carl.infrastructure.component.web.model;
 
-import org.carl.infrastructure.component.web.runtime.IRuntimeUser;
+import org.carl.infrastructure.component.web.constant.Constants;
 import org.carl.infrastructure.utils.struct.LinkedTable;
 
 import java.util.StringJoiner;
@@ -10,9 +10,9 @@ import java.util.StringJoiner;
  *
  * <p>e.g:
  *
- * <p>GET: /api/v1/{module}.{submodule}/{action}/xxx
+ * <p>GET: /v1/api/{module}.{submodule}/{action}/xxx
  *
- * <p>POST: /api/v1/{module}.{submodule}/{action}
+ * <p>POST: /v1/api/{module}.{submodule}/{action}
  */
 public class ApiRequest {
 
@@ -24,7 +24,7 @@ public class ApiRequest {
     private LinkedTable<String> models;
     private String action;
     private boolean isSkip = false;
-    private IRuntimeUser user = IRuntimeUser.WHITE;
+    //    private IRuntimeUser user = IRuntimeUser.WHITE;
     private String dataId;
     private String moduleID;
     private String moduleName;
@@ -36,14 +36,14 @@ public class ApiRequest {
 
     public ApiRequest(String path) {
         this.path = path;
-        if (!path.startsWith("/api")) {
+        if (!path.startsWith(Constants.API_PREFIX)) {
             isSkip = true;
             return;
         }
 
         // NOTE: /api/v1/{module}.{submodule}/{action}
-        // NOTE: /api/v1/system.config/refresh
-        String[] urlBlock = path.split("/");
+        // OTE: /api/v1/system.config/refresh
+        String[] urlBlock = path.split(Constants.API_PATH_DELIMITER);
         // ["", "api", "v1", "system.config", "refresh"]
 
         if (urlBlock.length < 5) {
@@ -54,8 +54,8 @@ public class ApiRequest {
         version = urlBlock[2];
         moduleName = urlBlock[3];
 
-        if (urlBlock[3].contains(".")) {
-            String[] parts = urlBlock[3].split("\\.");
+        if (urlBlock[3].contains(Constants.API_MODEL_DELIMITER)) {
+            String[] parts = urlBlock[3].split(Constants.API_MODEL_DELIMITER);
             models = new LinkedTable<>(parts.length);
             for (String part : parts) {
                 models.insert(part);
@@ -68,11 +68,11 @@ public class ApiRequest {
         }
     }
 
-    public ApiRequest setUser(IRuntimeUser user) {
-        this.user = user;
-        return this;
-    }
-
+    //    public ApiRequest setUser(IRuntimeUser user) {
+    //        this.user = user;
+    //        return this;
+    //    }
+    //
     public String getVersion() {
         return version;
     }
@@ -97,9 +97,10 @@ public class ApiRequest {
         return this.dataId;
     }
 
-    public IRuntimeUser getUser() {
-        return user;
-    }
+    //
+    //    public IRuntimeUser getUser() {
+    //        return user;
+    //    }
 
     public boolean isSkip() {
         return isSkip;
@@ -136,13 +137,13 @@ public class ApiRequest {
         return this;
     }
 
-    public String getUsername() {
-        if (username != null) {
-            return username;
-        }
-
-        return user.getUsername();
-    }
+    //    public String getUsername() {
+    //        if (username != null) {
+    //            return username;
+    //        }
+    //
+    //        return user.getUsername();
+    //    }
 
     public ApiRequest setUsername(String username) {
         this.username = username;
@@ -166,7 +167,7 @@ public class ApiRequest {
                 .add("models=" + models)
                 .add("action='" + action + "'")
                 .add("isSkip=" + isSkip)
-                .add("user=" + user)
+                //                .add("user=" + user)
                 .add("dataId='" + dataId + "'")
                 .add("moduleID='" + moduleID + "'")
                 .add("moduleName='" + moduleName + "'")
