@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
@@ -29,6 +30,7 @@ class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
     private final Schema<T> schema;
     private final PulsarClient pulsarClient;
     private org.carl.infrastructure.mq.consumer.MessageListener<T> messageListener;
+    private boolean autoAck = false;
     private List<String> topics;
     private MQConfig.ConsumerConfig consumerConfig;
     private final ConsumerBuilder<T> consumerBuilder;
@@ -49,6 +51,12 @@ class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
         this.schema = schema;
         this.consumerConfig = consumerConfig;
         this.consumerBuilder = client.newConsumer(schema);
+    }
+
+    @Override
+    public IConsumerBuilder<T> autoAck(boolean flag) {
+        this.autoAck = flag;
+        return this;
     }
 
     @Override
@@ -77,7 +85,6 @@ class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
     @Override
     public IConsumer<T> subscribe() throws ConsumerException {
         try {
-            boolean autoAck = this.consumerConfig.autoAck();
             if (messageListener != null) {
                 final CompletableFuture<PulsarConsumer<T>> consumerFuture =
                         new CompletableFuture<>();
@@ -147,34 +154,30 @@ class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
     public IConsumer<T> subscribe(String... topics) throws ConsumerException {
         this.recordTopic(topics);
         try {
-            // 如果设置了 messageListener，需要在 subscribe 之前配置
             if (messageListener != null) {
-                // 方案1：使用 CompletableFuture 来延迟初始化
                 final CompletableFuture<PulsarConsumer<T>> consumerFuture =
                         new CompletableFuture<>();
 
-                MessageListener<T> messageListener1 =
+                MessageListener<T> pulsarMessageListener =
                         new MessageListener<>() {
                             @Override
                             public void received(Consumer<T> consumer, Message<T> msg) {
                                 try {
-                                    // 等待 PulsarConsumer 初始化完成
                                     PulsarConsumer<T> pulsarConsumer = consumerFuture.get();
                                     messageListener.received(
                                             pulsarConsumer,
                                             PulsarMessageBuilder.PulsarMessage.wrapper(msg));
-                                    //                            consumer.acknowledge(msg);
+                                    if (autoAck) consumer.acknowledge(msg);
                                 } catch (Exception e) {
-                                    //                            consumer.negativeAcknowledge(msg);
+                                    if (autoAck) consumer.negativeAcknowledge(msg);
                                     try {
                                         PulsarConsumer<T> pulsarConsumer = consumerFuture.get();
                                         messageListener.onException(pulsarConsumer, e);
                                     } catch (Exception ex) {
-                                        // 如果获取 consumer 失败，记录日志
-                                        logErrorTopic();
                                         log.error(
                                                 "Failed to get consumer reference for exception handling",
                                                 ex);
+                                        throw new RuntimeException(new ConsumerException(ex));
                                     }
                                 }
                             }
@@ -189,35 +192,33 @@ class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
                                     try {
                                         PulsarConsumer<T> pulsarConsumer = consumerFuture.get();
                                         messageListener.onException(pulsarConsumer, e);
-                                    } catch (Exception ex) {
-                                        logErrorTopic();
+                                    } catch (InterruptedException
+                                            | ExecutionException
+                                            | ConsumerException ex) {
                                         log.error(
                                                 "Failed to get consumer reference for exception handling",
                                                 ex);
+                                        throw new RuntimeException(new ConsumerException(ex));
                                     }
                                 }
                             }
                         };
 
-                // 在 subscribe 之前设置监听器
-                this.consumerBuilder.messageListener(messageListener1);
+                this.consumerBuilder.messageListener(pulsarMessageListener);
 
-                // 创建 Consumer
                 Consumer<T> subscribe = consumerBuilder.subscribe();
                 PulsarConsumer<T> tPulsarConsumer = new PulsarConsumer<>(subscribe);
 
-                // 完成 Future，使监听器能够获取到 PulsarConsumer 实例
                 consumerFuture.complete(tPulsarConsumer);
 
                 return tPulsarConsumer;
             } else {
-                // 没有设置监听器的情况，直接创建
                 Consumer<T> subscribe = consumerBuilder.subscribe();
                 return new PulsarConsumer<>(subscribe);
             }
         } catch (PulsarClientException e) {
             logErrorTopic();
-            log.error("Consumer subscribe failed ", e);
+            log.error("subscribe failed ", e);
             throw new ConsumerException(e);
         }
     }

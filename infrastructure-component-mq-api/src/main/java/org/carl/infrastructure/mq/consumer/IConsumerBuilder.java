@@ -16,6 +16,9 @@ import java.util.regex.Pattern;
  * @param <T>
  */
 public interface IConsumerBuilder<T> extends Cloneable {
+
+    IConsumerBuilder<T> autoAck(boolean flag);
+
     /**
      * Create a copy of the current consumer builder.
      *

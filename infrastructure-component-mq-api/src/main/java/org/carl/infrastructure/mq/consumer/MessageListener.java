@@ -23,8 +23,8 @@ public interface MessageListener<T> {
      * @param consumer 消费者实例
      * @param exception 异常信息
      */
-    default void onException(IConsumer<T> consumer, Throwable exception) {
-        // 默认实现：记录日志
+    default void onException(IConsumer<T> consumer, Throwable exception) throws ConsumerException {
+        throw new ConsumerException(exception);
     }
 
     /**
