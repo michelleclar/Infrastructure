@@ -1,5 +1,5 @@
 [versions]
-quarkus = "3.19.3"
+quarkus = "3.30.4"
 carl = '1.0-BATE'
 testcontainers = "1.20.4"
 [libraries]
@@ -17,6 +17,7 @@ infrastructure-component-workflow = { module = "org.carl:infrastructure-componen
 infrastructure-component-statemachine = { module = "org.carl:infrastructure-component-statemachine", version.ref = "carl" }
 infrastructure-component-metrics = { module = "org.carl:infrastructure-component-metrics", version.ref = "carl" }
 infrastructure-component-mq = { module = "org.carl:infrastructure-component-mq", version.ref = "carl" }
+infrastructure-component-redis = { module = "org.carl:infrastructure-component-redis", version.ref = "carl" }
 infrastructure-component-ruleengine = { module = "org.carl:infrastructure-component-ruleengine", version.ref = "carl" }
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }

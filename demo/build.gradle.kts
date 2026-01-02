@@ -65,6 +65,7 @@ dependencies {
     implementation(libs.infrastructure.component.statemachine)
     implementation(libs.infrastructure.component.metrics)
     implementation(libs.infrastructure.component.mq)
+    implementation(libs.infrastructure.component.redis)
     implementation(libs.infrastructure.component.ruleengine)
     jooqGenerator(libs.infrastructure.component.persistence)
     testImplementation(libs.bundles.test)

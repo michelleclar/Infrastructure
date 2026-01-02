@@ -9,6 +9,7 @@ import io.vertx.redis.client.Response;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public class RedisClient implements AutoCloseable {
     private final Redis redis;
@@ -25,7 +26,7 @@ public class RedisClient implements AutoCloseable {
      * @param key the key
      * @return Future with the value
      */
-    public Future<String> get(String key) {
+    public CompletableFuture<String> get(String key) {
         return redis.send(Request.cmd(Command.GET).arg(key))
                 .map(
                         response -> {
@@ -33,7 +34,9 @@ public class RedisClient implements AutoCloseable {
                                 return null;
                             }
                             return response.toString();
-                        });
+                        })
+                .toCompletionStage()
+                .toCompletableFuture();
     }
 
     /**
@@ -43,7 +46,7 @@ public class RedisClient implements AutoCloseable {
      * @return the value
      */
     public String getSync(String key) {
-        return get(key).toCompletionStage().toCompletableFuture().join();
+        return get(key).join();
     }
 
     /**
@@ -53,8 +56,10 @@ public class RedisClient implements AutoCloseable {
      * @param value the value
      * @return Future
      */
-    public Future<Void> set(String key, String value) {
-        return redis.send(Request.cmd(Command.SET).arg(key).arg(value)).mapEmpty();
+    public CompletableFuture<Response> set(String key, String value) {
+        return redis.send(Request.cmd(Command.SET).arg(key).arg(value))
+                .toCompletionStage()
+                .toCompletableFuture();
     }
 
     /**
@@ -64,7 +69,7 @@ public class RedisClient implements AutoCloseable {
      * @param value the value
      */
     public void setSync(String key, String value) {
-        set(key, value).toCompletionStage().toCompletableFuture().join();
+        set(key, value).join();
     }
 
     /**
@@ -75,9 +80,10 @@ public class RedisClient implements AutoCloseable {
      * @param duration expiration duration
      * @return Future
      */
-    public Future<Void> set(String key, String value, Duration duration) {
+    public CompletableFuture<Response> set(String key, String value, Duration duration) {
         return redis.send(Request.cmd(Command.SETEX).arg(key).arg(duration.getSeconds()).arg(value))
-                .mapEmpty();
+                .toCompletionStage()
+                .toCompletableFuture();
     }
 
     /**
@@ -88,7 +94,7 @@ public class RedisClient implements AutoCloseable {
      * @param duration expiration duration
      */
     public void setSync(String key, String value, Duration duration) {
-        set(key, value, duration).toCompletionStage().toCompletableFuture().join();
+        set(key, value, duration).join();
     }
 
     /**
@@ -97,8 +103,10 @@ public class RedisClient implements AutoCloseable {
      * @param key the key
      * @return Future
      */
-    public Future<Void> del(String key) {
-        return redis.send(Request.cmd(Command.DEL).arg(key)).mapEmpty();
+    public CompletableFuture<Response> del(String key) {
+        return redis.send(Request.cmd(Command.DEL).arg(key))
+                .toCompletionStage()
+                .toCompletableFuture();
     }
 
     /**
@@ -107,7 +115,7 @@ public class RedisClient implements AutoCloseable {
      * @param key the key
      */
     public void delSync(String key) {
-        del(key).toCompletionStage().toCompletableFuture().join();
+        del(key).join();
     }
 
     /**
@@ -116,7 +124,7 @@ public class RedisClient implements AutoCloseable {
      * @param prefix the prefix
      * @return Future with list of keys
      */
-    public Future<List<String>> keys(String prefix) {
+    public CompletableFuture<List<String>> keys(String prefix) {
         return redis.send(Request.cmd(Command.KEYS).arg(prefix + "*"))
                 .map(
                         response -> {
@@ -127,7 +135,9 @@ public class RedisClient implements AutoCloseable {
                                 }
                             }
                             return keys;
-                        });
+                        })
+                .toCompletionStage()
+                .toCompletableFuture();
     }
 
     /**
@@ -137,7 +147,7 @@ public class RedisClient implements AutoCloseable {
      * @return list of keys
      */
     public List<String> keysSync(String prefix) {
-        return keys(prefix).toCompletionStage().toCompletableFuture().join();
+        return keys(prefix).join();
     }
 
     /**
@@ -146,8 +156,11 @@ public class RedisClient implements AutoCloseable {
      * @param key the key
      * @return Future with the new value
      */
-    public Future<Long> incr(String key) {
-        return redis.send(Request.cmd(Command.INCR).arg(key)).map(Response::toLong);
+    public CompletableFuture<Long> incr(String key) {
+        return redis.send(Request.cmd(Command.INCR).arg(key))
+                .map(Response::toLong)
+                .toCompletionStage()
+                .toCompletableFuture();
     }
 
     /**
@@ -157,7 +170,7 @@ public class RedisClient implements AutoCloseable {
      * @return the new value
      */
     public Long incrSync(String key) {
-        return incr(key).toCompletionStage().toCompletableFuture().join();
+        return incr(key).join();
     }
 
     /**
@@ -167,9 +180,9 @@ public class RedisClient implements AutoCloseable {
      * @param key the key
      * @param value the value to set if missing
      * @param duration expiration duration
-     * @return Future with the value (existing or new)
+     * @return CompletableFuture with the value (existing or new)
      */
-    public Future<String> getOrSet(String key, String value, Duration duration) {
+    public CompletableFuture<String> getOrSet(String key, String value, Duration duration) {
         // Lua script:
         // redis.call('GET', KEYS[1]) returns the value if exists
         // If not, SET and return the new value
@@ -189,7 +202,9 @@ public class RedisClient implements AutoCloseable {
                                 .arg(key)
                                 .arg(value)
                                 .arg(duration.getSeconds()))
-                .map(Response::toString);
+                .map(Response::toString)
+                .toCompletionStage()
+                .toCompletableFuture();
     }
 
     /**
@@ -201,7 +216,7 @@ public class RedisClient implements AutoCloseable {
      * @return the value (existing or new)
      */
     public String getOrSetSync(String key, String value, Duration duration) {
-        return getOrSet(key, value, duration).toCompletionStage().toCompletableFuture().join();
+        return getOrSet(key, value, duration).join();
     }
 
     /**
@@ -211,9 +226,9 @@ public class RedisClient implements AutoCloseable {
      * @param key the key
      * @param by amount to increment by
      * @param init initialization value if key missing
-     * @return Future with the new value
+     * @return CompletableFuture with the new value
      */
-    public Future<Long> incr(String key, long by, long init) {
+    public CompletableFuture<Long> incr(String key, long by, long init) {
         // Lua script:
         // Check if exists using EXISTS
         String script =
@@ -225,7 +240,9 @@ public class RedisClient implements AutoCloseable {
                         + "end";
 
         return redis.send(Request.cmd(Command.EVAL).arg(script).arg(1).arg(key).arg(by).arg(init))
-                .map(Response::toLong);
+                .map(Response::toLong)
+                .toCompletionStage()
+                .toCompletableFuture();
     }
 
     /**
@@ -235,9 +252,9 @@ public class RedisClient implements AutoCloseable {
      * @param key the key
      * @param by amount to increment by
      * @param init initialization value if key missing
-     * @return Future with the new value
+     * @return CompletableFuture with the new value
      */
-    public Future<Long> incr(String key, long init) {
+    public CompletableFuture<Long> incr(String key, long init) {
         // Lua script:
         // Check if exists using EXISTS
         String script =
@@ -249,7 +266,9 @@ public class RedisClient implements AutoCloseable {
                         + "end";
 
         return redis.send(Request.cmd(Command.EVAL).arg(script).arg(1).arg(key).arg(1).arg(init))
-                .map(Response::toLong);
+                .map(Response::toLong)
+                .toCompletionStage()
+                .toCompletableFuture();
     }
 
     /**
@@ -261,7 +280,7 @@ public class RedisClient implements AutoCloseable {
      * @return the new value
      */
     public Long incrSync(String key, long by, long init) {
-        return incr(key, by, init).toCompletionStage().toCompletableFuture().join();
+        return incr(key, by, init).join();
     }
 
     /**
@@ -272,7 +291,7 @@ public class RedisClient implements AutoCloseable {
      * @return the new value
      */
     public Long incrSync(String key, long init) {
-        return incr(key, 1, init).toCompletionStage().toCompletableFuture().join();
+        return incr(key, 1, init).join();
     }
 
     /**
@@ -281,10 +300,10 @@ public class RedisClient implements AutoCloseable {
      * @param key the key
      * @param clazz the class of the object
      * @param <T> the type
-     * @return Future with the object
+     * @return CompletableFuture with the object
      */
-    public <T> Future<T> get(String key, Class<T> clazz) {
-        return get(key).map(
+    public <T> CompletableFuture<T> get(String key, Class<T> clazz) {
+        return get(key).thenApply(
                         str -> {
                             if (str == null) return null;
                             return io.vertx.core.json.Json.decodeValue(str, clazz);
@@ -300,7 +319,7 @@ public class RedisClient implements AutoCloseable {
      * @return the object
      */
     public <T> T getSync(String key, Class<T> clazz) {
-        return get(key, clazz).toCompletionStage().toCompletableFuture().join();
+        return get(key, clazz).join();
     }
 
     /**
@@ -309,9 +328,9 @@ public class RedisClient implements AutoCloseable {
      * @param key the key
      * @param value the object value
      * @param <T> the type
-     * @return Future
+     * @return CompletableFuture
      */
-    public <T> Future<Void> set(String key, T value) {
+    public <T> CompletableFuture<Response> set(String key, T value) {
         return set(key, io.vertx.core.json.Json.encode(value));
     }
 
@@ -323,7 +342,7 @@ public class RedisClient implements AutoCloseable {
      * @param <T> the type
      */
     public <T> void setSync(String key, T value) {
-        set(key, value).toCompletionStage().toCompletableFuture().join();
+        set(key, value).join();
     }
 
     /**
@@ -333,9 +352,9 @@ public class RedisClient implements AutoCloseable {
      * @param value the object value
      * @param duration expiration duration
      * @param <T> the type
-     * @return Future
+     * @return CompletableFuture
      */
-    public <T> Future<Void> set(String key, T value, Duration duration) {
+    public <T> CompletableFuture<Response> set(String key, T value, Duration duration) {
         return set(key, io.vertx.core.json.Json.encode(value), duration);
     }
 
@@ -348,7 +367,7 @@ public class RedisClient implements AutoCloseable {
      * @param <T> the type
      */
     public <T> void setSync(String key, T value, Duration duration) {
-        set(key, value, duration).toCompletionStage().toCompletableFuture().join();
+        set(key, value, duration).join();
     }
 
     /**
@@ -359,11 +378,12 @@ public class RedisClient implements AutoCloseable {
      * @param duration expiration duration
      * @param clazz the class of the object
      * @param <T> the type
-     * @return Future with the object (existing or new)
+     * @return CompletableFuture with the object (existing or new)
      */
-    public <T> Future<T> getOrSet(String key, T value, Duration duration, Class<T> clazz) {
+    public <T> CompletableFuture<T> getOrSet(
+            String key, T value, Duration duration, Class<T> clazz) {
         return getOrSet(key, io.vertx.core.json.Json.encode(value), duration)
-                .map(
+                .thenApply(
                         str -> {
                             if (str == null) return null;
                             return io.vertx.core.json.Json.decodeValue(str, clazz);
@@ -381,10 +401,7 @@ public class RedisClient implements AutoCloseable {
      * @return the object (existing or new)
      */
     public <T> T getOrSetSync(String key, T value, Duration duration, Class<T> clazz) {
-        return getOrSet(key, value, duration, clazz)
-                .toCompletionStage()
-                .toCompletableFuture()
-                .join();
+        return getOrSet(key, value, duration, clazz).join();
     }
 
     /**
@@ -438,10 +455,12 @@ public class RedisClient implements AutoCloseable {
          *
          * @param waitTime Max time to wait for lock (ms)
          * @param leaseTime Time until lock expires (ms)
-         * @return Future<Boolean> true if acquired
+         * @return CompletableFuture<Boolean> true if acquired
          */
-        public Future<Boolean> tryLock(long waitTime, long leaseTime) {
-            return tryLockInternal(waitTime, leaseTime, false);
+        public CompletableFuture<Boolean> tryLock(long waitTime, long leaseTime) {
+            return tryLockInternal(waitTime, leaseTime, false)
+                    .toCompletionStage()
+                    .toCompletableFuture();
         }
 
         /**
@@ -449,10 +468,12 @@ public class RedisClient implements AutoCloseable {
          *
          * @param waitTime Max time to wait for lock
          * @param leaseTime Time until lock expires
-         * @return Future<Boolean> true if acquired
+         * @return CompletableFuture<Boolean> true if acquired
          */
-        public Future<Boolean> tryLock(Duration waitTime, Duration leaseTime) {
-            return tryLockInternal(waitTime.toMillis(), leaseTime.toMillis(), false);
+        public CompletableFuture<Boolean> tryLock(Duration waitTime, Duration leaseTime) {
+            return tryLockInternal(waitTime.toMillis(), leaseTime.toMillis(), false)
+                    .toCompletionStage()
+                    .toCompletableFuture();
         }
 
         /**
@@ -460,11 +481,11 @@ public class RedisClient implements AutoCloseable {
          * periodically as long as this instance is alive and not unlocked.
          *
          * @param waitTime Max time to wait for lock (ms)
-         * @return Future<Boolean> true if acquired
+         * @return CompletableFuture<Boolean> true if acquired
          */
-        public Future<Boolean> tryLock(long waitTime) {
+        public CompletableFuture<Boolean> tryLock(long waitTime) {
             // Default lease time for watchdog is 30 seconds, renew every 10 seconds
-            return tryLockInternal(waitTime, 30000, true);
+            return tryLockInternal(waitTime, 30000, true).toCompletionStage().toCompletableFuture();
         }
 
         /**
@@ -472,9 +493,9 @@ public class RedisClient implements AutoCloseable {
          * periodically as long as this instance is alive and not unlocked.
          *
          * @param waitTime Max time to wait for lock
-         * @return Future<Boolean> true if acquired
+         * @return CompletableFuture<Boolean> true if acquired
          */
-        public Future<Boolean> tryLock(Duration waitTime) {
+        public CompletableFuture<Boolean> tryLock(Duration waitTime) {
             return tryLock(waitTime.toMillis());
         }
 
@@ -577,7 +598,7 @@ public class RedisClient implements AutoCloseable {
         }
 
         /** Unlock and stop watchdog if active. */
-        public Future<Void> unlock() {
+        public CompletableFuture<Response> unlock() {
             long tId = timerId.get();
             if (tId != -1) {
                 vertx.cancelTimer(tId);
@@ -588,7 +609,7 @@ public class RedisClient implements AutoCloseable {
             Request req =
                     Request.cmd(Command.EVAL).arg(UNLOCK_SCRIPT).arg(1).arg(lockKey).arg(lockValue);
 
-            return redis.send(req).mapEmpty();
+            return redis.send(req).toCompletionStage().toCompletableFuture();
         }
     }
 }

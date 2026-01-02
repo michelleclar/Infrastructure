@@ -4,10 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
-import io.vertx.core.Future;
-
 import org.carl.infrastructure.redis.factory.jackson.module.*;
-import org.carl.infrastructure.redis.option.RedisConfigOptions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -33,6 +30,7 @@ public class RedisClientTest {
         // If not, these tests will fail or we can disable them by default
         RedisConfigOptions options = new RedisConfigOptions();
         options.setConnectionString("redis://180.184.66.147:6379");
+        options.setPassword("carl");
         SimpleModule customModule = new SimpleModule();
         customModule.addSerializer(Date.class, new CustomDateSerializer());
         customModule.addSerializer(LocalDateTime.class, new CustomLocalDateTimeSerializer());
@@ -71,15 +69,15 @@ public class RedisClientTest {
         String key = "test:key:async:" + UUID.randomUUID();
         String value = "hello async";
 
-        Future<Void> setFuture = redisClient.set(key, value);
-        setFuture.toCompletionStage().toCompletableFuture().get();
+        var setFuture = redisClient.set(key, value);
+        setFuture.get();
 
-        Future<String> getFuture = redisClient.get(key);
-        String retrieved = getFuture.toCompletionStage().toCompletableFuture().get();
+        var getFuture = redisClient.get(key);
+        String retrieved = getFuture.get();
 
         assertEquals(value, retrieved);
 
-        redisClient.del(key).toCompletionStage().toCompletableFuture().get();
+        redisClient.del(key).get();
     }
 
     @Test
@@ -272,25 +270,22 @@ public class RedisClientTest {
         RedisClient.RedisLock lock = redisClient.getLock(key);
 
         // 1. Try acquire lock with 5s wait, 10s lease
-        boolean acquired =
-                lock.tryLock(5000, 10000).toCompletionStage().toCompletableFuture().get();
+        boolean acquired = lock.tryLock(5000, 10000).get();
         assertTrue(acquired);
 
         // 2. Try acquire same lock properly failing
         RedisClient.RedisLock lock2 = redisClient.getLock(key);
-        boolean acquired2 =
-                lock2.tryLock(100, 10000).toCompletionStage().toCompletableFuture().get();
+        boolean acquired2 = lock2.tryLock(100, 10000).get();
         assertFalse(acquired2);
 
         // 3. Unlock
-        lock.unlock().toCompletionStage().toCompletableFuture().get();
+        lock.unlock().get();
 
         // 4. Lock2 should now succeed
-        boolean acquired3 =
-                lock2.tryLock(100, 10000).toCompletionStage().toCompletableFuture().get();
+        boolean acquired3 = lock2.tryLock(100, 10000).get();
         assertTrue(acquired3);
 
-        lock2.unlock().toCompletionStage().toCompletableFuture().get();
+        lock2.unlock().get();
     }
 
     @Test
@@ -299,11 +294,10 @@ public class RedisClientTest {
         RedisClient.RedisLock lock = redisClient.getLock(key);
 
         // 1. Try acquire lock with Duration (5s wait, 10s lease)
-        boolean acquired = lock.tryLock(Duration.ofSeconds(5), Duration.ofSeconds(10))
-                .toCompletionStage().toCompletableFuture().get();
+        boolean acquired = lock.tryLock(Duration.ofSeconds(5), Duration.ofSeconds(10)).get();
         assertTrue(acquired);
 
-        lock.unlock().toCompletionStage().toCompletableFuture().get();
+        lock.unlock().get();
     }
 
     @Test
@@ -312,7 +306,7 @@ public class RedisClientTest {
         RedisClient.RedisLock lock = redisClient.getLock(key);
 
         // 1. Acquire with watchdog (default 30s lease)
-        boolean acquired = lock.tryLock(5000).toCompletionStage().toCompletableFuture().get();
+        boolean acquired = lock.tryLock(5000).get();
         assertTrue(acquired);
 
         // 2. Wait longer than 1/3 lease (10s) ensuring renewal happens.
@@ -322,7 +316,7 @@ public class RedisClientTest {
         Thread.sleep(12000);
 
         // Let's rely on unlocking succeeding.
-        lock.unlock().toCompletionStage().toCompletableFuture().get();
+        lock.unlock().get();
     }
 
     public static class ComplexPojo {
