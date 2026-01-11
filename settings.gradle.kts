@@ -8,6 +8,7 @@ pluginManagement {
 rootProject.name = "infrastructure"
 //quarkus module
 include("infrastructure-component")
+include("infrastructure-component:approval")
 include("infrastructure-component:mq")
 include("infrastructure-component:web")
 include("infrastructure-component:user")
@@ -34,3 +35,4 @@ include("infrastructure-component-rule-engine")
 include("infrastructure-component-pdp")
 include("infrastructure-component-statemachine")
 include("infrastructure-component-redis")
+include("infrastructure-component-audit")
