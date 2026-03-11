@@ -9,7 +9,7 @@ publishing {
             from(components["java"])
             groupId = project.group.toString()
             artifactId = project.name
-            version = project.version.toString()
+            version = "1.1-BATE"
         }
     }
     repositories {

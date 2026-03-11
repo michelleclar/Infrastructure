@@ -1,5 +1,6 @@
 package org.carl.infrastructure.mq.pulsar.builder;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 
 import org.apache.pulsar.client.api.*;
@@ -100,19 +101,29 @@ class PulsarClientFactory {
 
         public PulsarClientProcessMetrics process(MQConfig.MonitoringConfig monitoringConfig) {
 
+            return this.process(monitoringConfig, null);
+        }
+
+        public PulsarClientProcessMetrics process(
+                MQConfig.MonitoringConfig monitoringConfig, OpenTelemetry openTelemetry) {
+
             // 配置事务
             if (this.transactionConfig.enabled()) {
                 this.clientBuilder.enableTransaction(true);
                 logger.info("Transaction support enabled");
             }
 
-            return new PulsarClientProcessMetrics(this.clientBuilder, monitoringConfig);
+            return openTelemetry == null
+                    ? new PulsarClientProcessMetrics(this.clientBuilder, monitoringConfig)
+                    : new PulsarClientProcessMetrics(
+                            this.clientBuilder, monitoringConfig, openTelemetry);
         }
     }
 
     public static class PulsarClientProcessMetrics {
         private final ClientBuilder clientBuilder;
         private final MQConfig.MonitoringConfig monitoringConfig;
+        private OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
         private static final Logger logger =
                 LoggerFactory.getLogger(PulsarClientProcessMetrics.class);
 
@@ -122,11 +133,20 @@ class PulsarClientFactory {
             this.monitoringConfig = monitoringConfig;
         }
 
+        public PulsarClientProcessMetrics(
+                ClientBuilder clientBuilder,
+                MQConfig.MonitoringConfig monitoringConfig,
+                OpenTelemetry openTelemetry) {
+            this.clientBuilder = clientBuilder;
+            this.monitoringConfig = monitoringConfig;
+            this.openTelemetry = openTelemetry;
+        }
+
         public ClientBuilder build() {
 
             // 配置监控
             if (monitoringConfig.metricsEnabled()) {
-                this.clientBuilder.openTelemetry(OpenTelemetry.noop());
+                this.clientBuilder.openTelemetry(this.openTelemetry);
                 logger.info("Metrics collection enabled with interval");
             }
             return clientBuilder;
