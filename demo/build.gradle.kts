@@ -56,7 +56,7 @@ dependencies {
     implementation(libs.infrastructure.component.authorization)
     implementation(libs.infrastructure.component.broadcast)
     implementation(libs.infrastructure.component.cache)
-    implementation(libs.infrastructure.component.persistence)
+    implementation(libs.infrastructure.component.quarkus.persistence)
     implementation(libs.infrastructure.component.search)
     implementation(libs.infrastructure.component.web)
     implementation(libs.infrastructure.component.qdrant.grpc)
@@ -67,7 +67,7 @@ dependencies {
     implementation(libs.infrastructure.component.mq)
     implementation(libs.infrastructure.component.redis)
     implementation(libs.infrastructure.component.ruleengine)
-    jooqGenerator(libs.infrastructure.component.persistence)
+    jooqGenerator(libs.infrastructure.component.persistence.jooq)
     testImplementation(libs.bundles.test)
 }
 

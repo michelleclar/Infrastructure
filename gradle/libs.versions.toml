@@ -2,11 +2,16 @@
 testcontainers = "1.20.4"
 quarkus = "3.30.4"
 commons = "4.4"
+commonsLang3 = "3.14.0"
 xml = "4.0.2"
 guava = "33.2.1-jre"
 jdbi = "3.49.0"
 velocity = "2.4.1"
 jooq = "3.20.3"
+postgresql = "42.7.4"
+jakartaTransaction = "2.0.1"
+slf4j = "2.0.9"
+jbossLogging = "3.5.3.Final"
 temporal = "0.1.2"
 vertx = "5.0.6"
 [libraries]
@@ -33,6 +38,10 @@ jdbi-core = { module = "org.jdbi:jdbi3-core", version.ref = "jdbi" }
 jooq = { module = "org.jooq:jooq", version.ref = "jooq" }
 jooq-meta = { module = "org.jooq:jooq-meta", version.ref = "jooq" }
 jooq-codegen = { module = "org.jooq:jooq-codegen", version.ref = "jooq" }
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
+jakarta-transaction-api = { module = "jakarta.transaction:jakarta.transaction-api", version.ref = "jakartaTransaction" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+jboss-logging = { module = "org.jboss.logging:jboss-logging", version.ref = "jbossLogging" }
 quarkus-vault = { module = "io.quarkiverse:quarkus-vault", version.ref = "quarkus" }
 quarkus-cache = { module = "io.quarkus:quarkus-cache", version.ref = "quarkus" }
 quarkus-agroal = { module = "io.quarkus:quarkus-agroal", version.ref = "quarkus" }
@@ -72,6 +81,7 @@ vertx-redis-client = { module = "io.vertx:vertx-redis-client", version.ref = "ve
 
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 commons = { module = "org.apache.commons:commons-collections4", version.ref = "commons" }
+commons-lang3 = { module = "org.apache.commons:commons-lang3", version.ref = "commonsLang3" }
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 testcontainers-consul = { module = "org.testcontainers:consul", version.ref = "testcontainers" }
@@ -104,15 +114,17 @@ auth = ["quarkus-oidc", "quarkus-keycloak", "openfga"]
 discover = ["stork", "consul", "consul-stork", "consul-client"]
 
 
-persistence = [
-    "quarkus-jdbc-postgresql",
-    #    "quarkus-reactive-pg-client",
-    #    "quarkus-hibernate-orm",
-    #    "quarkus-panache",
-    "jdbi-core",
-    "quarkus-agroal",
+persistence-jooq = [
     "velocity",
-    "jooq"
+    "jooq",
+    "xml-bind",
+    "jakarta-transaction-api",
+    "commons-lang3"
+]
+
+persistence-quarkus = [
+    "quarkus-jdbc-postgresql",
+    "quarkus-agroal"
 ]
 
 cache = ["quarkus-cache", "quarkus-redis"]

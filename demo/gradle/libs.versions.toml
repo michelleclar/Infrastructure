@@ -8,7 +8,8 @@ infrastructure-component-dto = { module = "org.carl:infrastructure-component-dto
 infrastructure-component-authorization = { module = "org.carl:infrastructure-component-authorization", version.ref = "carl" }
 infrastructure-component-broadcast = { module = "org.carl:infrastructure-component-broadcast", version.ref = "carl" }
 infrastructure-component-cache = { module = "org.carl:infrastructure-component-cache", version.ref = "carl" }
-infrastructure-component-persistence = { module = "org.carl:infrastructure-component-persistence", version.ref = "carl" }
+infrastructure-component-quarkus-persistence = { module = "org.carl:infrastructure-component-quarkus-persistence", version.ref = "carl" }
+infrastructure-component-persistence-jooq = { module = "org.carl:infrastructure-component-persistence-jooq", version.ref = "carl" }
 infrastructure-component-search = { module = "org.carl:infrastructure-component-search", version.ref = "carl" }
 infrastructure-component-web = { module = "org.carl:infrastructure-component-web", version.ref = "carl" }
 infrastructure-component-qdrant-grpc = { module = "org.carl:infrastructure-component-qdrant-grpc", version.ref = "carl" }
@@ -38,7 +39,7 @@ all = [
     'infrastructure-component-authorization',
     'infrastructure-component-broadcast',
     'infrastructure-component-cache',
-    'infrastructure-component-persistence',
+    'infrastructure-component-quarkus-persistence',
     'infrastructure-component-search',
     'infrastructure-component-web',
 ]

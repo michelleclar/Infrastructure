@@ -51,7 +51,7 @@ tasks.withType<Test>().configureEach {
 dependencies {
     implementation(enforcedPlatform(libs.quarkus.platform.bom))
     implementation(libs.infrastructure.component.web)
-    implementation(libs.infrastructure.component.persistence)
+    implementation(libs.infrastructure.component.quarkus.persistence)
     implementation(libs.infrastructure.component.qdrant.grpc)
     implementation(libs.infrastructure.component.embedding.grpc)
     implementation(libs.infrastructure.component.dto)
@@ -59,7 +59,7 @@ dependencies {
     implementation("com.hankcs:hanlp:portable-1.8.6")
     implementation("org.ansj:ansj_seg:5.1.6")
     testImplementation(libs.bundles.test)
-    jooqGenerator(libs.infrastructure.component.persistence)
+    jooqGenerator(libs.infrastructure.component.persistence.jooq)
 }
 
 quarkus {
