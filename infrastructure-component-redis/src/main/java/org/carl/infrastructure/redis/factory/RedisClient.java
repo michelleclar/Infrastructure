@@ -10,6 +10,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 public class RedisClient implements AutoCloseable {
     private final Redis redis;
@@ -34,6 +35,25 @@ public class RedisClient implements AutoCloseable {
                                 return null;
                             }
                             return response.toString();
+                        })
+                .toCompletionStage()
+                .toCompletableFuture();
+    }
+
+    /**
+     * Get value by key (Async)
+     *
+     * @param key the key
+     * @return Future with the value
+     */
+    public <T> CompletableFuture<T> get(String key, Function<String, T> function) {
+        return redis.send(Request.cmd(Command.GET).arg(key))
+                .map(
+                        response -> {
+                            if (response == null) {
+                                return null;
+                            }
+                            return function.apply(response.toString());
                         })
                 .toCompletionStage()
                 .toCompletableFuture();
@@ -116,6 +136,55 @@ public class RedisClient implements AutoCloseable {
      */
     public void delSync(String key) {
         del(key).join();
+    }
+
+    /**
+     * Delete values by keys (Async)
+     *
+     * @param keys the keys
+     * @return Future
+     */
+    public CompletableFuture<Response> del(List<String> keys) {
+        if (keys == null || keys.isEmpty()) {
+            return CompletableFuture.completedFuture(null);
+        }
+        Request req = Request.cmd(Command.DEL);
+        for (String key : keys) {
+            req.arg(key);
+        }
+        return redis.send(req).toCompletionStage().toCompletableFuture();
+    }
+
+    /**
+     * Delete values by keys (Sync)
+     *
+     * @param keys the keys
+     */
+    public void delSync(List<String> keys) {
+        del(keys).join();
+    }
+
+    /**
+     * Get remaining time to live of key in milliseconds (Async)
+     *
+     * @param key the key
+     * @return Future with time in milliseconds (-2 if key does not exist, -1 if no expire)
+     */
+    public CompletableFuture<Long> pttl(String key) {
+        return redis.send(Request.cmd(Command.PTTL).arg(key))
+                .map(Response::toLong)
+                .toCompletionStage()
+                .toCompletableFuture();
+    }
+
+    /**
+     * Get remaining time to live of key in milliseconds (Sync)
+     *
+     * @param key the key
+     * @return time in milliseconds (-2 if key does not exist, -1 if no expire)
+     */
+    public Long pttlSync(String key) {
+        return pttl(key).join();
     }
 
     /**
@@ -320,6 +389,38 @@ public class RedisClient implements AutoCloseable {
      */
     public <T> T getSync(String key, Class<T> clazz) {
         return get(key, clazz).join();
+    }
+
+    /**
+     * Get value by key (Generic Async, TypeReference)
+     *
+     * @param key the key
+     * @param typeRef the type reference
+     * @param <T> the type
+     * @return CompletableFuture with the object
+     */
+    public <T> CompletableFuture<T> get(String key, com.fasterxml.jackson.core.type.TypeReference<T> typeRef) {
+        return get(key).thenApply(
+                str -> {
+                    if (str == null) return null;
+                    try {
+                        return io.vertx.core.json.jackson.DatabindCodec.mapper().readValue(str, typeRef);
+                    } catch (java.io.IOException e) {
+                        throw new RuntimeException("Failed to decode redis value for key: " + key, e);
+                    }
+                });
+    }
+
+    /**
+     * Get value by key (Generic Sync, TypeReference)
+     *
+     * @param key the key
+     * @param typeRef the type reference
+     * @param <T> the type
+     * @return the object
+     */
+    public <T> T getSync(String key, com.fasterxml.jackson.core.type.TypeReference<T> typeRef) {
+        return get(key, typeRef).join();
     }
 
     /**

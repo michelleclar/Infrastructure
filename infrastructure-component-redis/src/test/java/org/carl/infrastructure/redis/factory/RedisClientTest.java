@@ -2,6 +2,7 @@ package org.carl.infrastructure.redis.factory;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
 import org.carl.infrastructure.redis.factory.jackson.module.*;
@@ -61,6 +62,41 @@ public class RedisClientTest {
         assertEquals(value, retrieved);
 
         // Clean up
+        redisClient.delSync(key);
+    }
+
+    @Test
+    public void testGetSyncWithTypeReference() {
+        String key = "test:key:typeref:" + UUID.randomUUID();
+        List<String> value = List.of("a", "b", "c");
+
+        redisClient.setSync(key, value);
+        List<String> retrieved =
+                redisClient.getSync(key, new TypeReference<List<String>>() {});
+
+        assertEquals(value, retrieved);
+
+        redisClient.delSync(key);
+    }
+
+    @Test
+    public void testPttlSync() throws InterruptedException {
+        String key = "test:key:pttl:" + UUID.randomUUID();
+
+        // Non-existent key -> -2
+        Long notExist = redisClient.pttlSync(key);
+        assertEquals(-2L, notExist);
+
+        // Key without expire -> -1
+        redisClient.setSync(key, "v");
+        Long noExpire = redisClient.pttlSync(key);
+        assertEquals(-1L, noExpire);
+
+        // Key with expire -> positive
+        redisClient.setSync(key, "v", Duration.ofSeconds(2));
+        Long ttl = redisClient.pttlSync(key);
+        assertTrue(ttl > 0);
+
         redisClient.delSync(key);
     }
 

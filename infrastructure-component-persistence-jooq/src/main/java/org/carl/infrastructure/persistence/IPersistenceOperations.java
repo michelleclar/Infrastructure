@@ -20,6 +20,6 @@ public interface IPersistenceOperations extends IPersistenceProvider {
     }
 
     default void execute(String sql) {
-        dsl().execute(sql);
+        dsl().run(dsl -> dsl.execute(sql));
     }
 }

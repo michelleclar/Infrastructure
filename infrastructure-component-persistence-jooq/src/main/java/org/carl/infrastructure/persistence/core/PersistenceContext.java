@@ -2,11 +2,11 @@ package org.carl.infrastructure.persistence.core;
 
 import org.carl.infrastructure.logging.ILogger;
 import org.carl.infrastructure.logging.LoggerFactory;
+import org.carl.infrastructure.persistence.engine.runtime.DslContextFactory;
 import org.carl.infrastructure.persistence.function.ConnectionCallable;
 import org.carl.infrastructure.persistence.function.ConnectionRunnable;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
-import org.jooq.impl.DSL;
 
 import javax.sql.DataSource;
 import java.util.function.Consumer;
@@ -21,7 +21,7 @@ public class PersistenceContext {
     private final DSLContext dsl;
 
     public static PersistenceContext create(DataSource dataSource) {
-        DSLContext dslContext = DSL.using(dataSource, SQLDialect.POSTGRES);
+        DSLContext dslContext = DslContextFactory.create(dataSource);
         return new PersistenceContext(dslContext);
     }
 
@@ -29,14 +29,12 @@ public class PersistenceContext {
         this.dsl = dsl;
     }
 
-    @Deprecated
-    public <T> T get(Function<PersistenceContext, T> queryFunction) {
-        return queryFunction.apply(this);
+    public <T> T get(Function<DSLContext, T> queryFunction) {
+        return queryFunction.apply(this.dsl);
     }
 
-    @Deprecated
-    public void run(Consumer<PersistenceContext> queryFunction) {
-        queryFunction.accept(this);
+    public void run(Consumer<DSLContext> queryFunction) {
+        queryFunction.accept(this.dsl);
     }
 
     public <T> T connectionResult(ConnectionCallable<T> callable) {
@@ -45,11 +43,6 @@ public class PersistenceContext {
 
     public void connection(ConnectionRunnable callable) {
         dsl.connection(callable::run);
-    }
-
-    @SuppressWarnings("unchecked")
-    public int execute(String sql) {
-        return dsl.execute(sql);
     }
 
     public SQLDialect getDialect() {

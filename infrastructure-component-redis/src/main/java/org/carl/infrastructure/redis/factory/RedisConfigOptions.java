@@ -1,7 +1,9 @@
 package org.carl.infrastructure.redis.factory;
 
 import io.vertx.core.net.NetClientOptions;
+import io.vertx.redis.client.RedisClientType;
 import io.vertx.redis.client.RedisOptions;
+import io.vertx.redis.client.RedisRole;
 
 public class RedisConfigOptions {
     private final RedisOptions internalOptions;
@@ -12,6 +14,44 @@ public class RedisConfigOptions {
 
     public RedisConfigOptions setConnectionString(String connectionString) {
         this.internalOptions.setConnectionString(connectionString);
+        return this;
+    }
+
+    /**
+     * @param type
+     * @return
+     */
+    public RedisConfigOptions setConnectType(SentinelType type) {
+        RedisClientType redisClientType =
+                switch (type) {
+                    case REPLICATION -> RedisClientType.REPLICATION;
+                    case SENTINEL -> RedisClientType.SENTINEL;
+                    case STANDALONE -> RedisClientType.STANDALONE;
+                    case CLUSTER -> RedisClientType.CLUSTER;
+                };
+
+        this.internalOptions.setType(redisClientType);
+        return this;
+    }
+
+    public RedisConfigOptions setSentinelRole(SentinelRole role) {
+        RedisRole redisRole =
+                switch (role) {
+                    case MASTER -> RedisRole.MASTER;
+                    case SENTINEL -> RedisRole.SENTINEL;
+                    case REPLICA -> RedisRole.REPLICA;
+                };
+        this.internalOptions.setRole(redisRole);
+        return this;
+    }
+
+    public RedisConfigOptions setSentinelMasterName(String masterName) {
+        this.internalOptions.setMasterName(masterName);
+        return this;
+    }
+
+    public RedisConfigOptions addConnectionString(String connect) {
+        this.internalOptions.addConnectionString(connect);
         return this;
     }
 
