@@ -8,7 +8,14 @@ import org.carl.infrastructure.persistence.function.ConnectionRunnable;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
 
+import org.jooq.Query;
+import org.jooq.Record;
+import org.jooq.Result;
+import org.jooq.ResultQuery;
+
 import javax.sql.DataSource;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -47,5 +54,37 @@ public class PersistenceContext {
 
     public SQLDialect getDialect() {
         return dsl.dialect();
+    }
+
+    public <R extends Record> CompletionStage<Result<R>> fetchAsync(
+            Function<DSLContext, ? extends ResultQuery<R>> queryFunction) {
+        return queryFunction.apply(this.dsl).fetchAsync();
+    }
+
+    public <R extends Record> CompletionStage<Result<R>> fetchAsync(
+            Function<DSLContext, ? extends ResultQuery<R>> queryFunction, Executor executor) {
+        return queryFunction.apply(this.dsl).fetchAsync(executor);
+    }
+
+    public <R extends Record, T> CompletionStage<T> fetchAsync(
+            Function<DSLContext, ? extends ResultQuery<R>> queryFunction,
+            Function<Result<R>, T> mapper) {
+        return queryFunction.apply(this.dsl).fetchAsync().thenApply(mapper);
+    }
+
+    public <R extends Record, T> CompletionStage<T> fetchAsync(
+            Function<DSLContext, ? extends ResultQuery<R>> queryFunction,
+            Function<Result<R>, T> mapper, Executor executor) {
+        return queryFunction.apply(this.dsl).fetchAsync(executor).thenApply(mapper);
+    }
+
+    public CompletionStage<Integer> executeAsync(
+            Function<DSLContext, ? extends Query> queryFunction) {
+        return queryFunction.apply(this.dsl).executeAsync();
+    }
+
+    public CompletionStage<Integer> executeAsync(
+            Function<DSLContext, ? extends Query> queryFunction, Executor executor) {
+        return queryFunction.apply(this.dsl).executeAsync(executor);
     }
 }
