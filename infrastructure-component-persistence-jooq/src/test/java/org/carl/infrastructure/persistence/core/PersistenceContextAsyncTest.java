@@ -15,6 +15,7 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -96,28 +97,38 @@ class PersistenceContextAsyncTest {
 
     @Test
     void fetchAsyncWithCustomExecutor() throws Exception {
-        String threadName = context.fetchAsync(
-                        dsl -> dsl.resultQuery("select * from %s.book".formatted(schemaName)),
-                        Executors.newSingleThreadExecutor(r -> new Thread(r, "custom-exec")))
-                .thenApply(result -> Thread.currentThread().getName())
-                .toCompletableFuture()
-                .get(5, TimeUnit.SECONDS);
+        ExecutorService executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "custom-exec"));
+        try {
+            String threadName = context.fetchAsync(
+                            dsl -> dsl.resultQuery("select * from %s.book".formatted(schemaName)),
+                            executor)
+                    .thenApplyAsync(result -> Thread.currentThread().getName(), executor)
+                    .toCompletableFuture()
+                    .get(5, TimeUnit.SECONDS);
 
-        assertTrue(threadName.startsWith("custom-exec"));
+            assertTrue(threadName.startsWith("custom-exec"));
+        } finally {
+            executor.shutdown();
+        }
     }
 
     @Test
     void fetchAsyncWithMapperAndCustomExecutor() throws Exception {
         execute("insert into %s.book (title, author) values ('Exec Book', 'Exec Author')".formatted(schemaName));
 
-        int count = context.<Record, Integer>fetchAsync(
-                        dsl -> dsl.resultQuery("select count(*) as cnt from %s.book where title = 'Exec Book'".formatted(schemaName)),
-                        result -> result.get(0).get("cnt", Integer.class),
-                        Executors.newCachedThreadPool())
-                .toCompletableFuture()
-                .get(5, TimeUnit.SECONDS);
+        ExecutorService executor = Executors.newCachedThreadPool();
+        try {
+            int count = context.<Record, Integer>fetchAsync(
+                            dsl -> dsl.resultQuery("select count(*) as cnt from %s.book where title = 'Exec Book'".formatted(schemaName)),
+                            result -> result.get(0).get("cnt", Integer.class),
+                            executor)
+                    .toCompletableFuture()
+                    .get(5, TimeUnit.SECONDS);
 
-        assertEquals(1, count);
+            assertEquals(1, count);
+        } finally {
+            executor.shutdown();
+        }
     }
 
     @Test
@@ -132,14 +143,19 @@ class PersistenceContextAsyncTest {
 
     @Test
     void executeAsyncWithCustomExecutor() throws Exception {
-        String threadName = context.executeAsync(
-                        dsl -> dsl.query("insert into %s.book (title, author) values ('ExecAsync Book', 'ExecAsync Author')".formatted(schemaName)),
-                        Executors.newSingleThreadExecutor(r -> new Thread(r, "dml-exec")))
-                .thenApply(rows -> Thread.currentThread().getName())
-                .toCompletableFuture()
-                .get(5, TimeUnit.SECONDS);
+        ExecutorService executor = Executors.newSingleThreadExecutor(r -> new Thread(r, "dml-exec"));
+        try {
+            String threadName = context.executeAsync(
+                            dsl -> dsl.query("insert into %s.book (title, author) values ('ExecAsync Book', 'ExecAsync Author')".formatted(schemaName)),
+                            executor)
+                    .thenApplyAsync(rows -> Thread.currentThread().getName(), executor)
+                    .toCompletableFuture()
+                    .get(5, TimeUnit.SECONDS);
 
-        assertTrue(threadName.startsWith("dml-exec"));
+            assertTrue(threadName.startsWith("dml-exec"));
+        } finally {
+            executor.shutdown();
+        }
     }
 
     private void execute(String... sqlStatements) throws Exception {
