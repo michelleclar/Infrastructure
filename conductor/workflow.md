@@ -10,26 +10,21 @@
 
 ## Commit Strategy
 
-**Conventional Commits** 格式：
+**Emoji 前缀格式**（与仓库现有约定一致，见 `AGENTS.md`）：
 
 ```
-<type>(<scope>): <subject>
-
-[optional body]
-[optional footer]
+:emoji: 简短描述
 ```
 
-| Type | Usage |
-|------|-------|
-| `feat` | 新功能 |
-| `fix` | Bug 修复 |
-| `docs` | 文档变更 |
-| `refactor` | 重构（无功能变化） |
-| `test` | 测试相关 |
-| `chore` | 构建/依赖/工具变更 |
-| `perf` | 性能优化 |
-
-Scope 示例：`redis`, `mq`, `persistence`, `quarkus`, `dto`
+| Emoji | 场景 |
+|-------|------|
+| `:sparkles:` | 新功能 |
+| `:bug:` | 修复 |
+| `:recycle:` | 重构 |
+| `:memo:` | 文档 |
+| `:white_check_mark:` | 测试 |
+| `:wrench:` | 构建/依赖/工具变更 |
+| `:zap:` | 性能优化 |
 
 ## Code Review Requirements
 

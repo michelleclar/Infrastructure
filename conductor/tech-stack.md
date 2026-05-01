@@ -4,7 +4,7 @@
 
 | Language | Version | Usage |
 |----------|---------|-------|
-| Java | 17+ | 主要开发语言（所有模块） |
+| Java | 21 | 主要开发语言（所有模块，toolchain 强制 Java 21） |
 | Kotlin | 1.9+ | Gradle 构建脚本（build.gradle.kts） |
 
 ## Frameworks
