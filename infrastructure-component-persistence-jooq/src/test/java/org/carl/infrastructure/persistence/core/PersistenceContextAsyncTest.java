@@ -20,9 +20,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -79,7 +77,7 @@ class PersistenceContextAsyncTest {
                 .toCompletableFuture().get(5, TimeUnit.SECONDS);
 
         assertNotNull(result);
-        assertTrue(result.size() > 0);
+        assertFalse(result.isEmpty());
     }
 
     @Test
@@ -88,7 +86,7 @@ class PersistenceContextAsyncTest {
 
         int count = context.<Record, Integer>fetchAsync(
                         dsl -> dsl.resultQuery("select count(*) as cnt from %s.book where title = 'Mapper Book'".formatted(schemaName)),
-                        result -> result.get(0).get("cnt", Integer.class))
+                        result -> result.getFirst().get("cnt", Integer.class))
                 .toCompletableFuture()
                 .get(5, TimeUnit.SECONDS);
 
@@ -120,7 +118,7 @@ class PersistenceContextAsyncTest {
         try {
             int count = context.<Record, Integer>fetchAsync(
                             dsl -> dsl.resultQuery("select count(*) as cnt from %s.book where title = 'Exec Book'".formatted(schemaName)),
-                            result -> result.get(0).get("cnt", Integer.class),
+                            result -> result.getFirst().get("cnt", Integer.class),
                             executor)
                     .toCompletableFuture()
                     .get(5, TimeUnit.SECONDS);
