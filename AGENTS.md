@@ -40,8 +40,9 @@
 ./gradlew build                                         # 构建全部
 ./gradlew test                                          # 测试全部
 ./gradlew :infrastructure-component-redis:test          # 测试单模块
-./gradlew :demo:build                                   # 构建 demo
 ```
+
+`demo/` 是独立的 Gradle 项目（有自己的 wrapper），从根目录无法用 `:demo:build` 构建，需进入 `demo/` 目录后执行 `./gradlew build`。
 
 Native 构建（跨平台，使用容器）：
 
@@ -110,7 +111,7 @@ jOOQ 从 PostgreSQL schema 生成 DAO 和 Record 类（生成配置见 `infrastr
 | Redis 泛型 | `client.getSync("key", MyClass.class)` 或 `client.getSync("key", new TypeReference<>() {})` |
 | 分布式锁 | `client.getLock("key").tryLock(...)` |
 | 发消息 | `IProducer<T>.sendMessage(value, builder -> builder.key(...))` |
-| 状态机 | `StateMachineBuilderFactory.create(S, E, C).state(...).build()` |
+| 状态机 | `StateMachineBuilderFactory.create()` → `.externalTransition().from(...).to(...).on(...).perform(...)` → `.build("id")` |
 | 单体响应 | `SingleEntityResponse.of(data)` |
 | 列表响应 | `MultiEntityResponse.of(list)` |
 | 分页响应 | `PageEntityResponse.of(...)` — 继承 `PageQuery`，内置 `pageSize`/`pageIndex`/`orderBy`/`getOffset()` |

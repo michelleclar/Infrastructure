@@ -379,40 +379,57 @@ MessageBuilder.<Order>create()
 
 #### 构建状态机
 
+`StateMachineBuilderFactory.create()` 无参，每条迁移通过 `externalTransition()` / `externalTransitions()` 独立声明，最后 `build(machineId)` 注册到全局工厂：
+
 ```java
-StateMachine<OrderStatus, OrderEvent, OrderCtx> machine =
-    StateMachineBuilderFactory.create(OrderStatus.class, OrderEvent.class, OrderCtx.class)
-        .initial(OrderStatus.NEW)
-        .state(OrderStatus.NEW)
-            .transition()
-                .on(OrderEvent.PAY).to(OrderStatus.PAID)
-                .when(ctx -> ctx.hasPayment())
-        .and()
-        .state(OrderStatus.PAID)
-            .transition()
-                .on(OrderEvent.SHIP).to(OrderStatus.SHIPPED)
-        .and()
-        .build();
+StateMachineBuilder<OrderStatus, OrderEvent, OrderCtx> builder =
+    StateMachineBuilderFactory.create();
+
+// 单条迁移
+builder.externalTransition()
+    .from(OrderStatus.NEW)
+    .to(OrderStatus.PAID)
+    .on(OrderEvent.PAY)
+    .when(ctx -> ctx.hasPayment())   // 可选条件守卫
+    .perform((from, to, event, ctx) -> log.info("paid"));
+
+// 多源迁移（fromAmong）
+builder.externalTransitions()
+    .fromAmong(OrderStatus.NEW, OrderStatus.PAID)
+    .to(OrderStatus.CANCELLED)
+    .on(OrderEvent.CANCEL)
+    .when(ctx -> true)
+    .perform((from, to, event, ctx) -> {});
+
+builder.build("OrderMachine");  // 注册到全局工厂
 ```
 
-#### 触发事件
+#### 获取与触发
 
 ```java
+// 从全局工厂获取（build 之后）
+StateMachine<OrderStatus, OrderEvent, OrderCtx> machine =
+    StateMachineFactory.get("OrderMachine");
+
+// 单状态触发
 OrderStatus next = machine.fireEvent(OrderStatus.NEW, OrderEvent.PAY, context);
+
+// 并行触发（externalParallelTransition 场景）
+List<OrderStatus> targets = machine.fireParallelEvent(OrderStatus.NEW, OrderEvent.PAY, context);
 ```
 
 #### 可视化
 
 ```java
-machine.showStateMachine();     // 打印状态机结构
-machine.generatePlantUML();     // 生成 PlantUML 图
+machine.showStateMachine();    // 打印状态机结构
+machine.generatePlantUML();    // 生成 PlantUML 图
 ```
 
 #### 使用约定
 
-- 泛型参数: `<S 状态枚举, E 事件枚举, C 上下文>`
-- `when()` 是可选条件守卫
-- `fireParallelEvent()` 支持并行触发
+- 泛型参数: `<S 状态枚举, E 事件枚举, C 上下文对象>`
+- `when()` 是可选条件守卫；`perform()` 是可选动作
+- 同一个 machineId 只能 `build` 一次；通过 `StateMachineFactory.get(id)` 复用
 
 ---
 
@@ -425,8 +442,8 @@ machine.generatePlantUML();     // 生成 PlantUML 图
 // 构建规则
 Rule rule = new RuleBuilder()
     .name("AdultEmployedRule")
-    .condition(facts -> facts.get("age") >= 18 && facts.get("employed"))
-    .action(facts -> facts.put("qualified", true))
+    .when(facts -> facts.get("age") >= 18 && facts.get("employed"))   // condition
+    .then(facts -> facts.put("qualified", true))                       // action
     .build();
 
 // 执行
