@@ -11,24 +11,17 @@
 
 ## Commit Strategy
 
-**Conventional Commits** — all commit messages must follow the [Conventional Commits 1.0.0](https://www.conventionalcommits.org/) specification.
+Format: `:emoji: 简短描述` — matches the repository convention defined in `AGENTS.md`.
 
-Common types used in this project:
+| Emoji | When to use |
+|-------|-------------|
+| `:sparkles:` | New feature or module |
+| `:bug:` | Bug fix |
+| `:recycle:` | Refactor (no behaviour change) |
+| `:memo:` | Documentation only |
+| `:white_check_mark:` | Tests |
 
-| Type | When to use |
-|------|-------------|
-| `feat` | New module or public API addition |
-| `fix` | Bug fix in an existing module |
-| `refactor` | Code restructuring without behaviour change |
-| `test` | Adding or fixing tests |
-| `docs` | Documentation only |
-| `build` | Gradle build scripts, dependency updates |
-| `chore` | Maintenance (CI, tooling, formatting) |
-| `perf` | Performance improvement |
-
-Scope should reference the affected module, e.g. `feat(redis): add distributed lock timeout option`.
-
-Breaking changes must include `BREAKING CHANGE:` in the commit footer.
+Example: `:sparkles: redis 分布式锁增加超时配置`
 
 ## Code Review
 
