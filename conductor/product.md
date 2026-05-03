@@ -2,24 +2,25 @@
 
 ## Project Name
 
-Infrastructure Components
+基础设施组件
 
 ## Description
 
-A multi-module Java library that packages Quarkus integrations and standalone utilities for backend services.
+为微服务提供可复用的通用基础设施能力，包含 Quarkus 集成模块和独立库模块。
 
 ## Problem Statement
 
-Microservice teams repeatedly reimplement the same infrastructure concerns (auth, caching, messaging, persistence) — this library centralizes and standardizes those solutions.
+各服务独立集成第三方中间件，版本混乱、配置分散、维护成本高。
 
 ## Target Users
 
-Internal platform/infrastructure teams maintaining shared service capabilities.
+需要快速集成中间件能力的 Java 开发者。
 
 ## Key Goals
 
-1. Provide Quarkus-integrated components for Quarkus-based microservices — delivered as Quarkus extensions that plug cleanly into the Quarkus CDI lifecycle.
-2. Provide standalone modules usable in any Java project without a Quarkus dependency — framework-agnostic libraries that can be consumed by non-Quarkus services.
+- 提供开箱即用的 Quarkus 扩展，降低各服务重复开发成本
+- 隔离框架依赖，支持独立库在非 Quarkus 项目中使用
+- 统一中间件集成标准，提升组件可复用性与可维护性
 
 ## Module Structure
 

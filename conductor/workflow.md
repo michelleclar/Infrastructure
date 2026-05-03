@@ -2,60 +2,62 @@
 
 ## TDD Policy
 
-**Strict — tests required before implementation.**
+**Strict** — 实现前必须先写测试。
 
 - Write the test first. No implementation code is merged without a corresponding test written beforehand.
-- Unit tests cover all public API methods.
-- Integration tests are required for any module that interacts with external systems (DB, Redis, Pulsar, etc.).
-- A task is not considered complete until all tests pass (`./gradlew test`).
+- 单元测试覆盖所有公共 API 方法
+- Integration tests are required for any module that interacts with external systems (DB, Redis, Pulsar, etc.)
+- A task is not considered complete until all tests pass (`./gradlew test`)
 
 ## Commit Strategy
 
-**Conventional Commits** — all commit messages must follow the [Conventional Commits 1.0.0](https://www.conventionalcommits.org/) specification.
+**Emoji 前缀格式**（与仓库现有约定一致，见 `AGENTS.md`）：
 
-Common types used in this project:
+```
+:emoji: 简短描述
+```
 
-| Type | When to use |
-|------|-------------|
-| `feat` | New module or public API addition |
-| `fix` | Bug fix in an existing module |
-| `refactor` | Code restructuring without behaviour change |
-| `test` | Adding or fixing tests |
-| `docs` | Documentation only |
-| `build` | Gradle build scripts, dependency updates |
-| `chore` | Maintenance (CI, tooling, formatting) |
-| `perf` | Performance improvement |
+| Emoji | 场景 |
+|-------|------|
+| `:sparkles:` | 新功能 |
+| `:bug:` | 修复 |
+| `:recycle:` | 重构 |
+| `:memo:` | 文档 |
+| `:white_check_mark:` | 测试 |
+| `:wrench:` | 构建/依赖/工具变更 |
+| `:zap:` | 性能优化 |
 
-Scope should reference the affected module, e.g. `feat(redis): add distributed lock timeout option`.
+## Code Review Requirements
 
-Breaking changes must include `BREAKING CHANGE:` in the commit footer.
+**非 trivial 变更需要 Code Review**，包括：
 
-## Code Review
+- 新增公共 API 或接口变更
+- 中间件集成逻辑
+- 安全相关代码（认证、权限）
+- 跨模块依赖变更
+- Reviewer must verify: tests present, API boundaries respected, no unintended Quarkus dependency leakage into standalone modules
 
-**Required for all changes.**
-
-- Every change must go through a pull request; direct pushes to `main` are not permitted.
-- At least one approval is required before merge.
-- Reviewer must verify: tests present, API boundaries respected, no unintended Quarkus dependency leakage into standalone modules.
+简单的文档修正、注释更新、版本号 bump 可自审合并。
 
 ## Verification Checkpoints
 
-**After each task completion.**
+**每个 Phase 完成后**需人工验证：
 
-Before marking a task done, the implementer must:
-
-1. Run `./gradlew build` — build must succeed with no errors.
-2. Run `./gradlew test` — all tests must pass.
-3. Manually verify the change behaves as specified in the task description.
-4. Confirm no regressions in dependent modules (`./gradlew :affected-module:test`).
+1. Run `./gradlew build` — build must succeed with no errors
+2. Run `./gradlew test` — all tests must pass
+3. 模块可正常发布到本地 Maven（`./gradlew publishToMavenLocal`）
+4. 若涉及 Quarkus 模块，验证 Quarkus dev mode 启动无异常
 
 ## Task Lifecycle
 
 ```
-pending → in_progress → [manual verification] → completed
+Todo → In Progress → Review → Verified → Done
 ```
 
-A task moves to `in_progress` when work begins. It moves to `completed` only after verification passes. If verification fails, it stays `in_progress` until resolved.
+- **In Progress**: 开发中，测试先行
+- **Review**: 代码完成，等待 Code Review（非 trivial 变更）
+- **Verified**: Phase 验证通过
+- **Done**: 合并主干
 
 ## Branch Strategy
 

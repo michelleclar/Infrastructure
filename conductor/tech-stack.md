@@ -11,11 +11,11 @@ Java toolchain is pinned via `java.toolchain.languageVersion = JavaLanguageVersi
 
 ## Build Tool
 
-| Tool | Version |
+| Tool | Details |
 |------|---------|
-| Gradle | 8.x (Kotlin DSL) |
-| Gradle parallel builds | Enabled (`org.gradle.parallel=true`) |
-| Gradle build cache | Enabled (`org.gradle.caching=true`) |
+| Gradle (Kotlin DSL) | 8.x, `kotlin.code.style=official` |
+| Parallel builds | Enabled (`org.gradle.parallel=true`) |
+| Build cache | Enabled (`org.gradle.caching=true`) |
 
 ## Framework
 
@@ -33,6 +33,13 @@ Quarkus BOM is used as the enforced platform for all dependency versions within 
 | Quarkus integration | `quarkus-jdbc-postgresql`, `quarkus-agroal` |
 | Standalone ORM | JOOQ (`infrastructure-component-persistence-jooq`) |
 
+## Caching
+
+| Component | Details |
+|-----------|---------|
+| Distributed cache | Redis via Vert.x Redis client (`infrastructure-component-redis`) |
+| Quarkus cache | `quarkus-cache`, `quarkus-redis` (`infrastructure-component-quarkus/cache`) |
+
 ## Messaging
 
 | Component | Details |
@@ -41,13 +48,6 @@ Quarkus BOM is used as the enforced platform for all dependency versions within 
 | Quarkus integration | `quarkus-pulsar` (`infrastructure-component-quarkus/mq`) |
 | Standalone API | `infrastructure-component-mq-api` (broker-agnostic interface) |
 | Standalone impl | `infrastructure-component-mq-pulsar` |
-
-## Caching
-
-| Component | Details |
-|-----------|---------|
-| Distributed cache | Redis via Vert.x Redis client (`infrastructure-component-redis`) |
-| Quarkus cache | `quarkus-cache`, `quarkus-redis` (`infrastructure-component-quarkus/cache`) |
 
 ## Search
 
@@ -86,7 +86,6 @@ Quarkus BOM is used as the enforced platform for all dependency versions within 
 | Component | Details |
 |-----------|---------|
 | Framework | Vert.x gRPC |
-| Proto codegen | `vertx-grpc-protoc-plugin2:4.5.13` |
 | gRPC modules | `infrastructure-component-qdrant-grpc`, `infrastructure-component-embedding-grpc` |
 
 ## Observability
@@ -104,11 +103,10 @@ Quarkus BOM is used as the enforced platform for all dependency versions within 
 | `infrastructure-component-log` | Unified logging (auto-adapts SLF4J / JBoss Logging) |
 | `infrastructure-component-utils` | General utilities (String, Collection, DAG); depends on Guava, commons-collections4 |
 
-## Infrastructure / Deployment
+## Deployment
 
-- Self-hosted via Docker
-- Kubernetes (internal cluster)
-- Native image builds supported via Quarkus Mandrel builder (`ubi9-quarkus-mandrel-builder-image:jdk-21`)
+- 作为 Maven 库发布到 Aliyun Maven，由各微服务引入使用
+- 推荐 Docker 容器化部署
 
 ## Group & Version
 
