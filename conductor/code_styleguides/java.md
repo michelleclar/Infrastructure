@@ -69,7 +69,7 @@ src/
 - Prefer checked exceptions for recoverable conditions at module boundaries.
 - Use unchecked exceptions (`RuntimeException` subclasses) for programming errors.
 - Never swallow exceptions silently; log at minimum `WARN` before rethrowing or recovering.
-- Log with SLF4J via `infrastructure-component-log` — do not use `System.out` or `java.util.logging` directly.
+- **Log exclusively via `ILogger`** (`org.carl.infrastructure.logging`) — direct use of SLF4J or JBoss Logger is forbidden. Obtain an instance with `LoggerFactory.getLogger(MyClass.class)`.
 
 ## Javadoc
 
