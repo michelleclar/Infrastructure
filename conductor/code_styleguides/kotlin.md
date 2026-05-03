@@ -1,37 +1,53 @@
-# Kotlin Style Guide (Build Scripts)
+# Kotlin Style Guide
 
-> Kotlin 在本项目中仅用于 Gradle 构建脚本（`build.gradle.kts`, `settings.gradle.kts`）。
-> 代码风格遵循 `kotlin.code.style=official`（Kotlin 官方风格）。
+Applies to Kotlin files in this project — currently Gradle build scripts (`build.gradle.kts`, `settings.gradle.kts`).
 
-## Formatting
+## General
 
-- Indent: 4 spaces
-- Line length: 最大 120 字符
-- 遵循 [Kotlin Coding Conventions](https://kotlinlang.org/docs/coding-conventions.html)
+- Follow [Kotlin Coding Conventions](https://kotlinlang.org/docs/coding-conventions.html) as the baseline
+- `kotlin.code.style=official` is set in `gradle.properties` — IDEs should pick this up automatically
 
-## Build Script Conventions
+## Gradle Build Scripts
 
-- 使用 `libs` version catalog 管理依赖版本，避免硬编码版本号
-- 插件通过 `alias(libs.plugins.xxx)` 引用，保持一致性
-- 子模块配置放在父模块的 `subprojects {}` 块中
+### Formatting
 
-```kotlin
-// 推荐：使用 version catalog
-dependencies {
-    implementation(libs.quarkus.core)
-    testImplementation(libs.junit.jupiter)
-}
+- **Indentation**: 4 spaces, no tabs
+- **Line length**: 120 characters max
+- Each `dependencies {}` block groups entries in this order:
+  1. `api(...)` declarations
+  2. `implementation(...)` declarations
+  3. `testImplementation(...)` declarations
+  4. Blank line separating each group
 
-// 不推荐：硬编码版本
-dependencies {
-    implementation("io.quarkus:quarkus-core:3.19.3")
-}
-```
+### Plugin Declarations
 
-## Publishing Configuration
+- Use the `plugins {}` block at the top of every `build.gradle.kts`
+- Pin versions for non-BOM plugins explicitly: `id("some.plugin") version "x.y.z"`
+- Do not apply plugins via the legacy `apply plugin: "..."` syntax
+
+### Dependency Management
+
+- Declare all shared versions in the version catalog (`gradle/libs.versions.toml`)
+- Reference catalog entries via `libs.<alias>` — do not hardcode version strings in module build files
+- Use `enforcedPlatform` only for the Quarkus BOM; avoid it elsewhere to prevent version conflicts
+- Prefer `api(...)` for dependencies that are part of a module's public API; use `implementation(...)` for internal dependencies
+
+### Naming Conventions
+
+| Element | Convention | Example |
+|---------|-----------|---------|
+| Variables / vals | lowerCamelCase | `quarkusVersion` |
+| Extension functions | lowerCamelCase | `configureJavaToolchain()` |
+| Constants (top-level) | UPPER_SNAKE_CASE | `DEFAULT_JVM_ARGS` |
+
+### Task Configuration
+
+- Use `tasks.named<TaskType>("taskName") { }` rather than `tasks.getByName(...)` to avoid eager resolution
+- Disable tasks explicitly with `enabled = false` rather than removing them
+
+### Publishing Configuration
 
 - Maven 发布凭证通过环境变量传入，不硬编码
-- `artifactId` 格式：`${project.parent?.name}-${project.name}`
 
 ```kotlin
 credentials {
@@ -40,7 +56,14 @@ credentials {
 }
 ```
 
-## Comments in Build Scripts
+### Comments
 
-- 仅在配置项有非显而易见的约束时添加注释
-- 临时禁用的配置使用 `// NOTE:` 前缀说明原因
+- Write comments only when the build logic is non-obvious (e.g. why a workaround exists)
+- Use `// NOTE:` prefix for temporarily disabled configuration — explain why
+- Do not comment out code — remove it. Use git history if rollback is needed
+
+## Version Catalog (`libs.versions.toml`)
+
+- Group versions under `[versions]`, libraries under `[libraries]`, plugins under `[plugins]`
+- Use kebab-case for alias names: `quarkus-platform-bom`, `infrastructure-component-redis`
+- Keep the catalog sorted alphabetically within each section

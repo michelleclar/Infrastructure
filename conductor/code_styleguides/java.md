@@ -1,67 +1,87 @@
 # Java Style Guide
 
+Applies to all Java source files in this project (Java 21, compiled with `-parameters`).
+
 ## Formatting
 
-- Indent: 4 spaces（不使用 Tab）
-- Line length: 最大 120 字符
-- 大括号: Allman 风格（`{` 与声明同行）
-- 空行: 方法间保留一个空行
+- **Indentation**: 4 spaces, no tabs
+- **Line length**: 120 characters max
+- **Braces**: opening brace on same line as declaration
+- **Blank lines**: one blank line between methods; two between top-level declarations
+- **File encoding**: UTF-8 (enforced via `options.encoding = "UTF-8"` in Gradle)
 
-## Naming Conventions
+## Naming
 
 | Element | Convention | Example |
 |---------|-----------|---------|
-| Class | UpperCamelCase | `RedisClient`, `MqProducer` |
-| Method | lowerCamelCase | `sendMessage()`, `acquireLock()` |
-| Field | lowerCamelCase | `connectionPool`, `retryCount` |
-| Constant | UPPER_SNAKE_CASE | `DEFAULT_TIMEOUT`, `MAX_RETRY` |
-| Package | lowercase, dot-separated | `org.carl.infrastructure.redis` |
+| Classes / Interfaces | UpperCamelCase | `RedisClientFactory` |
+| Methods / Variables | lowerCamelCase | `buildConnection()` |
+| Constants | UPPER_SNAKE_CASE | `DEFAULT_TIMEOUT_MS` |
+| Packages | all lowercase, dot-separated | `org.carl.infrastructure.redis` |
+| Test classes | suffix `Test` | `RedisClientFactoryTest` |
 
-## Code Organization
+## Imports
 
-- 每个文件只定义一个顶级类
-- 字段声明在构造函数之前
-- 静态成员在实例成员之前
-- 接口优先于抽象类
+- No wildcard imports (`import java.util.*` is forbidden)
+- Static imports allowed for test assertions (`assertThat`, `assertEquals`)
+- Import order: Java standard library → Jakarta/Javax → third-party → internal (`org.carl`)
 
-## Comments & Documentation
+## Module Structure
 
-- 公共 API（`public` 方法/类）必须有 Javadoc
-- Javadoc 使用中文或英文均可，保持项目内一致
-- 内部实现逻辑注释仅在 WHY 不明显时添加，不解释 WHAT
-- 禁止提交注释掉的代码
+Every module must follow this layout:
 
-```java
-/**
- * 获取分布式锁，超时自动释放。
- *
- * @param key     锁的唯一标识
- * @param timeout 持锁超时时间
- * @return 是否成功获取锁
- */
-public boolean acquireLock(String key, Duration timeout) { ... }
+```
+src/
+  main/
+    java/org/carl/infrastructure/<module>/
+      api/          # Public interfaces and DTOs (stable contract)
+      impl/         # Internal implementations (not part of public API)
+      config/       # Configuration classes
+  test/
+    java/org/carl/infrastructure/<module>/
 ```
 
-## Error Handling
+## API Visibility
 
-- 业务异常使用自定义 unchecked exception，继承 `RuntimeException`
-- 不吞掉异常（catch 后必须记录日志或重新抛出）
-- 不使用异常控制正常业务流程
+- Public interfaces live under `api/` and are part of the public contract
+- Implementation classes under `impl/` must be package-private or annotated `@Internal` where a public modifier is unavoidable
+- Do not expose concrete implementation types in method signatures — use the interface type
 
-## Module Design
+## Quarkus-Specific Rules (Quarkus modules only)
 
-- 独立库模块：不得引入 Quarkus 依赖
-- Quarkus 集成模块：通过 `@ApplicationScoped` 等 CDI 注解暴露 Bean
-- 跨模块调用通过接口，不直接依赖实现类
+- Inject dependencies via `@Inject` (CDI), not constructor injection, unless the class is not a CDI bean
+- Configuration must use `@ConfigMapping` or `@ConfigProperty`; no hardcoded values
+- Startup validation goes in a method annotated `@Observes StartupEvent`; never in a constructor
+- All CDI beans used in tests must be annotated `@QuarkusTest` with `@InjectMock` for external dependencies
 
 ## Testing
 
 - 测试类命名：`XxxTest`（单元测试）、`XxxIT`（集成测试）
-- 每个测试方法只验证一个行为
-- 使用 JUnit 5 + Mockito；Quarkus 模块使用 `@QuarkusTest`
-- 测试方法命名：`should_<expected>_when_<condition>`
+- Test method names follow the pattern: `should_<expected>_when_<condition>`
+- Use JUnit 5 (`@Test`, `@BeforeEach`, `@AfterEach`)
+- Quarkus modules use `@QuarkusTest`; standalone modules use plain JUnit 5
+- No `Thread.sleep()` in tests — use `Awaitility` for async assertions
+- Mocking: Mockito for unit tests; `@InjectMock` / `@QuarkusMock` for Quarkus integration tests
 
 ```java
 @Test
 void should_return_empty_when_key_not_exists() { ... }
 ```
+
+## Error Handling
+
+- 业务异常使用自定义 unchecked exception，继承 `RuntimeException`
+- Never swallow exceptions silently; log at minimum `WARN` before rethrowing or recovering
+- Log with SLF4J via `infrastructure-component-log` — do not use `System.out` or `java.util.logging` directly
+- 不使用异常控制正常业务流程
+
+## Javadoc
+
+- All public interfaces and methods in `api/` packages must have Javadoc
+- `@param` and `@return` tags are required when their meaning is not self-evident from the name
+
+## Dependency Rules
+
+- Standalone modules: zero Quarkus dependencies (even optional/provided scope)
+- Quarkus modules: may depend on standalone modules; use `implementation(enforcedPlatform(libs.quarkus.platform.bom))` for version alignment
+- Add dependencies to version catalogs (`libs.versions.toml`) rather than hardcoding versions in module `build.gradle.kts`

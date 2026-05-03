@@ -1,65 +1,116 @@
 # Tech Stack
 
-## Languages
+## Language
 
-| Language | Version | Usage |
-|----------|---------|-------|
-| Java | 21 | 主要开发语言（所有模块，toolchain 强制 Java 21） |
-| Kotlin | 1.9+ | Gradle 构建脚本（build.gradle.kts） |
+| Language | Version |
+|----------|---------|
+| Java | 21 (LTS) |
+| Kotlin | (Gradle build scripts only) |
 
-## Frameworks
+Java toolchain is pinned via `java.toolchain.languageVersion = JavaLanguageVersion.of(21)` in the root `build.gradle.kts`.
 
-| Framework | Version | Usage |
-|-----------|---------|-------|
-| Quarkus | 3.19.3 | Quarkus 集成模块（quarkus-component-*） |
-| Vert.x | (via Quarkus) | 异步运行时、Redis 客户端、消息广播 |
+## Build Tool
 
-## Databases & Storage
+| Tool | Details |
+|------|---------|
+| Gradle (Kotlin DSL) | 8.x, `kotlin.code.style=official` |
+| Parallel builds | Enabled (`org.gradle.parallel=true`) |
+| Build cache | Enabled (`org.gradle.caching=true`) |
 
-| Technology | Usage |
-|------------|-------|
-| PostgreSQL | 主数据库，via quarkus-jdbc-postgresql |
-| JOOQ | 类型安全 SQL，persistence-jooq 模块 |
-| Redis | 缓存层（分布式锁、泛型序列化），redis 模块 |
+## Framework
+
+| Framework | Version |
+|-----------|---------|
+| Quarkus | 3.19.3 |
+
+Quarkus BOM is used as the enforced platform for all dependency versions within Quarkus-integrated modules.
+
+## Persistence
+
+| Component | Details |
+|-----------|---------|
+| Database | PostgreSQL |
+| Quarkus integration | `quarkus-jdbc-postgresql`, `quarkus-agroal` |
+| Standalone ORM | JOOQ (`infrastructure-component-persistence-jooq`) |
+
+## Caching
+
+| Component | Details |
+|-----------|---------|
+| Distributed cache | Redis via Vert.x Redis client (`infrastructure-component-redis`) |
+| Quarkus cache | `quarkus-cache`, `quarkus-redis` (`infrastructure-component-quarkus/cache`) |
 
 ## Messaging
 
-| Technology | Usage |
-|------------|-------|
-| Apache Pulsar | 消息队列，mq-pulsar 模块实现 mq-api 接口 |
+| Component | Details |
+|-----------|---------|
+| Broker | Apache Pulsar |
+| Quarkus integration | `quarkus-pulsar` (`infrastructure-component-quarkus/mq`) |
+| Standalone API | `infrastructure-component-mq-api` (broker-agnostic interface) |
+| Standalone impl | `infrastructure-component-mq-pulsar` |
 
-## Other Integrations
+## Search
 
-| Technology | Usage |
-|------------|-------|
-| Elasticsearch | 全文搜索，quarkus-elasticsearch |
-| gRPC | 嵌入向量服务、Qdrant 向量数据库通信 |
-| Consul | 服务发现与负载均衡 |
-| Temporal | 工作流编排 |
-| OpenTelemetry | 可观测性与指标采集 |
-| Keycloak / OIDC | 身份认证与权限控制 |
+| Component | Details |
+|-----------|---------|
+| Engine | Elasticsearch |
+| Integration | `quarkus-elasticsearch` (`infrastructure-component-quarkus/search`) |
 
-## Build & Deployment
+## Auth & Authorization
 
-| Tool | Usage |
-|------|-------|
-| Gradle (Kotlin DSL) | 构建系统，`kotlin.code.style=official` |
-| Aliyun Maven | 制品仓库，库发布目标 |
-| Docker | 推荐服务部署方式 |
+| Component | Details |
+|-----------|---------|
+| Protocol | OIDC |
+| Provider | Keycloak |
+| Integration | `quarkus-oidc`, `quarkus-keycloak` (`infrastructure-component-quarkus/authorization`) |
+| Policy | `infrastructure-component-pdp` (standalone Policy Decision Point) |
 
-## Module Structure
+## Workflow & State
+
+| Component | Details |
+|-----------|---------|
+| Workflow engine | Temporal (`quarkus-temporal`, `infrastructure-component-quarkus/workflow`) |
+| State machine | `infrastructure-component-statemachine` (standalone) |
+| Rule engine | `infrastructure-component-rule-engine` (standalone) |
+
+## Service Discovery
+
+| Component | Details |
+|-----------|---------|
+| Registry | Consul |
+| Load balancing | Stork (`consul-stork`) |
+| Integration | `infrastructure-component-quarkus/discover` |
+
+## RPC
+
+| Component | Details |
+|-----------|---------|
+| Framework | Vert.x gRPC |
+| gRPC modules | `infrastructure-component-qdrant-grpc`, `infrastructure-component-embedding-grpc` |
+
+## Observability
+
+| Component | Details |
+|-----------|---------|
+| Tracing/Metrics | OpenTelemetry (`quarkus-opentelemetry`) |
+| Integration | `infrastructure-component-quarkus/metrics` |
+
+## Shared Utilities
+
+| Module | Purpose |
+|--------|---------|
+| `infrastructure-component-dto` | Base DTOs: Command, Query, Response, PageQuery |
+| `infrastructure-component-log` | Unified logging (auto-adapts SLF4J / JBoss Logging) |
+| `infrastructure-component-utils` | General utilities (String, Collection, DAG); depends on Guava, commons-collections4 |
+
+## Deployment
+
+- 作为 Maven 库发布到 Aliyun Maven，由各微服务引入使用
+- 推荐 Docker 容器化部署
+
+## Group & Version
 
 ```
-infrastructure/
-├── infrastructure-component-quarkus/   # Quarkus 集成模块（需 Quarkus 依赖）
-│   ├── approval, mq, web, user, cache
-│   ├── search, metrics, workflow
-│   ├── discover, broadcast
-│   ├── persistence, authorization
-└── infrastructure-component-*/        # 独立库模块（无 Quarkus 依赖）
-    ├── dto, log, utils
-    ├── persistence-jooq, redis
-    ├── mq-api, mq-pulsar
-    ├── rule-engine, pdp, statemachine
-    └── embedding-grpc, qdrant-grpc
+group = org.carl
+version = 1.0-BATE
 ```

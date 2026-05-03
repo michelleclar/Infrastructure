@@ -4,9 +4,10 @@
 
 **Strict** — 实现前必须先写测试。
 
-- 新功能和 bug fix 均需先编写失败测试，再编写实现
-- PR 不得合并未通过测试的代码
-- 单元测试覆盖核心逻辑；集成测试覆盖中间件交互
+- Write the test first. No implementation code is merged without a corresponding test written beforehand.
+- 单元测试覆盖所有公共 API 方法
+- Integration tests are required for any module that interacts with external systems (DB, Redis, Pulsar, etc.)
+- A task is not considered complete until all tests pass (`./gradlew test`)
 
 ## Commit Strategy
 
@@ -34,6 +35,7 @@
 - 中间件集成逻辑
 - 安全相关代码（认证、权限）
 - 跨模块依赖变更
+- Reviewer must verify: tests present, API boundaries respected, no unintended Quarkus dependency leakage into standalone modules
 
 简单的文档修正、注释更新、版本号 bump 可自审合并。
 
@@ -41,9 +43,10 @@
 
 **每个 Phase 完成后**需人工验证：
 
-- 所有测试通过（`./gradlew test`）
-- 模块可正常发布到本地 Maven（`./gradlew publishToMavenLocal`）
-- 若涉及 Quarkus 模块，验证 Quarkus dev mode 启动无异常
+1. Run `./gradlew build` — build must succeed with no errors
+2. Run `./gradlew test` — all tests must pass
+3. 模块可正常发布到本地 Maven（`./gradlew publishToMavenLocal`）
+4. 若涉及 Quarkus 模块，验证 Quarkus dev mode 启动无异常
 
 ## Task Lifecycle
 
@@ -55,3 +58,9 @@ Todo → In Progress → Review → Verified → Done
 - **Review**: 代码完成，等待 Code Review（非 trivial 变更）
 - **Verified**: Phase 验证通过
 - **Done**: 合并主干
+
+## Branch Strategy
+
+- Feature branches: `feat/<scope>-<short-description>`
+- Bug fix branches: `fix/<scope>-<short-description>`
+- Base branch for PRs: `main`

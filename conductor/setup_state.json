@@ -12,13 +12,13 @@
     "key_goals": "提供开箱即用的 Quarkus 扩展；隔离框架依赖，支持独立库在非 Quarkus 项目中使用",
     "voice_tone": "专业且技术性 — 面向工程师，精确简洁",
     "design_principles": "简单优于功能、开箱即用、框架隔离",
-    "languages": "Java (primary) + Kotlin (build scripts)",
+    "languages": "Java 21 (primary) + Kotlin (build scripts)",
     "frontend": "None",
     "backend_framework": "Quarkus 3.19.3（部分模块依赖，独立库模块无框架依赖）",
     "database": "PostgreSQL + JOOQ + Redis（Redis 作为缓存层）",
     "infrastructure": "作为 Maven 库发布到 Aliyun Maven，由各微服务引入使用，推荐 Docker 部署",
     "tdd_strictness": "Strict",
-    "commit_strategy": "Conventional Commits",
+    "commit_strategy": "Emoji 前缀格式（per AGENTS.md）",
     "code_review": "非 trivial 变更需要 Code Review",
     "verification_checkpoints": "每个 Phase 完成后",
     "styleguide_languages": "Java + Kotlin",
@@ -35,5 +35,5 @@
     "conductor/code_styleguides/kotlin.md"
   ],
   "started_at": "2026-05-01T00:00:00Z",
-  "last_updated": "2026-05-01T00:00:00Z"
+  "last_updated": "2026-05-03T00:00:00Z"
 }
