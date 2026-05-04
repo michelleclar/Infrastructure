@@ -1,4 +1,4 @@
-# Conductor — Infrastructure Components
+# Conductor — 基础设施组件
 
 Navigation hub for project context.
 
@@ -9,6 +9,11 @@ Navigation hub for project context.
 - [Tech Stack](./tech-stack.md)
 - [Workflow](./workflow.md)
 - [Tracks](./tracks.md)
+
+## Style Guides
+
+- [Java](./code_styleguides/java.md)
+- [Kotlin (Build Scripts)](./code_styleguides/kotlin.md)
 
 ## Active Tracks
 
