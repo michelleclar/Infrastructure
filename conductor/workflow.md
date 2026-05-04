@@ -11,11 +11,7 @@
 
 ## Commit Strategy
 
-**Emoji 前缀格式**（与仓库现有约定一致，见 `AGENTS.md`）：
-
-```
-:emoji: 简短描述
-```
+Format: `:emoji: 简短描述` — matches the repository convention defined in `AGENTS.md`.
 
 | Emoji | 场景 |
 |-------|------|
@@ -26,6 +22,8 @@
 | `:white_check_mark:` | 测试 |
 | `:wrench:` | 构建/依赖/工具变更 |
 | `:zap:` | 性能优化 |
+
+Example: `:sparkles: redis 分布式锁增加超时配置`
 
 ## Code Review Requirements
 

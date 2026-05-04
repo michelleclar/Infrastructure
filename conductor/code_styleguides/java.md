@@ -70,9 +70,9 @@ void should_return_empty_when_key_not_exists() { ... }
 
 ## Error Handling
 
-- 业务异常使用自定义 unchecked exception，继承 `RuntimeException`
+- Prefer checked exceptions for recoverable conditions at module boundaries; use unchecked exceptions (`RuntimeException` subclasses) for programming errors
 - Never swallow exceptions silently; log at minimum `WARN` before rethrowing or recovering
-- Log with SLF4J via `infrastructure-component-log` — do not use `System.out` or `java.util.logging` directly
+- **Log exclusively via `ILogger`** (`org.carl.infrastructure.logging`) — direct use of SLF4J or JBoss Logger is forbidden. Obtain an instance with `LoggerFactory.getLogger(MyClass.class)`
 - 不使用异常控制正常业务流程
 
 ## Javadoc
