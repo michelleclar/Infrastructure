@@ -27,6 +27,7 @@ include("infrastructure-component-embedding-grpc")
 include("infrastructure-component-dto")
 include("infrastructure-component-log")
 include("infrastructure-component-utils")
+include("infrastructure-component-http")
 
 include("infrastructure-component-mq-api")
 include("infrastructure-component-mq-pulsar")

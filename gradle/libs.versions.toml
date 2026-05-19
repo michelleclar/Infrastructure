@@ -14,6 +14,7 @@ slf4j = "2.0.9"
 jbossLogging = "3.5.3.Final"
 temporal = "0.1.2"
 vertx = "5.0.6"
+httpcomponentsClient5 = "5.4.1"
 [libraries]
 quarkus-platform-bom = { module = "io.quarkus.platform:quarkus-bom", version.ref = "quarkus" }
 quarkus-camel-platform-bom = { module = "io.quarkus.platform:quarkus-camel-bom", version.ref = "quarkus" }
@@ -78,6 +79,7 @@ velocity = { module = "org.apache.velocity:velocity-engine-core", version.ref = 
 
 vertx-core = { module = "io.vertx:vertx-core", version.ref = "vertx" }
 vertx-redis-client = { module = "io.vertx:vertx-redis-client", version.ref = "vertx" }
+httpcomponents-client5 = { module = "org.apache.httpcomponents.client5:httpclient5", version.ref = "httpcomponentsClient5" }
 
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 commons = { module = "org.apache.commons:commons-collections4", version.ref = "commons" }
@@ -131,6 +133,7 @@ cache = ["quarkus-cache", "quarkus-redis"]
 mq = ["quarkus-pulsar"]
 search = ["quarkus-elasticsearch"]
 utils = ["guava"]
+http = ["httpcomponents-client5"]
 protocol = ["quarkus-grpc", "quarkus-websocket"]
 #metrics = ["quarkus-observability-devservices-lgtm","quarkus-micrometer-registry-prometheus", "quarkus-opentelemetry", "quarkus-micrometer-opentelemetry"]
 metrics = ["quarkus-observability-devservices-lgtm", "quarkus-opentelemetry"]
