@@ -3,10 +3,12 @@ package org.carl.test;
 import org.carl.infrastructure.statemachine.Action;
 import org.carl.infrastructure.statemachine.Condition;
 import org.carl.infrastructure.statemachine.StateMachine;
+import org.carl.infrastructure.statemachine.StateMachineFactory;
 import org.carl.infrastructure.statemachine.builder.StateMachineBuilder;
 import org.carl.infrastructure.statemachine.builder.StateMachineBuilderFactory;
 import org.carl.infrastructure.statemachine.impl.StateMachineException;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -17,6 +19,12 @@ import org.junit.jupiter.api.Test;
  * @date 2020-02-08 5:52 PM
  */
 public class StateMachineUnNormalTest {
+
+    @AfterEach
+    public void tearDown() {
+        StateMachineFactory.unregister("NotMeetConditionMachine");
+        StateMachineFactory.unregister("DuplicatedMachine");
+    }
 
     @Test
     public void testConditionNotMeet() {

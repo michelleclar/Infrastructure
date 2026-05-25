@@ -8,6 +8,7 @@ import org.carl.infrastructure.statemachine.builder.AlertFailCallback;
 import org.carl.infrastructure.statemachine.builder.StateMachineBuilder;
 import org.carl.infrastructure.statemachine.builder.StateMachineBuilderFactory;
 import org.carl.infrastructure.statemachine.exception.TransitionFailException;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -41,6 +42,18 @@ public class StateMachineTest {
     static class Context {
         String operator = "frank";
         String entityId = "123465";
+    }
+
+    @AfterEach
+    public void tearDown() {
+        StateMachineFactory.unregister(MACHINE_ID);
+        StateMachineFactory.unregister(MACHINE_ID + "-testFail");
+        StateMachineFactory.unregister(MACHINE_ID + "-testVerify");
+        StateMachineFactory.unregister(MACHINE_ID + "1");
+        StateMachineFactory.unregister(MACHINE_ID + "2");
+        StateMachineFactory.unregister("testExternalInternalNormal");
+        StateMachineFactory.unregister("testMultiThread");
+        StateMachineFactory.unregister("ParallelMachine");
     }
 
     @Test

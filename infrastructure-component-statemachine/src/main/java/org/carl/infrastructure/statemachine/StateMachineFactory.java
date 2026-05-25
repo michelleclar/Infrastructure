@@ -11,13 +11,13 @@ public class StateMachineFactory {
 
     public static <S, E, C> void register(StateMachine<S, E, C> stateMachine) {
         String machineId = stateMachine.getMachineId();
-        if (stateMachineMap.get(machineId) != null) {
+        StateMachine<?, ?, ?> existing = stateMachineMap.putIfAbsent(machineId, stateMachine);
+        if (existing != null) {
             throw new StateMachineException(
                     "The state machine with id ["
                             + machineId
                             + "] is already built, no need to build again");
         }
-        stateMachineMap.put(stateMachine.getMachineId(), stateMachine);
     }
 
     public static <S, E, C> StateMachine<S, E, C> get(String machineId) {
