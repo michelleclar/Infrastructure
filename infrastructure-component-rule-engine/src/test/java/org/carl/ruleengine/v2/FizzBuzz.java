@@ -1,7 +1,7 @@
 package org.carl.ruleengine.v2;
 
-import static com.alibaba.cola.ruleengine.fizzbuzz.v2.SimpleRuleEngine.*;
-import static com.alibaba.cola.ruleengine.fizzbuzz.v2.TimesCondition.times;
+import static org.carl.ruleengine.v2.SimpleRuleEngine.*;
+import static org.carl.ruleengine.v2.TimesCondition.times;
 
 /** 用简易规则引擎重构后的FizzBuzz实现 */
 public class FizzBuzz {
