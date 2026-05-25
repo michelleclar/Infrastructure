@@ -6,33 +6,36 @@ import org.carl.infrastructure.ruleengine.api.RuleEngine;
 import org.carl.infrastructure.ruleengine.core.DefaultRuleEngine;
 
 /**
- * Mixin interface that provides rule engine evaluation capability.
+ * Ability interface that grants implementing classes access to a shared {@link RuleEngine}.
  *
- * <p>Implement this interface on a context or service class to gain access to a
- * {@link RuleEngine} without direct field injection. Following the Ability pattern,
- * the default implementation returns a stateless {@link DefaultRuleEngine} instance.
- *
- * <p>Override {@link #getRuleEngine()} to supply a custom or shared engine instance.
+ * <p>The default engine is a shared static constant — implementors need not allocate a new engine
+ * on every call.
  */
 public interface IRuleEngineAbility {
 
+    /** Shared, reusable engine instance (interface field is implicitly public static final). */
+    RuleEngine DEFAULT_ENGINE = new DefaultRuleEngine();
+
     /**
-     * Returns the {@link RuleEngine} instance used for evaluating rules.
+     * Return the rule engine to use. Defaults to {@link #DEFAULT_ENGINE}.
      *
-     * @return a non-null {@link RuleEngine}
+     * @return the {@link RuleEngine} instance
      */
     default RuleEngine getRuleEngine() {
-        return new DefaultRuleEngine();
+        return DEFAULT_ENGINE;
     }
 
     /**
-     * Convenience method: fire the given rule against the provided facts using
-     * the ability's rule engine.
+     * Fire the given rule against the provided facts using this ability's engine.
      *
-     * @param rule  the rule to evaluate and execute
-     * @param facts the facts to pass to the rule
+     * @param rule  the rule to fire; must not be null
+     * @param facts the facts to evaluate against
+     * @throws IllegalArgumentException if {@code rule} is null
      */
     default void fireRule(Rule rule, Facts facts) {
+        if (rule == null) {
+            throw new IllegalArgumentException("rule must not be null");
+        }
         getRuleEngine().fire(rule, facts);
     }
 }
