@@ -30,4 +30,12 @@ public class StateMachineFactory {
         }
         return stateMachine;
     }
+
+    public static boolean contains(String machineId) {
+        return stateMachineMap.containsKey(machineId);
+    }
+
+    public static void unregister(String machineId) {
+        stateMachineMap.remove(machineId);
+    }
 }

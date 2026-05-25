@@ -3,8 +3,10 @@ package org.carl.test;
 import org.carl.infrastructure.statemachine.Action;
 import org.carl.infrastructure.statemachine.Condition;
 import org.carl.infrastructure.statemachine.StateMachine;
+import org.carl.infrastructure.statemachine.StateMachineFactory;
 import org.carl.infrastructure.statemachine.builder.StateMachineBuilder;
 import org.carl.infrastructure.statemachine.builder.StateMachineBuilderFactory;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -249,6 +251,11 @@ public class ContentPublishingStateMachineTest {
                 .when(checkRepublishCondition())
                 .perform(doAction());
         stateMachine = builder.build(MACHINE_ID);
+    }
+
+    @AfterEach
+    public void tearDown() {
+        StateMachineFactory.unregister(MACHINE_ID);
     }
 
     @Test

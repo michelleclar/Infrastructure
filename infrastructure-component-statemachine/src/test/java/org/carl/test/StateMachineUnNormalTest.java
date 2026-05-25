@@ -1,11 +1,11 @@
 package org.carl.test;
 
-import com.alibaba.cola.statemachine.Action;
-import com.alibaba.cola.statemachine.Condition;
-import com.alibaba.cola.statemachine.StateMachine;
-import com.alibaba.cola.statemachine.builder.StateMachineBuilder;
-import com.alibaba.cola.statemachine.builder.StateMachineBuilderFactory;
-import com.alibaba.cola.statemachine.impl.StateMachineException;
+import org.carl.infrastructure.statemachine.Action;
+import org.carl.infrastructure.statemachine.Condition;
+import org.carl.infrastructure.statemachine.StateMachine;
+import org.carl.infrastructure.statemachine.builder.StateMachineBuilder;
+import org.carl.infrastructure.statemachine.builder.StateMachineBuilderFactory;
+import org.carl.infrastructure.statemachine.impl.StateMachineException;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
