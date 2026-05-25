@@ -1,8 +1,5 @@
-package org.carl.test;
+package org.carl.infrastructure.pdp;
 
-import org.carl.infrastructure.pdp.Pdp;
-import org.carl.infrastructure.pdp.PolicyDecision;
-import org.carl.infrastructure.pdp.PolicyRequest;
 import org.carl.infrastructure.pdp.impl.DefaultPdp;
 import org.junit.jupiter.api.Test;
 
@@ -45,5 +42,16 @@ class PdpTest {
     void delegatingDefaultMethodOnPdp() {
         Pdp pdp = new DefaultPdp(List.of(req -> PolicyDecision.PERMIT));
         assertEquals(PolicyDecision.PERMIT, pdp.evaluate("alice", "read", "document:1"));
+    }
+
+    @Test
+    void iPdpAbilityMixinDefaultGetPdpEvaluatesPermit() {
+        IPdpAbility ability = new IPdpAbility() {
+            @Override
+            public Pdp getPdp() {
+                return new DefaultPdp(List.of(req -> PolicyDecision.PERMIT));
+            }
+        };
+        assertEquals(PolicyDecision.PERMIT, ability.evaluate(REQUEST));
     }
 }
