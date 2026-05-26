@@ -42,7 +42,11 @@ public class ApprovalService {
         instance.setStatus(ApprovalStatus.IN_PROGRESS);
         instance.setCurrentStep(0);
         instance.setNodesJson(nodesJson);
-        instance.setCreatedBy(UserContext.getCurrentUserId());
+        String creator = UserContext.getCurrentUserId();
+        if (creator == null || creator.isBlank()) {
+            throw new IllegalStateException("operator is required");
+        }
+        instance.setCreatedBy(creator);
 
         long instanceId = repository.insertInstance(instance);
         ApprovalNode first = nodes.get(0);
@@ -141,6 +145,9 @@ public class ApprovalService {
         requireOperator(task);
         if (task.getStatus() != TaskStatus.PENDING) {
             throw new IllegalStateException("task is not pending");
+        }
+        if (toUserId == null || toUserId.isBlank()) {
+            throw new IllegalArgumentException("toUserId is required");
         }
         repository.updateTaskAssignee(taskId, toUserId);
         insertHistory(task.getInstanceId(), taskId, ActionType.TRANSFER, comment);

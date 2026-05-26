@@ -19,9 +19,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,13 +29,11 @@ import java.util.Optional;
 class ApprovalServiceTest {
 
     @Mock ApprovalRepository repository;
+    @Spy ObjectMapper mapper = new ObjectMapper();
     @InjectMocks ApprovalService service;
 
     @BeforeEach
-    void setUp() throws Exception {
-        Field mapperField = ApprovalService.class.getDeclaredField("mapper");
-        mapperField.setAccessible(true);
-        mapperField.set(service, new ObjectMapper());
+    void setUp() {
         UserContext.setCurrentUserId("user1");
     }
 
@@ -255,5 +253,29 @@ class ApprovalServiceTest {
 
         verify(repository).updateTaskAssignee(1L, "user2");
         verify(repository).insertHistory(any());
+    }
+
+    @Test
+    void startProcess_throwsWhenOperatorNotSet() {
+        UserContext.clear();
+        assertThrows(
+                IllegalStateException.class,
+                () -> service.startProcess("biz-1", List.of(new ApprovalNode())));
+    }
+
+    @Test
+    void transferTask_throwsWhenToUserIdBlank() {
+        ApprovalTask task = new ApprovalTask();
+        task.setId(1L);
+        task.setInstanceId(10L);
+        task.setAssignee("user1");
+        task.setStatus(TaskStatus.PENDING);
+
+        when(repository.fetchTask(1L)).thenReturn(Optional.of(task));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.transferTask(1L, "", "comment"));
+        assertEquals("toUserId is required", ex.getMessage());
     }
 }
