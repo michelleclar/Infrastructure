@@ -1,17 +1,27 @@
-package org.carl.components.vector;
+package org.carl.infrastructure.qdrant;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.net.SocketAddress;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import org.carl.infrastructure.qdrant.QdrantGrpcClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+
 @ExtendWith(VertxExtension.class)
 class VectorClientTest {
     private QdrantGrpcClient vectorClient;
+
+    private static boolean qdrantReachable() {
+        try (var s = new java.net.Socket()) {
+            s.connect(new java.net.InetSocketAddress("localhost", 6334), 500);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
     @BeforeEach
     void init() {
@@ -22,6 +32,7 @@ class VectorClientTest {
 
     @Test
     void get() {
+        assumeTrue(qdrantReachable(), "Qdrant not reachable — skipping");
         var r =
                 vectorClient
                         .getCollectionsGrpcClient()
@@ -38,7 +49,7 @@ class VectorClientTest {
 
     @Test
     void create(VertxTestContext testContext) {
-
+        assumeTrue(qdrantReachable(), "Qdrant not reachable — skipping");
         vectorClient
                 .getCollectionsGrpcClient()
                 .create(builder -> builder.setCollectionName("test").build())
