@@ -32,17 +32,7 @@ public class EventBusTest {
     @Test
     void test() {
 
-        eventBus.request("pojo", "hello")
-                .subscribe()
-                .with(
-                        item -> {
-                            System.out.println(item.body());
-                        });
-        eventBus.request("greeting", "hello")
-                .subscribe()
-                .with(
-                        item -> {
-                            System.out.println(item.body());
-                        });
+        eventBus.request("pojo", "hello").subscribe().with(__ -> {});
+        eventBus.request("greeting", "hello").subscribe().with(__ -> {});
     }
 }

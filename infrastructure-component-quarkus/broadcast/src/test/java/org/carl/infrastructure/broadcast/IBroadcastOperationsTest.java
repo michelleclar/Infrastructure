@@ -13,12 +13,10 @@ class IBroadcastOperationsTest extends BroadcastStd {
 
     @BeforeEach
     void setUp() {
-        subscribe("test.int", Integer.class, System.out::println).subscribe().with(__ -> {});
-        subscribe("test.string", String.class, System.out::println).subscribe().with(__ -> {});
-        subscribe("test.transfer", TransferEvent.class, System.out::println)
-                .subscribe()
-                .with(__ -> {});
-        subscribe("test.unsubscribe", Integer.class, System.out::println).await().indefinitely();
+        subscribe("test.int", Integer.class, __ -> {}).subscribe().with(__ -> {});
+        subscribe("test.string", String.class, __ -> {}).subscribe().with(__ -> {});
+        subscribe("test.transfer", TransferEvent.class, __ -> {}).subscribe().with(__ -> {});
+        subscribe("test.unsubscribe", Integer.class, __ -> {}).await().indefinitely();
     }
 
     @Test
@@ -32,7 +30,7 @@ class IBroadcastOperationsTest extends BroadcastStd {
 
     @Test
     void request() {
-        request("test.int", 1).subscribe().with(System.out::println);
+        request("test.int", 1).subscribe().with(__ -> {});
     }
 
     @Test
@@ -49,15 +47,15 @@ class IBroadcastOperationsTest extends BroadcastStd {
                         false)
                 .await()
                 .indefinitely();
-        request(topic, 1).subscribe().with(System.out::println);
+        request(topic, 1).subscribe().with(__ -> {});
     }
 
     @Test
     void unsubscribe() {
         String topic = "test.unsubscribe";
-        request(topic, 1).subscribe().with(System.out::println);
+        request(topic, 1).subscribe().with(__ -> {});
         unsubscribe(topic).await().indefinitely();
-        request(topic, 1).subscribe().with(System.out::println);
+        request(topic, 1).subscribe().with(__ -> {});
     }
 
     @Test
