@@ -3,8 +3,11 @@ package org.carl.infrastructure.approval.core;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.quarkus.arc.properties.IfBuildProperty;
+
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
 
 import org.carl.infrastructure.approval.model.ActionType;
 import org.carl.infrastructure.approval.model.ApprovalDoneItem;
@@ -19,11 +22,13 @@ import org.carl.infrastructure.approval.user.UserContext;
 import java.util.List;
 
 @ApplicationScoped
+@IfBuildProperty(name = "quarkus.plugins.approval.enable", stringValue = "true")
 public class ApprovalService {
 
     @Inject ApprovalRepository repository;
     @Inject ObjectMapper mapper;
 
+    @Transactional
     public long startProcess(String bizKey, List<ApprovalNode> nodes) {
         if (nodes == null || nodes.isEmpty()) {
             throw new IllegalArgumentException("nodes is required");
@@ -49,6 +54,7 @@ public class ApprovalService {
         return instanceId;
     }
 
+    @Transactional
     public void approveTask(long taskId, String comment) {
         ApprovalTask task =
                 repository
@@ -89,6 +95,7 @@ public class ApprovalService {
                 instance.getId(), currentStep + 1, ApprovalStatus.IN_PROGRESS.name());
     }
 
+    @Transactional
     public void backTask(long taskId, String comment) {
         ApprovalTask task =
                 repository
@@ -122,6 +129,7 @@ public class ApprovalService {
                 instance.getId(), currentStep - 1, ApprovalStatus.IN_PROGRESS.name());
     }
 
+    @Transactional
     public void transferTask(long taskId, String toUserId, String comment) {
         ApprovalTask task =
                 repository
