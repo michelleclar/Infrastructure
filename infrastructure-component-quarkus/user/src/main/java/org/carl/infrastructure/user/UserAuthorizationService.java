@@ -12,6 +12,7 @@ import org.carl.infrastructure.authorization.modle.UserIdentity;
 
 import java.util.Set;
 
+/** Module authorization service (PEP) — validates module-level actions against the current user's permissions. */
 @ApplicationScoped
 @IfBuildProperty(name = "quarkus.plugins.user.enable", stringValue = "true")
 public class UserAuthorizationService implements IModuleAuthorizationServiceAbility {
@@ -34,6 +35,7 @@ public class UserAuthorizationService implements IModuleAuthorizationServiceAbil
         return "user";
     }
 
+    // Token is unused: this service delegates to the CDI-managed SecurityIdentity from the active request context.
     @Override
     public IUserIdentity getIdentity(String token) {
         return new UserIdentity(securityIdentity);

@@ -1,5 +1,6 @@
 package org.carl.infrastructure.user;
 
+import io.quarkus.arc.properties.IfBuildProperty;
 import io.quarkus.security.identity.SecurityIdentity;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -21,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>职责： - 从令牌解析并构建 {@link IUserIdentity} - 基于用户身份执行模块权限校验
  */
 @ApplicationScoped
+@IfBuildProperty(name = "quarkus.plugins.user.enable", stringValue = "true")
 public class KeycloakAuthProvider implements AuthProvider {
     private static final Map<String, IUserIdentity> STORE = new ConcurrentHashMap<>();
     @Inject SecurityIdentity securityIdentity;
