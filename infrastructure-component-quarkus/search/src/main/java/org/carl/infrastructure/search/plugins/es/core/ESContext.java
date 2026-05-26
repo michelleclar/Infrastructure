@@ -8,4 +8,6 @@ public class ESContext {
     public ESContext(ElasticsearchClient client) {
         this.client = client;
     }
+
+    public ElasticsearchClient getClient() { return client; }
 }

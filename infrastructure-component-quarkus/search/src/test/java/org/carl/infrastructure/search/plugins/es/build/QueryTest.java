@@ -1,4 +1,4 @@
-package search.plugins.es.build;
+package org.carl.infrastructure.search.plugins.es.build;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -20,7 +20,6 @@ class QueryTest {
                         .TermQueryBuild()
                         .setTermPair("type", "POST")
                         .build();
-        System.out.println(build);
     }
 
     @Test
@@ -30,6 +29,5 @@ class QueryTest {
                         .properties(p -> p.setType(PropertyType.KEYWORD).setName("id").build())
                         .properties(p -> p.setName("type").setType(PropertyType.KEYWORD).build())
                         .properties(p -> p.setName("content").setType(PropertyType.TEXT).build());
-        System.out.println(build);
     }
 }
