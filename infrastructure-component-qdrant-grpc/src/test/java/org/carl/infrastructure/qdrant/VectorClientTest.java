@@ -4,6 +4,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.net.SocketAddress;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,6 +13,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @ExtendWith(VertxExtension.class)
 class VectorClientTest {
+    private Vertx vertx;
     private QdrantGrpcClient vectorClient;
 
     private static boolean qdrantReachable() {
@@ -25,26 +27,23 @@ class VectorClientTest {
 
     @BeforeEach
     void init() {
-        vectorClient =
-                new QdrantGrpcClient(
-                        Vertx.vertx(), SocketAddress.inetSocketAddress(6334, "localhost"));
+        vertx = Vertx.vertx();
+        vectorClient = new QdrantGrpcClient(vertx, SocketAddress.inetSocketAddress(6334, "localhost"));
+    }
+
+    @AfterEach
+    void tearDown() {
+        vertx.close();
     }
 
     @Test
-    void get() {
+    void get(VertxTestContext testContext) {
         assumeTrue(qdrantReachable(), "Qdrant not reachable — skipping");
-        var r =
-                vectorClient
-                        .getCollectionsGrpcClient()
-                        .get(
-                                builder -> {
-                                    return builder.setCollectionName("test").build();
-                                });
-        r.onComplete(
-                handle -> {
-                    var _r = handle.result();
-                    System.out.println(_r);
-                });
+        vectorClient
+                .getCollectionsGrpcClient()
+                .get(builder -> builder.setCollectionName("test").build())
+                .onSuccess(response -> testContext.completeNow())
+                .onFailure(testContext::failNow);
     }
 
     @Test
@@ -53,11 +52,7 @@ class VectorClientTest {
         vectorClient
                 .getCollectionsGrpcClient()
                 .create(builder -> builder.setCollectionName("test").build())
-                .onSuccess(
-                        response -> {
-                            System.out.println(response);
-                            testContext.completeNow();
-                        })
+                .onSuccess(response -> testContext.completeNow())
                 .onFailure(testContext::failNow);
     }
 }
