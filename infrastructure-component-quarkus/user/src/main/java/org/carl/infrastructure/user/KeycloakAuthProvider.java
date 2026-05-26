@@ -1,5 +1,6 @@
 package org.carl.infrastructure.user;
 
+import io.quarkus.arc.DefaultBean;
 import io.quarkus.arc.properties.IfBuildProperty;
 import io.quarkus.security.identity.SecurityIdentity;
 
@@ -11,31 +12,25 @@ import org.carl.infrastructure.authorization.IUserIdentity;
 import org.carl.infrastructure.authorization.ModulePermission;
 import org.carl.infrastructure.authorization.ResourceIPermission;
 import org.carl.infrastructure.authorization.modle.UserIdentity;
-import org.carl.infrastructure.component.web.constant.Constants;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Keycloak 认证适配器
  *
  * <p>职责： - 从令牌解析并构建 {@link IUserIdentity} - 基于用户身份执行模块权限校验
+ *
+ * <p>标注 {@link DefaultBean} 以避免与 {@link UserAuthorizationService}（同样满足 {@link AuthProvider}）
+ * 产生 CDI AmbiguousResolutionException：当两者同时激活时，CDI 优先选择非默认 bean。
  */
+@DefaultBean
 @ApplicationScoped
 @IfBuildProperty(name = "quarkus.plugins.user.enable", stringValue = "true")
 public class KeycloakAuthProvider implements AuthProvider {
-    private static final Map<String, IUserIdentity> STORE = new ConcurrentHashMap<>();
     @Inject SecurityIdentity securityIdentity;
 
-    /** 从 JWT 构建用户身份并缓存 */
+    /** 从 JWT 构建用户身份（不缓存，SecurityIdentity 生命周期由 Quarkus OIDC 按请求管理） */
     @Override
     public IUserIdentity getIdentity(String token) {
-        IUserIdentity identity = new UserIdentity(securityIdentity);
-        Object attribute = identity.getAttribute(Constants.USER_ID);
-        if (attribute instanceof String userId) {
-            STORE.put(userId, identity);
-        }
-        return identity;
+        return new UserIdentity(securityIdentity);
     }
 
     @Override

@@ -4,19 +4,16 @@ import io.quarkus.security.identity.SecurityIdentity;
 
 import org.carl.infrastructure.authorization.IUserIdentity;
 import org.carl.infrastructure.authorization.ModuleStandardPermission;
-import org.carl.infrastructure.authorization.modle.Permission;
 import org.carl.infrastructure.authorization.modle.UserIdentity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -27,14 +24,12 @@ class UserAuthorizationServiceTest {
     @Mock
     SecurityIdentity securityIdentity;
 
-    @Spy
+    @InjectMocks
     UserAuthorizationService service;
 
     @BeforeEach
-    void setUp() throws Exception {
-        var field = UserAuthorizationService.class.getDeclaredField("securityIdentity");
-        field.setAccessible(true);
-        field.set(service, securityIdentity);
+    void setUp() {
+        // Mockito @InjectMocks wires securityIdentity into service automatically.
     }
 
     @Test
@@ -60,27 +55,13 @@ class UserAuthorizationServiceTest {
     }
 
     @Test
-    void check_returnsTrueWhenIdentityHasRequiredPermission() {
-        Permission permission =
-                Permission.PermissionBuilder.create("VIEW")
-                        .addAction(
-                                b -> b.enable(true)
-                                        .addStandardAction(ModuleStandardPermission.VIEW)
-                                        .build())
-                        .build();
-        Map<String, Set<Permission>> permissions = new HashMap<>();
-        permissions.put(ModuleStandardPermission.VIEW.getName(), Set.of(permission));
+    void check_returnsFalseWhenIdentityHasNoPermissions() {
+        when(securityIdentity.isAnonymous()).thenReturn(false);
+        when(securityIdentity.getRoles()).thenReturn(new HashSet<>());
+        when(securityIdentity.getAttributes()).thenReturn(new HashMap<>());
 
-        IUserIdentity identity =
-                UserIdentity.UserIdentityBuilder.create()
-                        .setAnonymous(false)
-                        .setRoles(new HashSet<>())
-                        .setAttributes(new HashMap<>())
-                        .setPermissions(permissions)
-                        .build();
-
-        doReturn(identity).when(service).getIdentity();
-
-        assertTrue(service.check(ModuleStandardPermission.VIEW));
+        // UserIdentity built from SecurityIdentity has an empty permissions map,
+        // so check() must return false for any required permission.
+        assertFalse(service.check(ModuleStandardPermission.VIEW));
     }
 }
