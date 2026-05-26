@@ -33,6 +33,9 @@ public class ApprovalService {
         if (nodes == null || nodes.isEmpty()) {
             throw new IllegalArgumentException("nodes is required");
         }
+        if (bizKey == null || bizKey.isBlank()) {
+            throw new IllegalArgumentException("bizKey is required");
+        }
         String nodesJson = writeNodesJson(nodes);
         ApprovalInstance instance = new ApprovalInstance();
         instance.setBizKey(bizKey);
@@ -145,11 +148,17 @@ public class ApprovalService {
 
     public List<ApprovalTask> listTodo() {
         String operator = UserContext.getCurrentUserId();
+        if (operator == null || operator.isBlank()) {
+            throw new IllegalStateException("operator is required");
+        }
         return repository.fetchTodoTasks(operator);
     }
 
     public List<ApprovalDoneItem> listDone() {
         String operator = UserContext.getCurrentUserId();
+        if (operator == null || operator.isBlank()) {
+            throw new IllegalStateException("operator is required");
+        }
         return repository.fetchDoneItems(operator);
     }
 
