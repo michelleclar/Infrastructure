@@ -1,5 +1,6 @@
 package org.carl.infrastructure.user;
 
+import io.quarkus.arc.properties.IfBuildProperty;
 import io.quarkus.security.identity.SecurityIdentity;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -7,19 +8,15 @@ import jakarta.inject.Inject;
 
 import org.carl.infrastructure.authorization.*;
 import org.carl.infrastructure.authorization.modle.Permission;
+import org.carl.infrastructure.authorization.modle.UserIdentity;
 
 import java.util.Set;
 
 @ApplicationScoped
-/**
- * 模块授权服务（PEP）
- *
- * <p>基于 {@link IUserIdentity} 的模块权限集合，校验所需动作是否允许。
- */
+@IfBuildProperty(name = "quarkus.plugins.user.enable", stringValue = "true")
 public class UserAuthorizationService implements IModuleAuthorizationServiceAbility {
     @Inject SecurityIdentity securityIdentity;
 
-    /** 校验模块动作权限 */
     @Override
     public <T extends Enum<T> & IModuleEnum> boolean check(T requiredPermission) {
         Set<Permission> userPermissions =
@@ -32,19 +29,18 @@ public class UserAuthorizationService implements IModuleAuthorizationServiceAbil
         return false;
     }
 
-    /** 模块名 */
     @Override
     public String getModule() {
-        return "";
+        return "user";
     }
 
     @Override
     public IUserIdentity getIdentity(String token) {
-        return null;
+        return new UserIdentity(securityIdentity);
     }
 
     @Override
     public SecurityIdentity getSecurityIdentity() {
-        return null;
+        return securityIdentity;
     }
 }
