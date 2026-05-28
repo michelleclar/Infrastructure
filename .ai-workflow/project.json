@@ -1,0 +1,957 @@
+{
+  "version": 1,
+  "projectId": "infrastructure",
+  "stateRoot": "~/.ai-workflow/projects/infrastructure",
+  "sourceOfTruth": "external-platform",
+  "strictPhaseFlow": true,
+  "activePhaseIndex": 5,
+  "platform": {
+    "primary": "youtrack",
+    "fallback": "obsidian",
+    "locked": true,
+    "migratedFrom": "linear",
+    "migratedAt": "2026-05-28T00:00:00.000Z"
+  },
+  "adapters": {
+    "linear": {},
+    "youtrack": {
+      "configFile": ".ai-workflow/platforms/youtrack.json"
+    },
+    "obsidian": {
+      "mode": "external",
+      "root": "~/.ai-workflow/projects/infrastructure/obsidian"
+    }
+  },
+  "runtime": {
+    "root": "~/.ai-workflow/projects/infrastructure/runtime"
+  },
+  "blackboard": [
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:54:25.449Z",
+      "platform": "linear",
+      "event": "document.created",
+      "ref": "f6cb5456-3fc2-487e-b1c4-9a855e3862c1",
+      "title": "[PRD] Infrastructure Components Completion"
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:54:50.958Z",
+      "platform": "linear",
+      "event": "issue.created",
+      "ref": "BAC-209",
+      "title": "[Phase 1 Acceptance] Core Independent Libraries",
+      "labels": [
+        "phase-acceptance"
+      ]
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:55:09.474Z",
+      "platform": "linear",
+      "event": "issue.created",
+      "ref": "BAC-210",
+      "title": "[Phase 2 Acceptance] AI and gRPC Clients",
+      "labels": [
+        "phase-acceptance"
+      ]
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:55:13.674Z",
+      "platform": "linear",
+      "event": "issue.created",
+      "ref": "BAC-211",
+      "title": "[Phase 3 Acceptance] Quarkus Integration Modules",
+      "labels": [
+        "phase-acceptance"
+      ]
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:55:17.002Z",
+      "platform": "linear",
+      "event": "issue.created",
+      "ref": "BAC-212",
+      "title": "[Phase 4 Acceptance] Business Logic Modules",
+      "labels": [
+        "phase-acceptance"
+      ]
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:55:50.016Z",
+      "platform": "linear",
+      "event": "issue.created",
+      "ref": "BAC-213",
+      "title": "Implement infrastructure-component-statemachine",
+      "parentId": "BAC-209",
+      "phase": 1
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:55:53.641Z",
+      "platform": "linear",
+      "event": "issue.created",
+      "ref": "BAC-214",
+      "title": "Implement infrastructure-component-rule-engine",
+      "parentId": "BAC-209",
+      "phase": 1
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:55:57.410Z",
+      "platform": "linear",
+      "event": "issue.created",
+      "ref": "BAC-215",
+      "title": "Implement infrastructure-component-pdp",
+      "parentId": "BAC-209",
+      "phase": 1
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:56:00.871Z",
+      "platform": "linear",
+      "event": "issue.created",
+      "ref": "BAC-216",
+      "title": "Implement infrastructure-component-qdrant-grpc",
+      "parentId": "BAC-210",
+      "phase": 2
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:56:04.282Z",
+      "platform": "linear",
+      "event": "issue.created",
+      "ref": "BAC-217",
+      "title": "Implement infrastructure-component-embedding-grpc",
+      "parentId": "BAC-210",
+      "phase": 2
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:56:17.524Z",
+      "platform": "linear",
+      "event": "issue.created",
+      "ref": "BAC-218",
+      "title": "Implement Quarkus broadcast extension (Vert.x event bus)",
+      "parentId": "BAC-211",
+      "phase": 3
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:56:21.392Z",
+      "platform": "linear",
+      "event": "issue.created",
+      "ref": "BAC-219",
+      "title": "Implement Quarkus search extension (Elasticsearch)",
+      "parentId": "BAC-211",
+      "phase": 3
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:56:24.931Z",
+      "platform": "linear",
+      "event": "issue.created",
+      "ref": "BAC-220",
+      "title": "Implement Quarkus approval module",
+      "parentId": "BAC-212",
+      "phase": 4
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:56:28.627Z",
+      "platform": "linear",
+      "event": "issue.created",
+      "ref": "BAC-221",
+      "title": "Implement Quarkus user module",
+      "parentId": "BAC-212",
+      "phase": 4
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:56:34.192Z",
+      "platform": "linear",
+      "event": "issue.created",
+      "ref": "BAC-222",
+      "title": "Implement audit log module",
+      "parentId": "BAC-212",
+      "phase": 4
+    },
+    {
+      "type": "Decision",
+      "ts": "2026-05-25T14:53:44.569Z",
+      "decision": "PRD parsed into 4 phases grouped by module type: independent libs, AI/gRPC, Quarkus integrations, business modules.",
+      "rationale": "User chose 'by type' grouping to maximize clean dependency ordering and testability at phase boundaries."
+    },
+    {
+      "type": "Decision",
+      "ts": "2026-05-25T14:54:25.449Z",
+      "decision": "PRD stored in Linear project 'Backend Infrastructure' (team: Backend/BAC). Obsidian mirror is secondary.",
+      "rationale": "Project already existed in Linear; primary platform defaulted to linear."
+    },
+    {
+      "type": "Decision",
+      "ts": "2026-05-25T14:59:00.000Z",
+      "decision": "All 14 issues mirrored to YouTrack project INFRA via /aw-create --platform=youtrack.",
+      "rationale": "User requested YouTrack as secondary platform. Issues created with Epic/Feature types; Linear IDs stored in youtrack.json linearMirror map."
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:59:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.created",
+      "ref": "INFRA-7",
+      "title": "[Phase 1 Acceptance] Core Independent Libraries",
+      "linearMirror": "BAC-209",
+      "phase": 1
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:59:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.created",
+      "ref": "INFRA-8",
+      "title": "Implement infrastructure-component-statemachine",
+      "linearMirror": "BAC-213",
+      "phase": 1
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:59:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.created",
+      "ref": "INFRA-9",
+      "title": "Implement infrastructure-component-rule-engine",
+      "linearMirror": "BAC-214",
+      "phase": 1
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:59:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.created",
+      "ref": "INFRA-10",
+      "title": "Implement infrastructure-component-pdp",
+      "linearMirror": "BAC-215",
+      "phase": 1
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:59:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.created",
+      "ref": "INFRA-11",
+      "title": "[Phase 2 Acceptance] AI and gRPC Clients",
+      "linearMirror": "BAC-210",
+      "phase": 2
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:59:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.created",
+      "ref": "INFRA-12",
+      "title": "Implement infrastructure-component-qdrant-grpc",
+      "linearMirror": "BAC-216",
+      "phase": 2
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:59:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.created",
+      "ref": "INFRA-13",
+      "title": "Implement infrastructure-component-embedding-grpc",
+      "linearMirror": "BAC-217",
+      "phase": 2
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:59:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.created",
+      "ref": "INFRA-14",
+      "title": "[Phase 3 Acceptance] Quarkus Integration Modules",
+      "linearMirror": "BAC-211",
+      "phase": 3
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:59:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.created",
+      "ref": "INFRA-15",
+      "title": "Implement Quarkus broadcast extension",
+      "linearMirror": "BAC-218",
+      "phase": 3
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:59:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.created",
+      "ref": "INFRA-16",
+      "title": "Implement Quarkus search extension",
+      "linearMirror": "BAC-219",
+      "phase": 3
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:59:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.created",
+      "ref": "INFRA-17",
+      "title": "[Phase 4 Acceptance] Business Logic Modules",
+      "linearMirror": "BAC-212",
+      "phase": 4
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:59:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.created",
+      "ref": "INFRA-18",
+      "title": "Implement Quarkus approval module",
+      "linearMirror": "BAC-220",
+      "phase": 4
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:59:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.created",
+      "ref": "INFRA-19",
+      "title": "Implement Quarkus user module",
+      "linearMirror": "BAC-221",
+      "phase": 4
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T14:59:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.created",
+      "ref": "INFRA-20",
+      "title": "Implement audit log module",
+      "linearMirror": "BAC-222",
+      "phase": 4
+    },
+    {
+      "type": "AgentTask",
+      "ts": "2026-05-25T15:19:21.020Z",
+      "platform": "youtrack",
+      "command": "/aw-create --mode=single --platform=youtrack",
+      "verdict": "ok",
+      "created": [
+        "INFRA-28",
+        "INFRA-29",
+        "INFRA-30",
+        "INFRA-31",
+        "INFRA-32",
+        "INFRA-33",
+        "INFRA-34",
+        "INFRA-35"
+      ]
+    },
+    {
+      "type": "Decision",
+      "ts": "2026-05-25T15:19:21.020Z",
+      "decision": "Code review defects were created as YouTrack Bug issues through the aw-create standalone flow.",
+      "rationale": "User explicitly requested project code review and defect filing in YouTrack using aw-create."
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T15:19:21.020Z",
+      "platform": "youtrack",
+      "event": "issue.created",
+      "ref": "INFRA-28",
+      "title": "[Defect] Redis tests use hard-coded external endpoints and credentials",
+      "parent": null
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T15:19:21.020Z",
+      "platform": "youtrack",
+      "event": "issue.created",
+      "ref": "INFRA-29",
+      "title": "[Defect] Redis generic JSON serialization fails LocalDateTime round trip",
+      "parent": null
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T15:19:21.020Z",
+      "platform": "youtrack",
+      "event": "issue.created",
+      "ref": "INFRA-30",
+      "title": "[Defect] CacheService returns null CacheContext despite injection",
+      "parent": null
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T15:19:21.020Z",
+      "platform": "youtrack",
+      "event": "issue.created",
+      "ref": "INFRA-31",
+      "title": "[Defect INFRA-12/13] gRPC client providers are not CDI producers",
+      "parent": "INFRA-12"
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T15:19:21.020Z",
+      "platform": "youtrack",
+      "event": "issue.created",
+      "ref": "INFRA-32",
+      "title": "[Defect INFRA-19] UserAuthorizationService overrides identity methods with null returns",
+      "parent": "INFRA-19"
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T15:19:21.020Z",
+      "platform": "youtrack",
+      "event": "issue.created",
+      "ref": "INFRA-33",
+      "title": "[Defect] Quarkus integration enable flags are inconsistent or missing",
+      "parent": "INFRA-14"
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T15:19:21.020Z",
+      "platform": "youtrack",
+      "event": "issue.created",
+      "ref": "INFRA-34",
+      "title": "[Defect INFRA-20] infrastructure-component-audit is included but contains no source module",
+      "parent": "INFRA-20"
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-25T15:19:21.020Z",
+      "platform": "youtrack",
+      "event": "issue.created",
+      "ref": "INFRA-35",
+      "title": "[Defect INFRA-18] Approval task transitions are not transactional",
+      "parent": "INFRA-18"
+    },
+    {
+      "type": "AcceptanceFinding",
+      "ts": "2026-05-25T15:30:00.000Z",
+      "phase": 1,
+      "verdict": "PASS",
+      "criteria": 12,
+      "tests": 48,
+      "modules": [
+        "statemachine",
+        "rule-engine",
+        "pdp"
+      ],
+      "youtrackGate": "INFRA-7",
+      "linearGate": "BAC-209",
+      "note": "All 12 acceptance criteria verified. Awaiting human final acceptance via /aw-accept."
+    },
+    {
+      "type": "Decision",
+      "ts": "2026-05-26T00:00:00.000Z",
+      "decision": "Phase 1 human final acceptance confirmed. INFRA-7 transitioned to Verified.",
+      "rationale": "User confirmed /aw-accept INFRA-7. All 3 children Verified, 48 tests passing, 12 criteria met."
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-26T00:00:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.state.changed",
+      "ref": "INFRA-7",
+      "from": "To be discussed",
+      "to": "Verified",
+      "comment": "7-16"
+    },
+    {
+      "type": "Decision",
+      "ts": "2026-05-26T00:00:00.000Z",
+      "decision": "activePhaseIndex advanced to 2. Phase 2 children INFRA-12 and INFRA-13 are now unblocked by strict phase flow.",
+      "rationale": "Phase 1 gate closed; Phase 2 (AI and gRPC Clients) is the next active phase."
+    },
+    {
+      "type": "AcceptanceFinding",
+      "ts": "2026-05-26T01:00:00.000Z",
+      "phase": 2,
+      "verdict": "PASS",
+      "criteria": 12,
+      "modules": [
+        "qdrant-grpc",
+        "embedding-grpc"
+      ],
+      "youtrackGate": "INFRA-11",
+      "note": "All 12 criteria verified. INFRA-12 Verified, INFRA-13 Verified. Awaiting human final acceptance."
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-26T01:00:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.state.changed",
+      "ref": "INFRA-11",
+      "from": "Open",
+      "to": "To be discussed"
+    },
+    {
+      "type": "Decision",
+      "ts": "2026-05-26T01:30:00.000Z",
+      "decision": "Phase 2 human final acceptance confirmed. INFRA-11 transitioned to Verified.",
+      "rationale": "User confirmed /aw-accept INFRA-11. Both children Verified, 12 criteria met."
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-26T01:30:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.state.changed",
+      "ref": "INFRA-11",
+      "from": "To be discussed",
+      "to": "Verified",
+      "comment": "7-17"
+    },
+    {
+      "type": "Decision",
+      "ts": "2026-05-26T01:30:00.000Z",
+      "decision": "activePhaseIndex advanced to 3. Phase 3 children INFRA-15 and INFRA-16 are now unblocked.",
+      "rationale": "Phase 2 gate closed; Phase 3 (Quarkus Integration Modules — broadcast, search) is next."
+    },
+    {
+      "type": "AcceptanceFinding",
+      "ts": "2026-05-26T02:00:00.000Z",
+      "phase": 3,
+      "verdict": "PASS",
+      "criteria": 12,
+      "modules": [
+        "broadcast",
+        "search"
+      ],
+      "youtrackGate": "INFRA-14",
+      "note": "All 12 criteria verified. INFRA-15 Verified (7 tests), INFRA-16 Verified (2 tests). Awaiting human final acceptance."
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-26T02:00:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.state.changed",
+      "ref": "INFRA-14",
+      "from": "Open",
+      "to": "To be discussed"
+    },
+    {
+      "type": "Decision",
+      "ts": "2026-05-26T02:30:00.000Z",
+      "decision": "Phase 3 human final acceptance confirmed. INFRA-14 transitioned to Verified.",
+      "rationale": "User confirmed /aw-accept INFRA-14. Both children Verified, 12 criteria met."
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-26T02:30:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.state.changed",
+      "ref": "INFRA-14",
+      "from": "To be discussed",
+      "to": "Verified",
+      "comment": "7-18"
+    },
+    {
+      "type": "Decision",
+      "ts": "2026-05-26T02:30:00.000Z",
+      "decision": "activePhaseIndex advanced to 4. Phase 4 children INFRA-18, INFRA-19, INFRA-20 are now unblocked.",
+      "rationale": "Phase 3 gate closed; Phase 4 (Business Logic Modules — approval, user, audit) is next."
+    },
+    {
+      "type": "AgentTask",
+      "ts": "2026-05-26T03:00:00.000Z",
+      "platform": "youtrack",
+      "role": "dev",
+      "runner": "codex-host",
+      "items": [
+        "INFRA-18",
+        "INFRA-19",
+        "INFRA-20"
+      ],
+      "commits": [
+        "e0b52b8",
+        "929d02a",
+        "9e4b447"
+      ]
+    },
+    {
+      "type": "Evidence",
+      "ts": "2026-05-26T03:00:00.000Z",
+      "workItemId": "INFRA-18",
+      "verdict": "PASS",
+      "tests": {
+        "total": 6,
+        "passed": 6,
+        "failed": 0
+      },
+      "changes": [
+        "ApprovalService: @Transactional on startProcess/approveTask/backTask/transferTask",
+        "Added @IfBuildProperty(quarkus.plugins.approval.enable)",
+        "ApprovalServiceTest: 6 unit tests"
+      ],
+      "defectsFixed": [
+        "INFRA-35"
+      ]
+    },
+    {
+      "type": "Evidence",
+      "ts": "2026-05-26T03:00:00.000Z",
+      "workItemId": "INFRA-19",
+      "verdict": "PASS",
+      "tests": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0
+      },
+      "changes": [
+        "UserAuthorizationService: getIdentity/getSecurityIdentity fixed, getModule returns 'user'",
+        "Added @IfBuildProperty(quarkus.plugins.user.enable)",
+        "UserAuthorizationServiceTest: 4 unit tests"
+      ],
+      "defectsFixed": [
+        "INFRA-32"
+      ]
+    },
+    {
+      "type": "Evidence",
+      "ts": "2026-05-26T03:00:00.000Z",
+      "workItemId": "INFRA-20",
+      "verdict": "PASS",
+      "tests": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0
+      },
+      "changes": [
+        "Created full infrastructure-component-audit module: AuditEvent, IAuditOperations, IAuditAbility, AuditContext, AuditContextProvider, AuditStd, beans.xml",
+        "AuditContextTest: 5 unit tests"
+      ],
+      "defectsFixed": [
+        "INFRA-34"
+      ]
+    },
+    {
+      "type": "Decision",
+      "ts": "2026-05-26T03:00:00.000Z",
+      "decision": "Phase 4 dev pass complete. INFRA-18/19/20 moved to 'To be discussed'. Defects INFRA-32/33/34/35 closed as Fixed.",
+      "rationale": "All 3 dev agents returned PASS with tests passing; changes verified on main branch."
+    },
+    {
+      "type": "Handoff",
+      "ts": "2026-05-26T03:00:00.000Z",
+      "from": "dev",
+      "to": "review",
+      "items": [
+        "INFRA-18",
+        "INFRA-19",
+        "INFRA-20"
+      ],
+      "context": "Review @Transactional correctness on approval, null-return fix on user, full audit module implementation."
+    },
+    {
+      "type": "Evidence",
+      "ts": "2026-05-26T03:30:00.000Z",
+      "workItemId": "INFRA-18",
+      "role": "test",
+      "verdict": "PASS",
+      "tests": {
+        "total": 13,
+        "passed": 13,
+        "failed": 0
+      },
+      "commits": [
+        "e0b52b8",
+        "dcaac33",
+        "c05ec29"
+      ]
+    },
+    {
+      "type": "Evidence",
+      "ts": "2026-05-26T03:30:00.000Z",
+      "workItemId": "INFRA-19",
+      "role": "test",
+      "verdict": "PASS",
+      "tests": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0
+      },
+      "commits": [
+        "929d02a",
+        "c444d7d",
+        "fd1cc32"
+      ],
+      "note": "KeycloakAuthProvider.canAccess returns false (intentional REBAC stub per source comment)"
+    },
+    {
+      "type": "Evidence",
+      "ts": "2026-05-26T03:30:00.000Z",
+      "workItemId": "INFRA-20",
+      "role": "test",
+      "verdict": "PASS",
+      "tests": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0
+      },
+      "commits": [
+        "9e4b447",
+        "77fdeae"
+      ]
+    },
+    {
+      "type": "AcceptanceFinding",
+      "ts": "2026-05-26T03:30:00.000Z",
+      "phase": 4,
+      "verdict": "PASS",
+      "criteria": 15,
+      "tests": 22,
+      "modules": [
+        "approval",
+        "user",
+        "audit"
+      ],
+      "youtrackGate": "INFRA-17",
+      "linearGate": "BAC-212",
+      "note": "All 15 acceptance criteria verified. approval: 13 tests, user: 4 tests, audit: 5 tests. Awaiting human final acceptance via /aw-accept."
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-26T03:30:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.state.changed",
+      "refs": [
+        "INFRA-18",
+        "INFRA-19",
+        "INFRA-20"
+      ],
+      "from": "To be discussed",
+      "to": "Fixed"
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-26T03:30:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.state.changed",
+      "ref": "INFRA-17",
+      "from": "Open",
+      "to": "To be discussed",
+      "note": "Initial acceptance PASS — awaiting human final acceptance"
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-26T03:00:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.state.changed",
+      "refs": [
+        "INFRA-18",
+        "INFRA-19",
+        "INFRA-20"
+      ],
+      "from": "In Progress",
+      "to": "To be discussed"
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-26T03:00:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.state.changed",
+      "refs": [
+        "INFRA-32",
+        "INFRA-33",
+        "INFRA-34",
+        "INFRA-35"
+      ],
+      "from": "Open",
+      "to": "Fixed"
+    },
+    {
+      "type": "Decision",
+      "ts": "2026-05-28T01:00:00.000Z",
+      "decision": "Platform migrated from linear to youtrack. Phase graph re-wired from phaseMap in youtrack.json. PRD queued for YouTrack KB upload (failed: article project field required).",
+      "rationale": "User requested YouTrack as primary platform during /aw-init reset. All INFRA-* issues already exist; no new issues created."
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-28T01:00:00.000Z",
+      "platform": "youtrack",
+      "event": "platform.migration",
+      "from": "linear",
+      "to": "youtrack",
+      "phaseMap": {
+        "1": {
+          "acceptanceId": "INFRA-7",
+          "children": [
+            "INFRA-8",
+            "INFRA-9",
+            "INFRA-10"
+          ],
+          "status": "done"
+        },
+        "2": {
+          "acceptanceId": "INFRA-11",
+          "children": [
+            "INFRA-12",
+            "INFRA-13"
+          ],
+          "status": "done"
+        },
+        "3": {
+          "acceptanceId": "INFRA-14",
+          "children": [
+            "INFRA-15",
+            "INFRA-16"
+          ],
+          "status": "done"
+        },
+        "4": {
+          "acceptanceId": "INFRA-17",
+          "children": [
+            "INFRA-18",
+            "INFRA-19",
+            "INFRA-20"
+          ],
+          "status": "in-review"
+        }
+      }
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-28T01:06:21.776Z",
+      "platform": "youtrack",
+      "event": "document.created",
+      "ref": "INFRA-A-2",
+      "id": "180-5",
+      "title": "[PRD] Infrastructure Components Completion",
+      "url": "https://carlmichelle.youtrack.cloud/articles/INFRA-A-2"
+    },
+    {
+      "type": "Decision",
+      "ts": "2026-05-28T01:06:21.776Z",
+      "decision": "PRD document uploaded to YouTrack KB as INFRA-A-2 (180-5) after sync. Obsidian mirror retained. Sync queue cleared.",
+      "rationale": "Previous upload failed due to missing project field; fixed by explicit project:{id:0-1} in POST body."
+    },
+    {
+      "type": "Decision",
+      "ts": "2026-05-28T01:11:13.431Z",
+      "decision": "Phase 4 human final acceptance confirmed. INFRA-17 transitioned to Verified. Project complete.",
+      "rationale": "User confirmed /aw-accept INFRA-17. All 3 children Fixed (approval: 13 tests, user: 4 tests, audit: 5 tests). 15 criteria met."
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-28T01:11:13.431Z",
+      "platform": "youtrack",
+      "event": "issue.state.changed",
+      "ref": "INFRA-17",
+      "from": "To be discussed",
+      "to": "Verified",
+      "comment": "7-23"
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-05-28T01:11:13.431Z",
+      "platform": "youtrack",
+      "event": "project.complete",
+      "phases": 4,
+      "totalTests": 94,
+      "note": "All 4 phases accepted. Infrastructure Components Completion PRD fulfilled."
+    }
+  ],
+  "phases": [
+    {
+      "index": 1,
+      "name": "Core Independent Libraries",
+      "content": "Implement `statemachine`, `rule-engine`, and `pdp` standalone modules. Each must expose an Ability interface, have unit tests, and be documented in `doc/AI_MODULE_GUIDE.md`.",
+      "target": "All three modules build, pass tests, and are demonstrable without Quarkus.",
+      "acceptanceIssueId": "INFRA-7",
+      "acceptanceIssueIdentifier": "INFRA-7",
+      "childIssueIds": [
+        "INFRA-8",
+        "INFRA-9",
+        "INFRA-10"
+      ],
+      "status": "done",
+      "initialAcceptance": "PASS",
+      "initialAcceptanceAt": "2026-05-25T15:30:00.000Z",
+      "finalAcceptance": "PASS",
+      "finalAcceptanceAt": "2026-05-26T00:00:00.000Z",
+      "acceptedBy": "human"
+    },
+    {
+      "index": 2,
+      "name": "AI and gRPC Clients",
+      "content": "Implement `qdrant-grpc` (Qdrant vector DB client) and `embedding-grpc` (Embedding service client) standalone modules. Includes proto definitions, generated stubs, and typed wrappers.",
+      "target": "Both clients connect to their respective services in integration tests; stubs are auto-generated from proto files.",
+      "acceptanceIssueId": "INFRA-11",
+      "acceptanceIssueIdentifier": "INFRA-11",
+      "childIssueIds": [
+        "INFRA-12",
+        "INFRA-13"
+      ],
+      "status": "done",
+      "initialAcceptance": "PASS",
+      "initialAcceptanceAt": "2026-05-26T01:00:00.000Z",
+      "finalAcceptance": "PASS",
+      "finalAcceptanceAt": "2026-05-26T01:30:00.000Z",
+      "acceptedBy": "human"
+    },
+    {
+      "index": 3,
+      "name": "Quarkus Integration Modules",
+      "content": "Implement `broadcast` (Vert.x event bus) and `search` (Elasticsearch full-text search) as Quarkus extensions under `infrastructure-component-quarkus/`. Both follow the conditional bean registration pattern (`quarkus.plugins.<name>.enable`).",
+      "target": "Both extensions register correctly in a Quarkus app; demo wiring in `demo/` passes `./gradlew :demo:build`.",
+      "acceptanceIssueId": "INFRA-14",
+      "acceptanceIssueIdentifier": "INFRA-14",
+      "childIssueIds": [
+        "INFRA-15",
+        "INFRA-16"
+      ],
+      "status": "done",
+      "initialAcceptance": "PASS",
+      "initialAcceptanceAt": "2026-05-26T02:00:00.000Z",
+      "finalAcceptance": "PASS",
+      "finalAcceptanceAt": "2026-05-26T02:30:00.000Z",
+      "acceptedBy": "human"
+    },
+    {
+      "index": 4,
+      "name": "Business Logic Modules",
+      "content": "Implement `approval` (approval workflow), `user` (user management), and `audit` (audit log) as Quarkus integration modules. These may depend on Phase 1 modules (statemachine, rule-engine).",
+      "target": "All three modules pass tests; `audit` captures structured events; `approval` integrates with `statemachine`.",
+      "acceptanceIssueId": "INFRA-17",
+      "acceptanceIssueIdentifier": "INFRA-17",
+      "childIssueIds": [
+        "INFRA-18",
+        "INFRA-19",
+        "INFRA-20"
+      ],
+      "status": "done",
+      "initialAcceptance": "PASS",
+      "initialAcceptanceAt": "2026-05-26T03:30:00.000Z",
+      "tests": 22,
+      "criteria": 15,
+      "finalAcceptance": "PASS",
+      "finalAcceptanceAt": "2026-05-28T01:11:13.431Z",
+      "acceptedBy": "human"
+    }
+  ],
+  "prd": {
+    "title": "Infrastructure Components Completion",
+    "slug": "infrastructure-components-completion",
+    "source": "docs/prd.md",
+    "document": {
+      "id": "180-5",
+      "idReadable": "INFRA-A-2",
+      "title": "[PRD] Infrastructure Components Completion",
+      "slug": "prd-infrastructure-components-completion",
+      "kind": "prd",
+      "url": "https://carlmichelle.youtrack.cloud/articles/INFRA-A-2",
+      "platform": "youtrack",
+      "updatedAt": "2026-05-28T01:06:21.776Z",
+      "status": "uploaded",
+      "obsidianMirror": "/Users/carl/.ai-workflow/projects/infrastructure/obsidian/docs/prd-infrastructure-components-completion.md"
+    }
+  },
+  "projectStatus": "complete",
+  "completedAt": "2026-05-28T01:11:13.431Z"
+}

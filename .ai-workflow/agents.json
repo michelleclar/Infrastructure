@@ -1,0 +1,548 @@
+{
+  "orchestrator": {
+    "kind": "host",
+    "defaultRunner": "codex-host",
+    "failurePolicy": {
+      "retries": 1,
+      "onExhausted": "block"
+    },
+    "worktree": {
+      "enabledByDefault": true
+    }
+  },
+  "modelTiers": {
+    "fast": {
+      "claude": {
+        "model": "haiku",
+        "effort": "low"
+      },
+      "codex": {
+        "model": "gpt-5.3-codex-spark",
+        "effort": "medium"
+      }
+    },
+    "standard": {
+      "claude": {
+        "model": "sonnet",
+        "effort": "medium"
+      },
+      "codex": {
+        "model": "gpt-5.4",
+        "effort": "high"
+      }
+    },
+    "strong": {
+      "claude": {
+        "model": "opus",
+        "effort": "high"
+      },
+      "codex": {
+        "model": "gpt-5.5",
+        "effort": "xhigh"
+      }
+    }
+  },
+  "runners": {
+    "claude-code": {
+      "kind": "cli",
+      "provider": "claude",
+      "command": "claude",
+      "mode": "print",
+      "outputFormat": "json",
+      "allowedTools": [
+        "Read",
+        "Edit",
+        "Bash"
+      ],
+      "permissionMode": "auto",
+      "retries": 1,
+      "worktree": {
+        "enabledByDefault": true
+      }
+    },
+    "codex-host": {
+      "kind": "host-agent",
+      "provider": "codex",
+      "retries": 1,
+      "worktree": {
+        "enabledByDefault": true
+      }
+    },
+    "codex-cli": {
+      "kind": "cli",
+      "provider": "codex",
+      "command": "codex",
+      "retries": 1,
+      "worktree": {
+        "enabledByDefault": true
+      }
+    },
+    "script-runner": {
+      "kind": "script",
+      "provider": "codex",
+      "retries": 0,
+      "worktree": {
+        "enabledByDefault": false
+      }
+    },
+    "browser-runner": {
+      "kind": "host-agent",
+      "provider": "claude",
+      "retries": 1,
+      "worktree": {
+        "enabledByDefault": false
+      }
+    }
+  },
+  "roles": {
+    "pm": {
+      "default": "product-manager",
+      "runner": "codex-host",
+      "modelTier": "standard",
+      "routes": [
+        {
+          "when": {
+            "complexity": [
+              "high",
+              "critical"
+            ]
+          },
+          "modelTier": "strong"
+        }
+      ]
+    },
+    "planner": {
+      "default": "project-manager",
+      "runner": "codex-host",
+      "modelTier": "standard",
+      "routes": [
+        {
+          "when": {
+            "area": [
+              "frontend",
+              "ui",
+              "ux",
+              "design",
+              "prototype",
+              "interaction"
+            ],
+            "complexity": [
+              "high",
+              "critical"
+            ]
+          },
+          "runner": "claude-code",
+          "agent": "product-experience-planner",
+          "modelTier": "strong"
+        },
+        {
+          "when": {
+            "area": [
+              "frontend",
+              "ui",
+              "ux",
+              "design",
+              "prototype",
+              "interaction"
+            ]
+          },
+          "runner": "claude-code",
+          "agent": "product-experience-planner",
+          "modelTier": "standard"
+        },
+        {
+          "when": {
+            "area": [
+              "backend",
+              "api",
+              "database",
+              "service",
+              "architecture"
+            ],
+            "complexity": [
+              "high",
+              "critical"
+            ]
+          },
+          "runner": "codex-host",
+          "agent": "java-architect",
+          "modelTier": "strong"
+        },
+        {
+          "when": {
+            "area": [
+              "backend",
+              "api",
+              "database",
+              "service",
+              "architecture"
+            ]
+          },
+          "runner": "codex-host",
+          "agent": "project-manager",
+          "modelTier": "standard"
+        }
+      ]
+    },
+    "dev": {
+      "default": "dev",
+      "runner": "codex-host",
+      "modelTier": "standard",
+      "routes": [
+        {
+          "when": {
+            "area": [
+              "frontend",
+              "ui",
+              "ux",
+              "design",
+              "prototype",
+              "interaction"
+            ],
+            "complexity": [
+              "high",
+              "critical"
+            ]
+          },
+          "runner": "claude-code",
+          "agent": "frontend-ui-engineer",
+          "modelTier": "strong"
+        },
+        {
+          "when": {
+            "area": [
+              "frontend",
+              "ui",
+              "ux",
+              "design",
+              "prototype",
+              "interaction"
+            ]
+          },
+          "runner": "claude-code",
+          "agent": "frontend-ui-engineer",
+          "modelTier": "standard"
+        },
+        {
+          "when": {
+            "browser": true,
+            "complexity": [
+              "high",
+              "critical"
+            ]
+          },
+          "runner": "claude-code",
+          "agent": "browser-integration-engineer",
+          "modelTier": "strong"
+        },
+        {
+          "when": {
+            "browser": true
+          },
+          "runner": "claude-code",
+          "agent": "browser-integration-engineer",
+          "modelTier": "standard"
+        },
+        {
+          "when": {
+            "complexity": [
+              "high",
+              "critical"
+            ]
+          },
+          "runner": "codex-host",
+          "agent": "java-architect",
+          "modelTier": "strong"
+        },
+        {
+          "when": {
+            "stack": "spring"
+          },
+          "runner": "codex-host",
+          "agent": "spring-boot-engineer",
+          "modelTier": "standard"
+        },
+        {
+          "when": {
+            "stack": "java"
+          },
+          "runner": "codex-host",
+          "agent": "java-architect",
+          "modelTier": "standard"
+        },
+        {
+          "when": {
+            "area": [
+              "backend",
+              "api",
+              "database",
+              "service"
+            ]
+          },
+          "runner": "codex-host",
+          "agent": "dev",
+          "modelTier": "standard"
+        },
+        {
+          "when": {
+            "kind": "bugfix"
+          },
+          "runner": "codex-host",
+          "agent": "debugger",
+          "modelTier": "standard"
+        }
+      ]
+    },
+    "fix": {
+      "default": "debugger",
+      "runner": "codex-host",
+      "modelTier": "standard",
+      "routes": [
+        {
+          "when": {
+            "area": [
+              "frontend",
+              "ui",
+              "ux",
+              "browser"
+            ],
+            "complexity": [
+              "high",
+              "critical"
+            ]
+          },
+          "runner": "claude-code",
+          "agent": "frontend-debugger",
+          "modelTier": "strong"
+        },
+        {
+          "when": {
+            "area": [
+              "frontend",
+              "ui",
+              "ux",
+              "browser"
+            ]
+          },
+          "runner": "claude-code",
+          "agent": "frontend-debugger",
+          "modelTier": "standard"
+        },
+        {
+          "when": {
+            "area": [
+              "backend",
+              "runtime",
+              "schema",
+              "database",
+              "service"
+            ],
+            "complexity": [
+              "high",
+              "critical"
+            ]
+          },
+          "runner": "codex-host",
+          "agent": "debugger",
+          "modelTier": "strong"
+        },
+        {
+          "when": {
+            "area": [
+              "backend",
+              "runtime",
+              "schema",
+              "database",
+              "service"
+            ]
+          },
+          "runner": "codex-host",
+          "agent": "debugger",
+          "modelTier": "standard"
+        }
+      ]
+    },
+    "review": {
+      "default": "code-reviewer",
+      "runner": "codex-host",
+      "modelTier": "strong",
+      "security": "security-auditor",
+      "routes": [
+        {
+          "when": {
+            "security": true
+          },
+          "runner": "codex-host",
+          "agent": "security-auditor",
+          "modelTier": "strong"
+        }
+      ]
+    },
+    "test": {
+      "strategy": "qa-expert",
+      "automation": "test-automator",
+      "orchestrator": "tester",
+      "default": "tester",
+      "runner": "codex-host",
+      "modelTier": "fast",
+      "routes": [
+        {
+          "when": {
+            "area": [
+              "frontend",
+              "ui",
+              "browser"
+            ],
+            "failureAnalysis": true,
+            "complexity": [
+              "high",
+              "critical"
+            ]
+          },
+          "runner": "claude-code",
+          "agent": "frontend-test-analyst",
+          "modelTier": "strong"
+        },
+        {
+          "when": {
+            "area": [
+              "frontend",
+              "ui",
+              "browser"
+            ],
+            "failureAnalysis": true
+          },
+          "runner": "claude-code",
+          "agent": "frontend-test-analyst",
+          "modelTier": "standard"
+        },
+        {
+          "when": {
+            "area": [
+              "backend",
+              "api",
+              "database",
+              "service"
+            ],
+            "failureAnalysis": true,
+            "complexity": [
+              "high",
+              "critical"
+            ]
+          },
+          "runner": "codex-host",
+          "agent": "debugger",
+          "modelTier": "strong"
+        },
+        {
+          "when": {
+            "area": [
+              "backend",
+              "api",
+              "database",
+              "service"
+            ],
+            "failureAnalysis": true
+          },
+          "runner": "codex-host",
+          "agent": "debugger",
+          "modelTier": "standard"
+        },
+        {
+          "when": {
+            "complexity": [
+              "high",
+              "critical"
+            ],
+            "failureAnalysis": true
+          },
+          "runner": "codex-host",
+          "agent": "debugger",
+          "modelTier": "strong"
+        }
+      ]
+    },
+    "acceptance": {
+      "browser": "browser-debugger",
+      "final": "acceptance",
+      "default": "acceptance",
+      "runner": "codex-host",
+      "modelTier": "standard",
+      "routes": [
+        {
+          "when": {
+            "area": [
+              "frontend",
+              "ui",
+              "ux",
+              "browser"
+            ],
+            "complexity": [
+              "high",
+              "critical"
+            ]
+          },
+          "runner": "claude-code",
+          "agent": "browser-acceptance",
+          "modelTier": "strong"
+        },
+        {
+          "when": {
+            "area": [
+              "frontend",
+              "ui",
+              "ux",
+              "browser"
+            ]
+          },
+          "runner": "claude-code",
+          "agent": "browser-acceptance",
+          "modelTier": "standard"
+        },
+        {
+          "when": {
+            "area": [
+              "backend",
+              "api",
+              "database",
+              "service"
+            ],
+            "complexity": [
+              "high",
+              "critical"
+            ]
+          },
+          "runner": "codex-host",
+          "agent": "acceptance",
+          "modelTier": "strong"
+        },
+        {
+          "when": {
+            "area": [
+              "backend",
+              "api",
+              "database",
+              "service"
+            ]
+          },
+          "runner": "codex-host",
+          "agent": "acceptance",
+          "modelTier": "standard"
+        }
+      ]
+    },
+    "docs": {
+      "default": "technical-writer",
+      "runner": "codex-host",
+      "modelTier": "fast",
+      "routes": [
+        {
+          "when": {
+            "decisionImpact": true
+          },
+          "modelTier": "standard"
+        }
+      ]
+    }
+  }
+}
