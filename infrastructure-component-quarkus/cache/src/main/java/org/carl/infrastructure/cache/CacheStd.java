@@ -9,7 +9,7 @@ public class CacheStd implements ICacheProvider {
 
     @Override
     public CacheContext getCacheContext() {
-        return null;
+        return context;
     }
 
     @Inject

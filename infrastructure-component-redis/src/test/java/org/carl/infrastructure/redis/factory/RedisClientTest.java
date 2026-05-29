@@ -10,6 +10,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
+@EnabledIfEnvironmentVariable(named = "TEST_REDIS_URL", matches = ".+")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class RedisClientTest {
 
@@ -27,11 +29,13 @@ public class RedisClientTest {
 
     @BeforeAll
     public void setup() {
-        // Assuming Redis is running on localhost:6379
-        // If not, these tests will fail or we can disable them by default
+        String redisUrl = System.getenv("TEST_REDIS_URL");
+        String redisPassword = System.getenv("TEST_REDIS_PASSWORD");
         RedisConfigOptions options = new RedisConfigOptions();
-        options.setConnectionString("redis://180.184.66.147:6379");
-        options.setPassword("carl");
+        options.setConnectionString(redisUrl);
+        if (redisPassword != null && !redisPassword.isEmpty()) {
+            options.setPassword(redisPassword);
+        }
         SimpleModule customModule = new SimpleModule();
         customModule.addSerializer(Date.class, new CustomDateSerializer());
         customModule.addSerializer(LocalDateTime.class, new CustomLocalDateTimeSerializer());
