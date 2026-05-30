@@ -953,5 +953,26 @@
     }
   },
   "projectStatus": "complete",
-  "completedAt": "2026-05-28T01:11:13.431Z"
+  "completedAt": "2026-05-28T01:11:13.431Z",
+  "postCompletionDefects": {
+    "tick": "2026-05-29",
+    "resolved": [
+      "INFRA-21","INFRA-22","INFRA-23","INFRA-24","INFRA-25","INFRA-26","INFRA-27",
+      "INFRA-28","INFRA-29","INFRA-30","INFRA-31"
+    ],
+    "alreadyFixedInCode": ["INFRA-21","INFRA-22","INFRA-23","INFRA-24","INFRA-25","INFRA-26","INFRA-27","INFRA-31"],
+    "fixedThisTick": {
+      "commit": "a9622e8",
+      "items": ["INFRA-28","INFRA-29","INFRA-30"],
+      "changes": [
+        "INFRA-30: CacheStd.getCacheContext() returns injected context instead of null",
+        "INFRA-29: RedisClientFactory auto-registers JavaTimeModule (WRITE_DATES_AS_TIMESTAMPS=false)",
+        "INFRA-28: Redis test endpoints moved to TEST_REDIS_URL / TEST_REDIS_SENTINEL_URL env vars; tests skip when vars absent"
+      ]
+    },
+    "pendingNewScope": {
+      "note": "INFRA-1 to INFRA-6 are Submitted tasks representing new feature scope not in the current PRD. Run /aw-init to define a new project/phase set before dispatching.",
+      "items": ["INFRA-1","INFRA-2","INFRA-3","INFRA-4","INFRA-5","INFRA-6"]
+    }
+  }
 }
