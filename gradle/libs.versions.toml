@@ -13,6 +13,7 @@ jakartaTransaction = "2.0.1"
 slf4j = "2.0.9"
 jbossLogging = "3.5.3.Final"
 temporal = "0.1.2"
+temporal-sdk = "1.29.0"
 vertx = "5.0.6"
 httpcomponentsClient5 = "5.4.1"
 [libraries]
@@ -68,6 +69,8 @@ quarkus-jwt-build = { module = "io.quarkus:quarkus-smallrye-jwt-build", version.
 quarkus-smtp = { module = "io.quarkus:quarkus-mailer", version.ref = "quarkus" }
 quarkus-temporal = { module = "io.quarkiverse.temporal:quarkus-temporal", version.ref = "temporal" }
 quarkus-temporal-test = { module = "io.quarkiverse.temporal:quarkus-temporal-test", version.ref = "temporal" }
+temporal-sdk = { module = "io.temporal:temporal-sdk", version.ref = "temporal-sdk" }
+temporal-testing = { module = "io.temporal:temporal-testing", version.ref = "temporal-sdk" }
 quarkus-smallrye-fault-tolerance = { module = "io.quarkus:quarkus-smallrye-fault-tolerance", version.ref = "quarkus" }
 openfga = { module = "dev.openfga:openfga-sdk", version.require = "0.9.3" }
 stork = { module = "io.quarkus:quarkus-smallrye-stork", version.ref = "quarkus" }

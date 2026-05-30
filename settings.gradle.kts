@@ -33,6 +33,8 @@ include("infrastructure-component-http")
 include("infrastructure-component-mq-api")
 include("infrastructure-component-mq-pulsar")
 
+include("infrastructure-component-workflow-temporal")
+
 include("infrastructure-component-persistence-jooq")
 include("infrastructure-component-rule-engine")
 include("infrastructure-component-pdp")
