@@ -17,8 +17,10 @@ import io.temporal.testing.TestWorkflowEnvironment;
 import io.temporal.worker.Worker;
 import io.temporal.worker.WorkerFactory;
 
+import org.carl.infrastructure.workflow.api.Decision;
 import org.carl.infrastructure.workflow.api.ProcessDefinition;
 import org.carl.infrastructure.workflow.api.ProcessRegistry;
+import org.carl.infrastructure.workflow.api.Vote;
 import org.carl.infrastructure.workflow.api.WorkflowExecutionException;
 import org.carl.infrastructure.workflow.engine.GenericActivity;
 import org.carl.infrastructure.workflow.engine.GenericWorkflow;
@@ -86,6 +88,16 @@ public final class WorkflowTestKit implements AutoCloseable {
 
     public void signal(String processId, String bizId, Object event) {
         existingStub(processId, bizId).signal("event", event);
+    }
+
+    /** Cast a vote in a multi-approver gathering state. */
+    public void vote(String processId, String bizId, String approver, Decision decision) {
+        vote(processId, bizId, approver, decision, null);
+    }
+
+    public void vote(
+            String processId, String bizId, String approver, Decision decision, String comment) {
+        existingStub(processId, bizId).signal("vote", new Vote(approver, decision, comment));
     }
 
     public <S> S queryState(String processId, String bizId, Class<S> stateType) {

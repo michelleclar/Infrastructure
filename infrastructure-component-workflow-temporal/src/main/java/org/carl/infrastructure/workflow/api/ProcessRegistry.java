@@ -129,43 +129,65 @@ public final class ProcessRegistry {
         def.define(flow);
         FLOWS.put(def.id(), flow);
 
+        // Cross-validation: a gathering state must NOT also have plain transitions out of it
+        Map<S, GatheringConfig<S, E, C>> gatherings = flow.gatherings();
+        for (ProcessFlow.TransitionSpec<S, E, C> spec : flow.transitions()) {
+            if (gatherings.containsKey(spec.from)) {
+                throw new IllegalStateException(
+                        "workflow process ["
+                                + def.id()
+                                + "]: state ["
+                                + spec.from
+                                + "] is declared as a gathering state but also has a plain"
+                                + " transition out via event ["
+                                + spec.event
+                                + "]. A gathering state may not have plain transitions.");
+            }
+        }
+
         // Index activities — keyed by processId-namespaced name, checking for duplicates
         // Track activity names seen in this process to catch duplicates
         Map<String, String> seenNames = new ConcurrentHashMap<>();
 
         for (ProcessFlow.TransitionSpec<S, E, C> spec : flow.transitions()) {
-            WorkflowActivity<S, E, C> activity = spec.activity;
-            if (activity == null) {
-                continue; // routing-only transition
-            }
+            indexActivity(def.id(), spec.activity, seenNames, stateType, eventType, ctxType);
+        }
+        // Also index gathering outcome activities (approved + rejected branches)
+        for (GatheringConfig<S, E, C> g : gatherings.values()) {
+            indexActivity(
+                    def.id(), g.approvedActivity(), seenNames, stateType, eventType, ctxType);
+            indexActivity(
+                    def.id(), g.rejectedActivity(), seenNames, stateType, eventType, ctxType);
+        }
+    }
 
-            String actName = activity.name();
-
-            // Validate uniqueness within this process
-            String prev = seenNames.put(actName, actName);
-            if (prev != null) {
-                throw new IllegalStateException(
-                        "workflow process ["
-                                + def.id()
-                                + "]: duplicate activity name \""
-                                + actName
-                                + "\". Activity names must be unique within a process.");
-            }
-
-            String forwardKey = namespacedName(def.id(), actName);
-            String compensateKey = forwardKey + COMPENSATE_SUFFIX;
-
-            // Forward binding
+    private static <S, E, C> void indexActivity(
+            String processId,
+            WorkflowActivity<S, E, C> activity,
+            Map<String, String> seenNames,
+            Class<S> stateType,
+            Class<E> eventType,
+            Class<C> ctxType) {
+        if (activity == null) {
+            return; // routing-only or no outcome activity
+        }
+        String actName = activity.name();
+        String prev = seenNames.put(actName, actName);
+        if (prev != null) {
+            throw new IllegalStateException(
+                    "workflow process ["
+                            + processId
+                            + "]: duplicate activity name \""
+                            + actName
+                            + "\". Activity names must be unique within a process.");
+        }
+        String forwardKey = namespacedName(processId, actName);
+        ACTIVITIES.put(
+                forwardKey, new ActivityBinding(activity, false, stateType, eventType, ctxType));
+        if (activity.compensable()) {
             ACTIVITIES.put(
-                    forwardKey,
-                    new ActivityBinding(activity, false, stateType, eventType, ctxType));
-
-            // Compensation binding (only if the activity is compensable)
-            if (activity.compensable()) {
-                ACTIVITIES.put(
-                        compensateKey,
-                        new ActivityBinding(activity, true, stateType, eventType, ctxType));
-            }
+                    forwardKey + COMPENSATE_SUFFIX,
+                    new ActivityBinding(activity, true, stateType, eventType, ctxType));
         }
     }
 
@@ -217,5 +239,18 @@ public final class ProcessRegistry {
 
     public static boolean contains(String id) {
         return DEFS.containsKey(id);
+    }
+
+    /**
+     * Returns the {@link GatheringConfig} for {@code state} in process {@code processId}, or
+     * {@code null} if that state is not a gathering state. Engine uses this on each state entry.
+     */
+    @SuppressWarnings("unchecked")
+    public static <S, E, C> GatheringConfig<S, E, C> gathering(String processId, Object state) {
+        ProcessFlow<?, ?, ?> flow = FLOWS.get(processId);
+        if (flow == null) {
+            return null;
+        }
+        return (GatheringConfig<S, E, C>) flow.gatherings().get(state);
     }
 }
