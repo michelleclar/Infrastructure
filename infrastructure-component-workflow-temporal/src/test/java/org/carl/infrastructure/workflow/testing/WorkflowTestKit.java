@@ -90,14 +90,24 @@ public final class WorkflowTestKit implements AutoCloseable {
         existingStub(processId, bizId).signal("event", event);
     }
 
-    /** Cast a vote in a multi-approver gathering state. */
-    public void vote(String processId, String bizId, String approver, Decision decision) {
-        vote(processId, bizId, approver, decision, null);
+    /**
+     * Cast a vote on a named step in an approval state.
+     *
+     * @param step     the step name in the expression tree (e.g. "manager")
+     * @param approver the human/system identity casting the vote (informational)
+     */
+    public void vote(String processId, String bizId, String step, String approver, Decision decision) {
+        vote(processId, bizId, step, approver, decision, null);
     }
 
     public void vote(
-            String processId, String bizId, String approver, Decision decision, String comment) {
-        existingStub(processId, bizId).signal("vote", new Vote(approver, decision, comment));
+            String processId,
+            String bizId,
+            String step,
+            String approver,
+            Decision decision,
+            String comment) {
+        existingStub(processId, bizId).signal("vote", new Vote(step, approver, decision, comment));
     }
 
     public <S> S queryState(String processId, String bizId, Class<S> stateType) {

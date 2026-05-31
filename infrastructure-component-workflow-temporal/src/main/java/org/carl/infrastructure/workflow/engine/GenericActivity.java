@@ -21,6 +21,11 @@ import org.carl.infrastructure.workflow.api.ProcessRegistry;
  * </ul>
  * Both variants are registered in {@link ProcessRegistry} at startup; the {@code ActivityBinding}
  * knows which branch to call. Runs outside workflow context, so IO is fine.
+ *
+ * <h3>Arguments</h3>
+ *
+ * <p>Five positional args: {@code (from, to, event, ctx, step)}. {@code step} (index 4) is a
+ * {@code String} that is non-null for hook activities and null for outcome/transition activities.
  */
 public class GenericActivity implements DynamicActivity {
 
@@ -33,7 +38,14 @@ public class GenericActivity implements DynamicActivity {
         Object to = args.get(1, binding.stateType());
         Object event = args.get(2, binding.eventType());
         Object ctx = args.get(3, binding.ctxType());
-        binding.execute(from, to, event, ctx);
+        // 5th arg: step name (String), may be null for non-hook activities
+        String step = null;
+        try {
+            step = args.get(4, String.class);
+        } catch (Exception ignored) {
+            // arg not present or null — leave step as null
+        }
+        binding.execute(from, to, event, ctx, step);
         return null;
     }
 }

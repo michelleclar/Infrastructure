@@ -39,18 +39,25 @@ public class WorkflowFacade {
     }
 
     /**
-     * Cast a single vote in a multi-approver gathering state. The engine matches by approver id
-     * against the gathering state's assignee set; votes from non-assignees are silently dropped.
+     * Cast a single vote on a named step in an approval state.
+     *
+     * @param step     the step name in the expression tree (e.g. "manager")
+     * @param approver the human/system identity casting the vote (informational)
      */
-    public void vote(String processId, String bizId, String approver, Decision decision) {
-        vote(processId, bizId, approver, decision, null);
+    public void vote(String processId, String bizId, String step, String approver, Decision decision) {
+        vote(processId, bizId, step, approver, decision, null);
     }
 
     /** Vote with a comment. */
     public void vote(
-            String processId, String bizId, String approver, Decision decision, String comment) {
+            String processId,
+            String bizId,
+            String step,
+            String approver,
+            Decision decision,
+            String comment) {
         client.newUntypedWorkflowStub(workflowId(processId, bizId))
-                .signal("vote", new Vote(approver, decision, comment));
+                .signal("vote", new Vote(step, approver, decision, comment));
     }
 
     /** Query the current state of a running instance. */

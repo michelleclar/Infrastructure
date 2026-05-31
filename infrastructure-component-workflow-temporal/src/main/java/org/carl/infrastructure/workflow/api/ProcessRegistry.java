@@ -1,6 +1,10 @@
 package org.carl.infrastructure.workflow.api;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -12,17 +16,25 @@ import java.util.concurrent.ConcurrentHashMap;
  * <h3>Activity-name namespacing</h3>
  *
  * <p>Activity names are SCOPED to a process. The Temporal activity-type name used on the wire is:
+ *
  * <pre>
  *   forward call:      {@code processId + "::" + activity.name()}
  *   compensation call: {@code processId + "::" + activity.name() + "#compensate"}
  * </pre>
- * This prevents name collisions across processes and makes dispatch unambiguous.
- * Constants: {@link #PROCESS_SEP} ({@code "::"}) and {@link #COMPENSATE_SUFFIX} ({@code "#compensate"}).
+ *
+ * Hook activity names are further namespaced with the step and hook type:
+ *
+ * <pre>
+ *   {@code processId + "::" + stepName + ":before|after|onComplete"}
+ * </pre>
+ *
+ * Constants: {@link #PROCESS_SEP} ({@code "::"}) and {@link #COMPENSATE_SUFFIX} ({@code
+ * "#compensate"}).
  *
  * <h3>Duplicate detection</h3>
  *
  * <p>Within a single process, {@link WorkflowActivity#name()} must be unique. A clear error is
- * thrown at registration time if the same name appears in two different transitions.
+ * thrown at registration time if the same name appears in two different transitions or hooks.
  */
 public final class ProcessRegistry {
 
@@ -30,14 +42,20 @@ public final class ProcessRegistry {
     public static final String PROCESS_SEP = "::";
 
     /**
-     * Suffix appended to an activity name to form the compensation Temporal activity type.
-     * e.g. {@code "leave::deductBalance#compensate"}.
+     * Suffix appended to an activity name to form the compensation Temporal activity type. e.g.
+     * {@code "leave::deductBalance#compensate"}.
      */
     public static final String COMPENSATE_SUFFIX = "#compensate";
 
     /**
-     * A registered activity bound to its S/E/C types, for the dynamic activity dispatcher.
-     * Carries a flag indicating whether this binding represents the forward run or a compensation.
+     * Separator between step name and hook type in hook activity names. e.g. {@code
+     * "leave::manager:before"}.
+     */
+    public static final String HOOK_SEP = ":";
+
+    /**
+     * A registered activity bound to its S/E/C types, for the dynamic activity dispatcher. Carries
+     * a flag indicating whether this binding represents the forward run or a compensation.
      */
     public static final class ActivityBinding {
         private final WorkflowActivity<?, ?, ?> activity;
@@ -59,10 +77,14 @@ public final class ProcessRegistry {
             this.ctxType = ctxType;
         }
 
-        /** Execute either the forward run or the compensate, depending on how this was registered. */
+        /**
+         * Execute either the forward run or the compensate, depending on how this was registered.
+         *
+         * @param step the hook step name, or null for non-hook activities
+         */
         @SuppressWarnings({"unchecked", "rawtypes"})
-        public void execute(Object from, Object to, Object event, Object ctx) {
-            NodeContext nodeCtx = new NodeContext(from, to, event, ctx);
+        public void execute(Object from, Object to, Object event, Object ctx, String step) {
+            NodeContext nodeCtx = new NodeContext(from, to, event, ctx, step);
             if (isCompensation) {
                 activity.compensate(nodeCtx);
             } else {
@@ -85,15 +107,13 @@ public final class ProcessRegistry {
 
     private static final Map<String, ProcessDefinition<?, ?, ?>> DEFS = new ConcurrentHashMap<>();
 
-    /**
-     * Compiled flow per process id (the resolved transition model).
-     */
+    /** Compiled flow per process id (the resolved transition model). */
     private static final Map<String, ProcessFlow<?, ?, ?>> FLOWS = new ConcurrentHashMap<>();
 
     /**
-     * Activity bindings keyed by NAMESPACED Temporal activity-type name:
-     * {@code processId + "::" + activityName} (forward)
-     * {@code processId + "::" + activityName + "#compensate"} (compensation).
+     * Activity bindings keyed by NAMESPACED Temporal activity-type name: {@code processId + "::" +
+     * activityName} (forward) {@code processId + "::" + activityName + "#compensate"}
+     * (compensation).
      */
     private static final Map<String, ActivityBinding> ACTIVITIES = new ConcurrentHashMap<>();
 
@@ -129,35 +149,157 @@ public final class ProcessRegistry {
         def.define(flow);
         FLOWS.put(def.id(), flow);
 
-        // Cross-validation: a gathering state must NOT also have plain transitions out of it
-        Map<S, GatheringConfig<S, E, C>> gatherings = flow.gatherings();
+        Map<S, ApprovalConfig<S, E, C>> approvals = flow.approvals();
+
+        // Cross-validation: an approval state must NOT also have plain transitions out of it
         for (ProcessFlow.TransitionSpec<S, E, C> spec : flow.transitions()) {
-            if (gatherings.containsKey(spec.from)) {
+            if (approvals.containsKey(spec.from)) {
                 throw new IllegalStateException(
                         "workflow process ["
                                 + def.id()
                                 + "]: state ["
                                 + spec.from
-                                + "] is declared as a gathering state but also has a plain"
+                                + "] is declared as an approval state but also has a plain"
                                 + " transition out via event ["
                                 + spec.event
-                                + "]. A gathering state may not have plain transitions.");
+                                + "]. An approval state may not have plain transitions.");
             }
         }
 
         // Index activities — keyed by processId-namespaced name, checking for duplicates
-        // Track activity names seen in this process to catch duplicates
         Map<String, String> seenNames = new ConcurrentHashMap<>();
 
         for (ProcessFlow.TransitionSpec<S, E, C> spec : flow.transitions()) {
             indexActivity(def.id(), spec.activity, seenNames, stateType, eventType, ctxType);
         }
-        // Also index gathering outcome activities (approved + rejected branches)
-        for (GatheringConfig<S, E, C> g : gatherings.values()) {
+
+        // Index approval outcome activities and hook activities
+        for (ApprovalConfig<S, E, C> cfg : approvals.values()) {
             indexActivity(
-                    def.id(), g.approvedActivity(), seenNames, stateType, eventType, ctxType);
+                    def.id(), cfg.approvedActivity(), seenNames, stateType, eventType, ctxType);
             indexActivity(
-                    def.id(), g.rejectedActivity(), seenNames, stateType, eventType, ctxType);
+                    def.id(), cfg.rejectedActivity(), seenNames, stateType, eventType, ctxType);
+
+            // Validate unique step names in the expression tree
+            Set<String> stepNames = new HashSet<>();
+            collectStepNames(cfg.expr(), stepNames, def.id());
+
+            // Walk the expression tree to index hook activities
+            List<Step> steps = new ArrayList<>();
+            collectSteps(cfg.expr(), steps);
+            for (Step step : steps) {
+                indexHookActivity(
+                        def.id(),
+                        step.name(),
+                        "before",
+                        step.beforeHook(),
+                        seenNames,
+                        stateType,
+                        eventType,
+                        ctxType);
+                indexHookActivity(
+                        def.id(),
+                        step.name(),
+                        "after",
+                        step.afterHook(),
+                        seenNames,
+                        stateType,
+                        eventType,
+                        ctxType);
+                indexHookActivity(
+                        def.id(),
+                        step.name(),
+                        "onComplete",
+                        step.onCompleteHook(),
+                        seenNames,
+                        stateType,
+                        eventType,
+                        ctxType);
+            }
+        }
+    }
+
+    /**
+     * Recursively collect all unique step names from the expression tree. Throws on duplicate step
+     * names (same name in two leaves = ambiguous vote routing).
+     */
+    private static void collectStepNames(Expr expr, Set<String> stepNames, String processId) {
+        if (expr instanceof Step s) {
+            if (!stepNames.add(s.name())) {
+                throw new IllegalStateException(
+                        "workflow process ["
+                                + processId
+                                + "]: duplicate step name \""
+                                + s.name()
+                                + "\" in approval expression. Each step name must be unique.");
+            }
+        } else if (expr instanceof And and) {
+            for (Expr child : and.children()) collectStepNames(child, stepNames, processId);
+        } else if (expr instanceof Or or) {
+            for (Expr child : or.children()) collectStepNames(child, stepNames, processId);
+        } else if (expr instanceof AtLeast al) {
+            for (Expr child : al.children()) collectStepNames(child, stepNames, processId);
+        }
+    }
+
+    /** Recursively collect all Step leaf nodes (pre-order). */
+    private static void collectSteps(Expr expr, List<Step> out) {
+        if (expr instanceof Step s) {
+            out.add(s);
+        } else if (expr instanceof And and) {
+            for (Expr child : and.children()) collectSteps(child, out);
+        } else if (expr instanceof Or or) {
+            for (Expr child : or.children()) collectSteps(child, out);
+        } else if (expr instanceof AtLeast al) {
+            for (Expr child : al.children()) collectSteps(child, out);
+        }
+    }
+
+    /**
+     * Build the hook activity name: {@code stepName + ":" + hookType} (e.g. {@code
+     * "manager:before"}).
+     */
+    public static String hookActivityName(String stepName, String hookType) {
+        return stepName + HOOK_SEP + hookType;
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private static <S, E, C> void indexHookActivity(
+            String processId,
+            String stepName,
+            String hookType,
+            WorkflowActivity<?, ?, ?> activity,
+            Map<String, String> seenNames,
+            Class<S> stateType,
+            Class<E> eventType,
+            Class<C> ctxType) {
+        if (activity == null) {
+            return;
+        }
+        // Register under the hook-namespaced name; use the activity's own name() for uniqueness
+        // checking so that hook activities can't collide with other activities by name.
+        String hookName = hookActivityName(stepName, hookType);
+        // Also enforce the hook activity's declared name() is unique
+        String actName = activity.name();
+        String prev = seenNames.put(actName, actName);
+        if (prev != null) {
+            throw new IllegalStateException(
+                    "workflow process ["
+                            + processId
+                            + "]: duplicate activity name \""
+                            + actName
+                            + "\". Activity names must be unique within a process.");
+        }
+        String forwardKey = namespacedName(processId, hookName);
+        ACTIVITIES.put(
+                forwardKey,
+                new ActivityBinding(
+                        (WorkflowActivity) activity, false, stateType, eventType, ctxType));
+        if (activity.compensable()) {
+            ACTIVITIES.put(
+                    forwardKey + COMPENSATE_SUFFIX,
+                    new ActivityBinding(
+                            (WorkflowActivity) activity, true, stateType, eventType, ctxType));
         }
     }
 
@@ -192,8 +334,8 @@ public final class ProcessRegistry {
     }
 
     /**
-     * Build the namespaced Temporal activity-type name for the forward call.
-     * {@code processId + "::" + activityName}.
+     * Build the namespaced Temporal activity-type name for the forward call. {@code processId +
+     * "::" + activityName}.
      */
     public static String namespacedName(String processId, String activityName) {
         return processId + PROCESS_SEP + activityName;
@@ -225,8 +367,8 @@ public final class ProcessRegistry {
 
     /**
      * Look up an activity binding by its namespaced Temporal activity-type name. The name is
-     * {@code processId + "::" + activity.name()} (forward) or
-     * {@code processId + "::" + activity.name() + "#compensate"} (compensation).
+     * {@code processId + "::" + activity.name()} (forward) or {@code processId + "::" +
+     * activity.name() + "#compensate"} (compensation).
      */
     public static ActivityBinding activity(String activityTypeName) {
         ActivityBinding binding = ACTIVITIES.get(activityTypeName);
@@ -242,15 +384,15 @@ public final class ProcessRegistry {
     }
 
     /**
-     * Returns the {@link GatheringConfig} for {@code state} in process {@code processId}, or
-     * {@code null} if that state is not a gathering state. Engine uses this on each state entry.
+     * Returns the {@link ApprovalConfig} for {@code state} in process {@code processId}, or {@code
+     * null} if that state is not an approval state. Engine uses this on each state entry.
      */
     @SuppressWarnings("unchecked")
-    public static <S, E, C> GatheringConfig<S, E, C> gathering(String processId, Object state) {
+    public static <S, E, C> ApprovalConfig<S, E, C> approval(String processId, Object state) {
         ProcessFlow<?, ?, ?> flow = FLOWS.get(processId);
         if (flow == null) {
             return null;
         }
-        return (GatheringConfig<S, E, C>) flow.gatherings().get(state);
+        return (ApprovalConfig<S, E, C>) flow.approvals().get(state);
     }
 }

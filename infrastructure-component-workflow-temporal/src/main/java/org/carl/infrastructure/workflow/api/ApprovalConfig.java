@@ -1,39 +1,37 @@
 package org.carl.infrastructure.workflow.api;
 
-import java.util.Collection;
+import java.util.Map;
 import java.util.function.Function;
 
 /**
- * Configuration of a multi-approver gathering state: who votes, the quorum policy, and where to
- * advance on each outcome.
- *
- * <p>Built via {@link ProcessFlow#gather(Object)}. Consumed by the engine.
+ * Configuration of an expression-based approval state. Built via {@link ProcessFlow#approval}.
+ * Consumed by the engine's {@code advanceViaApproval} method.
  *
  * @param <S> state type
- * @param <E> event type (unused here, but kept for the {@link WorkflowActivity} parameterization)
+ * @param <E> event type (preserved for WorkflowActivity parameterization)
  * @param <C> context type
  */
-public final class GatheringConfig<S, E, C> {
+public final class ApprovalConfig<S, E, C> {
 
     private final S state;
-    private final Function<C, Collection<String>> assignees;
-    private final ApprovalPolicy policy;
+    private final Expr expr;
+    private final Function<C, Map<String, String>> assignees; // optional, may be null
     private final S approvedTo;
     private final WorkflowActivity<S, E, C> approvedActivity; // may be null
     private final S rejectedTo;
     private final WorkflowActivity<S, E, C> rejectedActivity; // may be null
 
-    GatheringConfig(
+    ApprovalConfig(
             S state,
-            Function<C, Collection<String>> assignees,
-            ApprovalPolicy policy,
+            Expr expr,
+            Function<C, Map<String, String>> assignees,
             S approvedTo,
             WorkflowActivity<S, E, C> approvedActivity,
             S rejectedTo,
             WorkflowActivity<S, E, C> rejectedActivity) {
         this.state = state;
+        this.expr = expr;
         this.assignees = assignees;
-        this.policy = policy;
         this.approvedTo = approvedTo;
         this.approvedActivity = approvedActivity;
         this.rejectedTo = rejectedTo;
@@ -44,18 +42,23 @@ public final class GatheringConfig<S, E, C> {
         return state;
     }
 
-    public Function<C, Collection<String>> assignees() {
-        return assignees;
+    public Expr expr() {
+        return expr;
     }
 
-    public ApprovalPolicy policy() {
-        return policy;
+    /**
+     * Optional function returning the assignee map (step name → approver id) from context. May be
+     * null — the engine does not require it; it is informational for hooks.
+     */
+    public Function<C, Map<String, String>> assignees() {
+        return assignees;
     }
 
     public S approvedTo() {
         return approvedTo;
     }
 
+    /** May be null (no activity on the approved branch). */
     public WorkflowActivity<S, E, C> approvedActivity() {
         return approvedActivity;
     }
@@ -64,6 +67,7 @@ public final class GatheringConfig<S, E, C> {
         return rejectedTo;
     }
 
+    /** May be null (no activity on the rejected branch). */
     public WorkflowActivity<S, E, C> rejectedActivity() {
         return rejectedActivity;
     }

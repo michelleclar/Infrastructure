@@ -1,7 +1,6 @@
 package org.carl.infrastructure.workflow.api;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -23,14 +22,19 @@ import java.util.function.Predicate;
  *
  * // Routing-only transition: no activity, registered immediately (no closer needed).
  * flow.from(SUBMITTED).to(REJECTED).on(REJECT);
+ *
+ * // Expression-based approval state (会签 v2):
+ * flow.approval(SUBMITTED)
+ *     .expr(and(step("manager"), or(step("legal"), step("compliance"))))
+ *     .onApproved(APPROVED)
+ *     .onRejected(REJECTED);
  * </pre>
  *
  * <h3>Transition model</h3>
  *
  * <p>Each call to {@code from(S).to(S).on(E)} records a {@link TransitionSpec} immediately; there
  * is no deferred builder requiring a terminal {@code perform()} call. Optional fluent steps
- * ({@code .when}, {@code .options}, {@code .perform}, {@code .saga}) enrich the spec after
- * recording.
+ * ({@code .when}, {@code .perform}) enrich the spec after recording.
  *
  * <h3>Resolution</h3>
  *
@@ -41,12 +45,12 @@ import java.util.function.Predicate;
  *
  * <p>If no transition matches, returns {@code null} (caller interprets as "stay / keep waiting").
  *
- * <h3>Gathering (会签)</h3>
+ * <h3>Approval (会签)</h3>
  *
- * <p>A state may instead be declared a <em>gathering state</em>: it collects {@code vote} signals
- * from N assignees, runs an {@link ApprovalPolicy} on each vote, and advances to one of two
- * configured outcome states (APPROVED / REJECTED) when the policy reaches a terminal verdict.
- * Use {@link #gather(Object)} to declare one. A gathering state may NOT also have plain
+ * <p>A state may instead be declared an <em>approval state</em>: it collects {@code vote} signals
+ * and evaluates a boolean expression tree ({@link Expr}) over named vote leaves, advancing to one
+ * of two configured outcome states (approved / rejected) when the expression reaches a terminal
+ * value. Use {@link #approval(Object)} to declare one. An approval state may NOT also have plain
  * {@code from(state).to(...).on(event)} transitions (validated by {@link ProcessRegistry}).
  *
  * @param <S> state type
@@ -58,8 +62,8 @@ public final class ProcessFlow<S, E, C> {
     /** The ordered list of registered transitions. */
     private final List<TransitionSpec<S, E, C>> transitions = new ArrayList<>();
 
-    /** Gathering states: state → its multi-approver gathering config. */
-    private final Map<S, GatheringConfig<S, E, C>> gatherings = new HashMap<>();
+    /** Approval states: state → its approval config. */
+    private final Map<S, ApprovalConfig<S, E, C>> approvals = new HashMap<>();
 
     /**
      * A resolved transition: the target state and the (possibly null) activity to run on entering
@@ -109,8 +113,8 @@ public final class ProcessFlow<S, E, C> {
      * Start a transition: {@code from(S).to(S).on(E)} [.when(guard)] [.perform(...)].
      *
      * <p>The resulting transition is recorded IMMEDIATELY when {@code .on(E)} is called; no further
-     * call is required. Optional steps ({@code .when}, {@code .options}, {@code .perform},
-     * {@code .saga}) enrich the already-recorded spec.
+     * call is required. Optional steps ({@code .when}, {@code .perform}) enrich the already-recorded
+     * spec.
      */
     public FlowFrom from(S state) {
         return new FlowFrom(state);
@@ -125,34 +129,32 @@ public final class ProcessFlow<S, E, C> {
     }
 
     /**
-     * Returns an unmodifiable view of the registered gathering states (state → config). Package-
+     * Returns an unmodifiable view of the registered approval states (state → config). Package-
      * private; consumed by {@link ProcessRegistry}.
      */
-    Map<S, GatheringConfig<S, E, C>> gatherings() {
-        return Collections.unmodifiableMap(gatherings);
+    Map<S, ApprovalConfig<S, E, C>> approvals() {
+        return Collections.unmodifiableMap(approvals);
     }
 
     /**
-     * Declare {@code state} as a multi-approver gathering state. Returns a builder chain:
+     * Declare {@code state} as an expression-based approval state. Returns a builder chain:
      *
      * <pre>
-     *   flow.gather(SUBMITTED)
-     *       .assignees(c -> c.getApprovers())
-     *       .policy(ApprovalPolicy.allApprove())
-     *       .onApproved(APPROVED).perform(new SomeActivity())
-     *       .onRejected(REJECTED);
+     *   flow.approval(SUBMITTED)
+     *       .expr(and(step("manager"), or(step("legal"), step("compliance"))))
+     *       .assignees(c -> Map.of("manager", c.getManagerId(), ...))  // optional
+     *       .onApproved(APPROVED).perform(new RecordApproval())         // .perform optional
+     *       .onRejected(REJECTED).perform(new RecordRejection());       // .perform optional
      * </pre>
      *
-     * Both {@code .onApproved(...)} and {@code .onRejected(...)} are required.
-     *
-     * @throws IllegalStateException if the same state is declared as gathering twice
+     * @throws IllegalStateException if the same state is declared as approval twice
      */
-    public GatherAssignees gather(S state) {
-        if (gatherings.containsKey(state)) {
+    public ApprovalExpr approval(S state) {
+        if (approvals.containsKey(state)) {
             throw new IllegalStateException(
-                    "Gathering already declared for state [" + state + "]");
+                    "Approval already declared for state [" + state + "]");
         }
-        return new GatherAssignees(state);
+        return new ApprovalExpr(state);
     }
 
     /**
@@ -262,131 +264,134 @@ public final class ProcessFlow<S, E, C> {
         }
     }
 
-    // ── Gather DSL chain ───────────────────────────────────────────────────────
+    // ── Approval DSL chain ────────────────────────────────────────────────────
 
-    /** Step 1: gather(state).<b>assignees(...)</b>. */
-    public final class GatherAssignees {
+    /** Step 1: approval(state).<b>expr(...)</b>. */
+    public final class ApprovalExpr {
         private final S state;
 
-        GatherAssignees(S state) {
+        ApprovalExpr(S state) {
             this.state = state;
         }
 
-        /** Provide the function returning the approver set; called once at state entry. Pure. */
-        public GatherPolicy assignees(Function<C, Collection<String>> assignees) {
-            return new GatherPolicy(state, assignees);
+        public ApprovalAssignees expr(Expr expression) {
+            return new ApprovalAssignees(state, expression);
         }
     }
 
-    /** Step 2: ....<b>policy(...)</b>. */
-    public final class GatherPolicy {
+    /** Step 2 (optional): ....<b>assignees(...)</b> or directly <b>onApproved(...)</b>. */
+    public final class ApprovalAssignees {
         private final S state;
-        private final Function<C, Collection<String>> assignees;
+        private final Expr expr;
 
-        GatherPolicy(S state, Function<C, Collection<String>> assignees) {
+        ApprovalAssignees(S state, Expr expr) {
             this.state = state;
-            this.assignees = assignees;
+            this.expr = expr;
         }
 
-        public GatherOnApproved policy(ApprovalPolicy policy) {
-            return new GatherOnApproved(state, assignees, policy);
+        /** Optional assignee map (step name → approver id); informational for hooks. */
+        public ApprovalOnApproved assignees(Function<C, Map<String, String>> assigneeFn) {
+            return new ApprovalOnApproved(state, expr, assigneeFn);
+        }
+
+        /** Skip assignees and go directly to onApproved. */
+        public ApprovalApprovedActivity onApproved(S approvedTo) {
+            return new ApprovalOnApproved(state, expr, null).onApproved(approvedTo);
         }
     }
 
     /** Step 3: ....<b>onApproved(state)</b>[.perform(activity)]. */
-    public final class GatherOnApproved {
+    public final class ApprovalOnApproved {
         private final S state;
-        private final Function<C, Collection<String>> assignees;
-        private final ApprovalPolicy policy;
+        private final Expr expr;
+        private final Function<C, Map<String, String>> assignees; // may be null
 
-        GatherOnApproved(
-                S state, Function<C, Collection<String>> assignees, ApprovalPolicy policy) {
+        ApprovalOnApproved(S state, Expr expr, Function<C, Map<String, String>> assignees) {
             this.state = state;
+            this.expr = expr;
             this.assignees = assignees;
-            this.policy = policy;
         }
 
-        /** Set the APPROVED outcome target state. Returns a builder requiring {@code .onRejected}. */
-        public GatherApprovedActivity onApproved(S approvedTo) {
-            return new GatherApprovedActivity(state, assignees, policy, approvedTo);
+        public ApprovalApprovedActivity onApproved(S approvedTo) {
+            return new ApprovalApprovedActivity(state, expr, assignees, approvedTo);
         }
     }
 
-    /** Step 4a: ....onApproved(state).<b>perform(activity)</b>? then onRejected(...). */
-    public final class GatherApprovedActivity {
+    /** Step 4a: ....onApproved(state).<b>perform(activity)?</b> then onRejected(...). */
+    public final class ApprovalApprovedActivity {
         private final S state;
-        private final Function<C, Collection<String>> assignees;
-        private final ApprovalPolicy policy;
+        private final Expr expr;
+        private final Function<C, Map<String, String>> assignees;
         private final S approvedTo;
         private WorkflowActivity<S, E, C> approvedActivity; // optional
 
-        GatherApprovedActivity(
+        ApprovalApprovedActivity(
                 S state,
-                Function<C, Collection<String>> assignees,
-                ApprovalPolicy policy,
+                Expr expr,
+                Function<C, Map<String, String>> assignees,
                 S approvedTo) {
             this.state = state;
+            this.expr = expr;
             this.assignees = assignees;
-            this.policy = policy;
             this.approvedTo = approvedTo;
         }
 
-        /** Optional activity to run on entering the APPROVED outcome state. */
-        public GatherApprovedActivity perform(WorkflowActivity<S, E, C> activity) {
+        /** Optional activity to run on entering the approved outcome state. */
+        public ApprovalApprovedActivity perform(WorkflowActivity<S, E, C> activity) {
             this.approvedActivity = activity;
             return this;
         }
 
-        /** REQUIRED: set the REJECTED outcome target. */
-        public GatherRejectedActivity onRejected(S rejectedTo) {
-            return new GatherRejectedActivity(
-                    state, assignees, policy, approvedTo, approvedActivity, rejectedTo);
+        /** REQUIRED: set the rejected outcome target. */
+        public ApprovalRejectedActivity onRejected(S rejectedTo) {
+            return new ApprovalRejectedActivity(
+                    state, expr, assignees, approvedTo, approvedActivity, rejectedTo);
         }
     }
 
-    /** Step 4b: ....onRejected(state).<b>perform(activity)</b>? — closes the gather declaration. */
-    public final class GatherRejectedActivity {
+    /** Step 4b: ....onRejected(state).<b>perform(activity)?</b> — closes the approval declaration. */
+    public final class ApprovalRejectedActivity {
         private final S state;
-        private final Function<C, Collection<String>> assignees;
-        private final ApprovalPolicy policy;
+        private final Expr expr;
+        private final Function<C, Map<String, String>> assignees;
         private final S approvedTo;
         private final WorkflowActivity<S, E, C> approvedActivity;
         private final S rejectedTo;
 
-        GatherRejectedActivity(
+        ApprovalRejectedActivity(
                 S state,
-                Function<C, Collection<String>> assignees,
-                ApprovalPolicy policy,
+                Expr expr,
+                Function<C, Map<String, String>> assignees,
                 S approvedTo,
                 WorkflowActivity<S, E, C> approvedActivity,
                 S rejectedTo) {
             this.state = state;
+            this.expr = expr;
             this.assignees = assignees;
-            this.policy = policy;
             this.approvedTo = approvedTo;
             this.approvedActivity = approvedActivity;
             this.rejectedTo = rejectedTo;
             // Register with no rejected activity by default; perform(...) replaces.
-            gatherings.put(
+            approvals.put(
                     state,
-                    new GatheringConfig<>(
+                    new ApprovalConfig<>(
                             state,
+                            expr,
                             assignees,
-                            policy,
                             approvedTo,
                             approvedActivity,
                             rejectedTo,
                             null));
         }
 
-        /** Optional activity to run on entering the REJECTED outcome state. */
+        /** Optional activity to run on entering the rejected outcome state. */
         public void perform(WorkflowActivity<S, E, C> activity) {
-            gatherings.put(
+            approvals.put(
                     state,
-                    new GatheringConfig<>(
+                    new ApprovalConfig<>(
                             state,
+                            expr,
                             assignees,
-                            policy,
                             approvedTo,
                             approvedActivity,
                             rejectedTo,

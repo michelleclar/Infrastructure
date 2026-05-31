@@ -18,12 +18,20 @@ public final class NodeContext<S, E, C> {
     private final S toState;
     private final E event;
     private final C ctx;
+    private final String step; // null for non-hook activities
 
+    /** Legacy constructor — step defaults to null. Preserves backward compatibility. */
     public NodeContext(S fromState, S toState, E event, C ctx) {
+        this(fromState, toState, event, ctx, null);
+    }
+
+    /** Full constructor including the hook step name (null for non-hook activities). */
+    public NodeContext(S fromState, S toState, E event, C ctx, String step) {
         this.fromState = fromState;
         this.toState = toState;
         this.event = event;
         this.ctx = ctx;
+        this.step = step;
     }
 
     /** State the process was in before this transition; {@code null} for the start-state node. */
@@ -44,5 +52,13 @@ public final class NodeContext<S, E, C> {
     /** Business context. */
     public C ctx() {
         return ctx;
+    }
+
+    /**
+     * The step name when this context is delivered to a hook activity ({@code before}, {@code after},
+     * or {@code onComplete}); {@code null} for outcome and transition activities.
+     */
+    public String step() {
+        return step;
     }
 }
