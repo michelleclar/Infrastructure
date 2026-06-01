@@ -5,6 +5,8 @@ import io.temporal.activity.DynamicActivity;
 import io.temporal.common.converter.EncodedValues;
 
 import org.carl.infrastructure.workflow.api.ProcessRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The one generic Temporal activity. Dispatches by activity-type name to the business
@@ -29,6 +31,8 @@ import org.carl.infrastructure.workflow.api.ProcessRegistry;
  */
 public class GenericActivity implements DynamicActivity {
 
+    private static final Logger log = LoggerFactory.getLogger(GenericActivity.class);
+
     @Override
     public Object execute(EncodedValues args) {
         // The activity-type name is the full namespaced name (processId::activityName[#compensate])
@@ -45,6 +49,7 @@ public class GenericActivity implements DynamicActivity {
         } catch (Exception ignored) {
             // arg not present or null — leave step as null
         }
+        log.debug("dispatch activity={} isCompensation={} step={}", activityType, binding.isCompensation(), step);
         binding.execute(from, to, event, ctx, step);
         return null;
     }

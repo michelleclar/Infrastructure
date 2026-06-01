@@ -66,14 +66,23 @@ public class GenericWorkflow implements DynamicWorkflow {
     /** Pending vote signals for the CURRENT approval state (one vote dequeued per iteration). */
     private final Deque<Vote> pendingVotes = new ArrayDeque<>();
 
+    /**
+     * Replay-aware logger. Initialized once in {@link #execute} via {@code Workflow.getLogger};
+     * shared across all workflow-thread methods so we don't allocate per call.
+     */
+    private Logger log;
+
     @Override
     public Object execute(EncodedValues args) {
+        // Initialize the replay-aware logger. Temporal's Workflow.getLogger suppresses
+        // duplicate emissions during history replay, keeping test output clean.
+        log = Workflow.getLogger(GenericWorkflow.class);
+
         String processId = Workflow.getInfo().getWorkflowType();
         ProcessDefinition def = ProcessRegistry.definition(processId);
         ProcessFlow flow = ProcessRegistry.flow(processId);
         Object ctx = args.get(0, def.ctxType());
 
-        Logger log = Workflow.getLogger(GenericWorkflow.class);
         // Two signal types: "event" advances a normal transition; "vote" feeds the approval loop.
         // Both registered up-front so signals delivered before we await them are queued by Temporal.
         Workflow.registerListener(
@@ -85,22 +94,42 @@ public class GenericWorkflow implements DynamicWorkflow {
                                     log.warn("dropping invalid vote signal (null step): {}", v);
                                     return;
                                 }
+                                log.debug(
+                                        "signal vote step={} approver={} decision={} pending={}",
+                                        v.getStep(),
+                                        v.getApprover(),
+                                        v.getDecision(),
+                                        pendingVotes.size() + 1);
                                 pendingVotes.add(v);
                             } else {
-                                eventInbox.add(signalArgs.get(0, def.eventType()));
+                                Object event = signalArgs.get(0, def.eventType());
+                                log.debug(
+                                        "signal event={} pending={}",
+                                        event,
+                                        eventInbox.size() + 1);
+                                eventInbox.add(event);
                             }
                         });
         currentState = def.startState();
         Workflow.registerListener((DynamicQueryHandler) (queryType, queryArgs) -> currentState);
+
+        log.debug(
+                "workflow start processId={} workflowId={} runId={} startState={}",
+                processId,
+                Workflow.getInfo().getWorkflowId(),
+                Workflow.getInfo().getRunId(),
+                currentState);
 
         Saga saga = new Saga(new Saga.Options.Builder().build());
         try {
             while (!def.isTerminal(currentState)) {
                 ApprovalConfig approval = ProcessRegistry.approval(processId, currentState);
                 if (approval != null) {
+                    log.debug("entering state={} approval=true", currentState);
                     // Approval state: evaluate expression tree until TRUE or FALSE
-                    advanceViaApproval(processId, approval, ctx, saga, log);
+                    advanceViaApproval(processId, approval, ctx, saga);
                 } else {
+                    log.debug("entering state={} approval=false", currentState);
                     // Plain transition: wait for one event signal (or a timeout-mapped event)
                     if (!advanceViaEvent(processId, def, flow, ctx, saga)) {
                         break;
@@ -108,8 +137,14 @@ public class GenericWorkflow implements DynamicWorkflow {
                 }
             }
         } catch (Exception e) {
+            log.error("workflow {} failed: {}; running saga compensation",
+                    Workflow.getInfo().getWorkflowId(), e.getMessage());
             saga.compensate();
             throw e;
+        }
+
+        if (def.isTerminal(currentState)) {
+            log.info("workflow {} terminal state={}", Workflow.getInfo().getWorkflowId(), currentState);
         }
         return currentState;
     }
@@ -124,6 +159,7 @@ public class GenericWorkflow implements DynamicWorkflow {
             ProcessFlow flow,
             Object ctx,
             Saga saga) {
+        log.debug("awaiting event in state={}", currentState);
         Object event = awaitNextEvent(def, currentState, ctx);
         if (event == null) {
             return false;
@@ -132,12 +168,16 @@ public class GenericWorkflow implements DynamicWorkflow {
 
         ProcessFlow.ResolvedTransition resolved = flow.resolve(from, event, ctx);
         if (resolved == null) {
+            log.debug("no transition for state={} event={} (or guard failed)", from, event);
             return true; // no match / guard failed → keep waiting
         }
         Object next = resolved.to();
         if (Objects.equals(next, from)) {
+            log.debug("self-transition state={} event={}", from, event);
             return true; // self-transition → keep waiting
         }
+        String activityName = resolved.activity() != null ? resolved.activity().name() : "(none)";
+        log.debug("transition {} --{}--> {} activity={}", from, event, next, activityName);
         runActivity(processId, resolved.activity(), from, next, event, ctx, null, saga);
         currentState = next;
         return true;
@@ -159,8 +199,7 @@ public class GenericWorkflow implements DynamicWorkflow {
             String processId,
             ApprovalConfig approval,
             Object ctx,
-            Saga saga,
-            Logger log) {
+            Saga saga) {
         Object from = currentState;
         Expr expr = approval.expr();
 
@@ -171,6 +210,17 @@ public class GenericWorkflow implements DynamicWorkflow {
         for (Step s : steps) {
             leafNames.add(s.name());
         }
+
+        // Count hooks for the init log
+        int beforeCount = 0, afterCount = 0, onCompleteCount = 0;
+        for (Step s : steps) {
+            if (s.beforeHook() != null) beforeCount++;
+            if (s.afterHook() != null) afterCount++;
+            if (s.onCompleteHook() != null) onCompleteCount++;
+        }
+        log.debug(
+                "approval state={} leaves={} hooks={{before:{},after:{},onComplete:{}}}",
+                from, steps.size(), beforeCount, afterCount, onCompleteCount);
 
         // Maps for tracking votes and detecting onComplete transitions
         Map<String, Decision> votes = new HashMap<>();
@@ -185,6 +235,7 @@ public class GenericWorkflow implements DynamicWorkflow {
                 String hookActivityType = ProcessRegistry.namespacedName(
                         processId,
                         ProcessRegistry.hookActivityName(s.name(), "before"));
+                log.debug("firing before hook step={} activity={}", s.name(), hookActivityType);
                 runHookActivity(processId, s.beforeHook(), hookActivityType, from, null, null, ctx, s.name(), saga);
             }
         }
@@ -216,6 +267,7 @@ public class GenericWorkflow implements DynamicWorkflow {
             } else {
                 votes.put(stepName, v.getDecision());
             }
+            log.debug("vote applied step={} decision={} votes={}", stepName, v.getDecision(), votes);
 
             // Fire after hook for this step (if defined)
             Step stepObj = findStep(steps, stepName);
@@ -223,6 +275,7 @@ public class GenericWorkflow implements DynamicWorkflow {
                 String hookActivityType = ProcessRegistry.namespacedName(
                         processId,
                         ProcessRegistry.hookActivityName(stepName, "after"));
+                log.debug("firing after hook step={} activity={}", stepName, hookActivityType);
                 runHookActivity(processId, stepObj.afterHook(), hookActivityType, from, null, null, ctx, stepName, saga);
             }
 
@@ -241,6 +294,8 @@ public class GenericWorkflow implements DynamicWorkflow {
                         String hookActivityType = ProcessRegistry.namespacedName(
                                 processId,
                                 ProcessRegistry.hookActivityName(s.name(), "onComplete"));
+                        log.debug("leaf {} UNKNOWN→{}, firing onComplete activity={}",
+                                s.name(), curr, hookActivityType);
                         runHookActivity(processId, s.onCompleteHook(), hookActivityType, from, null, null, ctx, s.name(), saga);
                     }
                 }
@@ -248,12 +303,14 @@ public class GenericWorkflow implements DynamicWorkflow {
 
             // Re-evaluate the overall expression
             Tri result = ExprEvaluator.evaluate(expr, votes);
+            log.debug("evaluator result={} votes={}", result, votes);
 
             if (result == Tri.TRUE) {
                 // Approved outcome
                 pendingVotes.clear(); // discard late-arriving votes
                 Object next = approval.approvedTo();
                 WorkflowActivity approvedActivity = approval.approvedActivity();
+                log.info("approval state={} → APPROVED advancing to={}", from, next);
                 runActivity(processId, approvedActivity, from, next, null, ctx, null, saga);
                 currentState = next;
                 return;
@@ -262,6 +319,7 @@ public class GenericWorkflow implements DynamicWorkflow {
                 pendingVotes.clear();
                 Object next = approval.rejectedTo();
                 WorkflowActivity rejectedActivity = approval.rejectedActivity();
+                log.info("approval state={} → REJECTED advancing to={}", from, next);
                 runActivity(processId, rejectedActivity, from, next, null, ctx, null, saga);
                 currentState = next;
                 return;
@@ -323,6 +381,8 @@ public class GenericWorkflow implements DynamicWorkflow {
         }
         Duration timeout = activity.timeout(ctx);
         RetryPolicy retry = activity.retry(ctx);
+        int retryMax = retry != null ? retry.maxAttempts() : 0;
+        log.debug("scheduling activity={} timeout={} retry-max={}", activityType, timeout, retryMax);
         ActivityStub stub =
                 Workflow.newUntypedActivityStub(TemporalMapper.activityOptions(timeout, retry));
         stub.execute(activityType, Void.class, from, to, event, ctx, step);
@@ -351,6 +411,8 @@ public class GenericWorkflow implements DynamicWorkflow {
         Duration timeout = activity.timeout(ctx);
         RetryPolicy retry = activity.retry(ctx);
         String activityType = ProcessRegistry.namespacedName(processId, activity.name());
+        int retryMax = retry != null ? retry.maxAttempts() : 0;
+        log.debug("scheduling activity={} timeout={} retry-max={}", activityType, timeout, retryMax);
 
         ActivityStub stub =
                 Workflow.newUntypedActivityStub(TemporalMapper.activityOptions(timeout, retry));
@@ -358,6 +420,7 @@ public class GenericWorkflow implements DynamicWorkflow {
 
         if (activity.compensable()) {
             String compensationType = activityType + ProcessRegistry.COMPENSATE_SUFFIX;
+            log.debug("registered saga compensation for activity={}", compensationType);
             ActivityStub compensationStub =
                     Workflow.newUntypedActivityStub(TemporalMapper.activityOptions(timeout, retry));
             saga.addCompensation(

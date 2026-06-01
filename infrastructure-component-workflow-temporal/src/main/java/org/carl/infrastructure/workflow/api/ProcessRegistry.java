@@ -1,5 +1,8 @@
 package org.carl.infrastructure.workflow.api;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -37,6 +40,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * thrown at registration time if the same name appears in two different transitions or hooks.
  */
 public final class ProcessRegistry {
+
+    private static final Logger log = LoggerFactory.getLogger(ProcessRegistry.class);
 
     /** Separator between processId and activity name in the Temporal activity-type string. */
     public static final String PROCESS_SEP = "::";
@@ -92,6 +97,10 @@ public final class ProcessRegistry {
             }
         }
 
+        public boolean isCompensation() {
+            return isCompensation;
+        }
+
         public Class<?> stateType() {
             return stateType;
         }
@@ -130,6 +139,7 @@ public final class ProcessRegistry {
      */
     public static <S, E, C> void register(ProcessDefinition<S, E, C> def) {
         boolean firstRegistration = DEFS.put(def.id(), def) == null;
+        int sizeBefore = ACTIVITIES.size();
 
         Class<S> stateType = def.stateType();
         Class<E> eventType = def.eventType();
@@ -217,6 +227,13 @@ public final class ProcessRegistry {
                         ctxType);
             }
         }
+
+        log.info(
+                "registered process id={} transitions={} approvals={} activities={}",
+                def.id(),
+                flow.transitions().size(),
+                flow.approvals().size(),
+                ACTIVITIES.size() - sizeBefore);
     }
 
     /**
@@ -295,6 +312,7 @@ public final class ProcessRegistry {
                 forwardKey,
                 new ActivityBinding(
                         (WorkflowActivity) activity, false, stateType, eventType, ctxType));
+        log.debug("indexed hook activity step={} type={} name={}", stepName, hookType, forwardKey);
         if (activity.compensable()) {
             ACTIVITIES.put(
                     forwardKey + COMPENSATE_SUFFIX,
@@ -326,6 +344,7 @@ public final class ProcessRegistry {
         String forwardKey = namespacedName(processId, actName);
         ACTIVITIES.put(
                 forwardKey, new ActivityBinding(activity, false, stateType, eventType, ctxType));
+        log.debug("indexed activity name={} compensable={}", forwardKey, activity.compensable());
         if (activity.compensable()) {
             ACTIVITIES.put(
                     forwardKey + COMPENSATE_SUFFIX,

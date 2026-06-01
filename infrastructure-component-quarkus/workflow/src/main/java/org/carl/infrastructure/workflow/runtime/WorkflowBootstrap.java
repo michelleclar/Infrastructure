@@ -15,7 +15,8 @@ import org.carl.infrastructure.workflow.api.ProcessDefinition;
 import org.carl.infrastructure.workflow.api.ProcessRegistry;
 import org.carl.infrastructure.workflow.engine.GenericActivity;
 import org.carl.infrastructure.workflow.engine.GenericWorkflow;
-import org.jboss.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Production wiring: registers every {@link ProcessDefinition} CDI bean, then starts a Temporal
@@ -27,7 +28,7 @@ import org.jboss.logging.Logger;
 @ApplicationScoped
 public class WorkflowBootstrap {
 
-    private static final Logger LOG = Logger.getLogger(WorkflowBootstrap.class);
+    private static final Logger log = LoggerFactory.getLogger(WorkflowBootstrap.class);
 
     @Inject WorkflowClient client;
     @Inject WorkflowConfig config;
@@ -38,6 +39,7 @@ public class WorkflowBootstrap {
     void onStart(@Observes StartupEvent event) {
         int count = 0;
         for (ProcessDefinition<?, ?, ?> def : processes) {
+            log.debug("discovered process definition class={} id={}", def.getClass().getName(), def.id());
             ProcessRegistry.register(def);
             count++;
         }
@@ -48,8 +50,7 @@ public class WorkflowBootstrap {
         worker.registerActivitiesImplementations(new GenericActivity());
         factory.start();
 
-        LOG.infof(
-                "workflow started: task-queue=%s, processes=%d", config.taskQueue(), count);
+        log.info("workflow started: task-queue={}, processes={}", config.taskQueue(), count);
     }
 
     @PreDestroy

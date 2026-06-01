@@ -9,6 +9,8 @@ import jakarta.inject.Inject;
 
 import org.carl.infrastructure.workflow.api.Decision;
 import org.carl.infrastructure.workflow.api.Vote;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Caller-facing facade. Business passes plain POJOs/enums; {@code io.temporal.*} stays here.
@@ -18,11 +20,14 @@ import org.carl.infrastructure.workflow.api.Vote;
 @ApplicationScoped
 public class WorkflowFacade {
 
+    private static final Logger log = LoggerFactory.getLogger(WorkflowFacade.class);
+
     @Inject WorkflowClient client;
     @Inject WorkflowConfig config;
 
     /** Start a process instance. {@code processId} must match a registered {@code ProcessDefinition#id}. */
     public void start(String processId, String bizId, Object ctx) {
+        log.debug("facade.start processId={} workflowId={}", processId, workflowId(processId, bizId));
         WorkflowStub stub =
                 client.newUntypedWorkflowStub(
                         processId,
@@ -35,6 +40,7 @@ public class WorkflowFacade {
 
     /** Deliver an external event (e.g. a human decision) to a running instance. */
     public void signal(String processId, String bizId, Object event) {
+        log.debug("facade.signal workflowId={} event={}", workflowId(processId, bizId), event);
         client.newUntypedWorkflowStub(workflowId(processId, bizId)).signal("event", event);
     }
 
@@ -56,12 +62,15 @@ public class WorkflowFacade {
             String approver,
             Decision decision,
             String comment) {
+        log.debug("facade.vote workflowId={} step={} approver={} decision={}",
+                workflowId(processId, bizId), step, approver, decision);
         client.newUntypedWorkflowStub(workflowId(processId, bizId))
                 .signal("vote", new Vote(step, approver, decision, comment));
     }
 
     /** Query the current state of a running instance. */
     public <S> S queryState(String processId, String bizId, Class<S> stateType) {
+        log.trace("facade.queryState workflowId={} type={}", workflowId(processId, bizId), stateType.getSimpleName());
         return client.newUntypedWorkflowStub(workflowId(processId, bizId))
                 .query("state", stateType);
     }

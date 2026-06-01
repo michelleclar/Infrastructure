@@ -28,6 +28,7 @@ dependencies {
     testImplementation(libs.temporal.testing)
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.slf4j:slf4j-simple:2.0.9")
 }
 
 tasks.test {
