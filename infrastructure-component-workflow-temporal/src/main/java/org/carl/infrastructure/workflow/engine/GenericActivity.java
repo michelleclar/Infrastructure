@@ -4,9 +4,9 @@ import io.temporal.activity.Activity;
 import io.temporal.activity.DynamicActivity;
 import io.temporal.common.converter.EncodedValues;
 
+import org.carl.infrastructure.logging.ILogger;
+import org.carl.infrastructure.logging.LoggerFactory;
 import org.carl.infrastructure.workflow.api.ProcessRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The one generic Temporal activity. Dispatches by activity-type name to the business
@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  */
 public class GenericActivity implements DynamicActivity {
 
-    private static final Logger log = LoggerFactory.getLogger(GenericActivity.class);
+    private static final ILogger log = LoggerFactory.getLogger(GenericActivity.class);
 
     @Override
     public Object execute(EncodedValues args) {

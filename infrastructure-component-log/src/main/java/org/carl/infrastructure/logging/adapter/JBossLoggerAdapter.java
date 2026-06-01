@@ -4,6 +4,8 @@ import org.carl.infrastructure.logging.ILogger;
 import org.carl.infrastructure.logging.LogLevel;
 import org.jboss.logging.Logger;
 
+import java.util.IllegalFormatException;
+
 /** JBoss Logging framework adapter. Adapts the JBoss Logger to the unified ILogger interface. */
 public record JBossLoggerAdapter(Logger logger) implements ILogger {
 
@@ -82,7 +84,7 @@ public record JBossLoggerAdapter(Logger logger) implements ILogger {
 
     @Override
     public void trace(String format, Object... args) {
-        logger.tracef(format, args);
+        logger.trace(formatMessage(format, args));
     }
 
     @Override
@@ -97,7 +99,7 @@ public record JBossLoggerAdapter(Logger logger) implements ILogger {
 
     @Override
     public void debug(String format, Object... args) {
-        logger.debugf(format, args);
+        logger.debug(formatMessage(format, args));
     }
 
     @Override
@@ -112,7 +114,7 @@ public record JBossLoggerAdapter(Logger logger) implements ILogger {
 
     @Override
     public void info(String format, Object... args) {
-        logger.infof(format, args);
+        logger.info(formatMessage(format, args));
     }
 
     @Override
@@ -127,7 +129,7 @@ public record JBossLoggerAdapter(Logger logger) implements ILogger {
 
     @Override
     public void warn(String format, Object... args) {
-        logger.warnf(format, args);
+        logger.warn(formatMessage(format, args));
     }
 
     @Override
@@ -142,11 +144,37 @@ public record JBossLoggerAdapter(Logger logger) implements ILogger {
 
     @Override
     public void error(String format, Object... args) {
-        logger.errorf(format, args);
+        logger.error(formatMessage(format, args));
     }
 
     @Override
     public void error(String message, Throwable throwable) {
         logger.error(message, throwable);
+    }
+
+    private static String formatMessage(String format, Object... args) {
+        if (format == null || args == null || args.length == 0) {
+            return format;
+        }
+
+        if (!format.contains("{}")) {
+            try {
+                return String.format(format, args);
+            } catch (IllegalFormatException ignored) {
+                return format;
+            }
+        }
+
+        StringBuilder message = new StringBuilder(format.length() + args.length * 16);
+        int argIndex = 0;
+        int searchFrom = 0;
+        int placeholder;
+        while ((placeholder = format.indexOf("{}", searchFrom)) >= 0 && argIndex < args.length) {
+            message.append(format, searchFrom, placeholder);
+            message.append(args[argIndex++]);
+            searchFrom = placeholder + 2;
+        }
+        message.append(format, searchFrom, format.length());
+        return message.toString();
     }
 }

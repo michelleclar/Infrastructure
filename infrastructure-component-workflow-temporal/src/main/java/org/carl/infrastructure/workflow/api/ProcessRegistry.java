@@ -1,7 +1,7 @@
 package org.carl.infrastructure.workflow.api;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.carl.infrastructure.logging.ILogger;
+import org.carl.infrastructure.logging.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -41,7 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class ProcessRegistry {
 
-    private static final Logger log = LoggerFactory.getLogger(ProcessRegistry.class);
+    private static final ILogger log = LoggerFactory.getLogger(ProcessRegistry.class);
 
     /** Separator between processId and activity name in the Temporal activity-type string. */
     public static final String PROCESS_SEP = "::";

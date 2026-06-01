@@ -8,6 +8,8 @@ import io.temporal.workflow.DynamicWorkflow;
 import io.temporal.workflow.Saga;
 import io.temporal.workflow.Workflow;
 
+import org.carl.infrastructure.logging.ILogger;
+import org.carl.infrastructure.logging.LoggerFactory;
 import org.carl.infrastructure.workflow.api.ApprovalConfig;
 import org.carl.infrastructure.workflow.api.Decision;
 import org.carl.infrastructure.workflow.api.Expr;
@@ -20,7 +22,6 @@ import org.carl.infrastructure.workflow.api.Step;
 import org.carl.infrastructure.workflow.api.Tri;
 import org.carl.infrastructure.workflow.api.Vote;
 import org.carl.infrastructure.workflow.api.WorkflowActivity;
-import org.slf4j.Logger;
 
 import java.time.Duration;
 import java.util.ArrayDeque;
@@ -66,18 +67,10 @@ public class GenericWorkflow implements DynamicWorkflow {
     /** Pending vote signals for the CURRENT approval state (one vote dequeued per iteration). */
     private final Deque<Vote> pendingVotes = new ArrayDeque<>();
 
-    /**
-     * Replay-aware logger. Initialized once in {@link #execute} via {@code Workflow.getLogger};
-     * shared across all workflow-thread methods so we don't allocate per call.
-     */
-    private Logger log;
+    private static final ILogger log = LoggerFactory.getLogger(GenericWorkflow.class);
 
     @Override
     public Object execute(EncodedValues args) {
-        // Initialize the replay-aware logger. Temporal's Workflow.getLogger suppresses
-        // duplicate emissions during history replay, keeping test output clean.
-        log = Workflow.getLogger(GenericWorkflow.class);
-
         String processId = Workflow.getInfo().getWorkflowType();
         ProcessDefinition def = ProcessRegistry.definition(processId);
         ProcessFlow flow = ProcessRegistry.flow(processId);

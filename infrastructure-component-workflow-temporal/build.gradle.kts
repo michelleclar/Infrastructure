@@ -24,13 +24,21 @@ publishing {
 
 dependencies {
     api(libs.temporal.sdk)
+    implementation(project(":infrastructure-component-log"))
 
     testImplementation(libs.temporal.testing)
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("org.slf4j:slf4j-simple:2.0.9")
 }
 
 tasks.test {
     useJUnitPlatform()
+    systemProperty("org.jboss.logging.provider", "jdk")
+    systemProperty(
+        "java.util.logging.config.file",
+        layout.projectDirectory.file("src/test/resources/logging.properties").asFile.absolutePath,
+    )
+    testLogging {
+        showStandardStreams = true
+    }
 }
