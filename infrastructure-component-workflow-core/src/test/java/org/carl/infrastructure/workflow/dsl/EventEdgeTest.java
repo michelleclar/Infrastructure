@@ -5,6 +5,7 @@ import static org.carl.infrastructure.workflow.dsl.BuiltInNodes.endTask;
 import static org.carl.infrastructure.workflow.dsl.BuiltInNodes.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.carl.infrastructure.workflow.definition.EdgeDefinition;
@@ -74,6 +75,57 @@ class EventEdgeTest {
 
         // sanity: no edge from the join node carries a non-null outcome anymore
         assertTrue(fromJoin.stream().allMatch(e -> e.outcome() == null));
+    }
+
+    // E8 validation tests -----------------------------------------------------------------------
+
+    @Test
+    void joinOnNodeAlreadyRegisteredAsNonTaskGroup_throws() {
+        FlowDef flow = Flow.define("w", "W");
+        flow.node("X", service("doX")); // registered as serviceTask
+        // Trying to turn X into a taskGroup via join() must throw
+        IllegalStateException ex =
+                assertThrows(
+                        IllegalStateException.class,
+                        () ->
+                                flow.from("X")
+                                        .join(Dsl.all(Dsl.node("child", approval("hr")))));
+        assertTrue(ex.getMessage().contains("X"));
+        assertTrue(ex.getMessage().contains("serviceTask"));
+        assertTrue(ex.getMessage().contains("taskGroup"));
+    }
+
+    @Test
+    void joinOnFreshNode_works() {
+        // X has not been registered yet → join() should succeed
+        FlowDef flow = Flow.define("w", "W");
+        flow.start("start");
+        flow.node("start", service("init"));
+        flow.node("done", endTask());
+        flow.from("start").on("submit").to("X");
+        flow.from("X")
+                .join(Dsl.all(Dsl.node("child1", approval("hr"))))
+                .on("APPROVED")
+                .to("done");
+        WorkflowDefinition def = flow.build();
+        // X must have been registered as taskGroup
+        assertEquals("taskGroup", def.nodes().stream()
+                .filter(n -> "X".equals(n.id())).findFirst().orElseThrow().type());
+    }
+
+    @Test
+    void joinOnExistingTaskGroupNode_allowed() {
+        // X was previously registered explicitly as taskGroup → join() is allowed (overwrite spec)
+        FlowDef flow = Flow.define("w", "W");
+        flow.node("X", BuiltInNodes.taskGroup());
+        flow.node("done", endTask());
+        flow.from("X")
+                .join(Dsl.all(Dsl.node("child1", approval("hr"))))
+                .on("APPROVED")
+                .to("done");
+        WorkflowDefinition def = flow.build();
+        assertEquals("taskGroup", def.nodes().stream()
+                .filter(n -> "X".equals(n.id())).findFirst().orElseThrow().type());
     }
 
     @Test

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -27,6 +28,24 @@ class BuiltInNodesTest {
         assertEquals(manual, sugar);
         assertEquals(NodeTypes.SERVICE_TASK, sugar.type());
         assertEquals("createOrder", sugar.props().get("activity"));
+    }
+
+    @Test
+    void serviceDualArgPinsActivityAndInput() {
+        Map<String, Object> input = Map.of("customerId", "alice");
+        NodeConfig sugar = apply(BuiltInNodes.service("createOrder", input));
+        assertEquals(NodeTypes.SERVICE_TASK, sugar.type());
+        assertEquals("createOrder", sugar.props().get("activity"));
+        assertEquals(input, sugar.props().get("activityInput"));
+    }
+
+    @Test
+    void serviceDualArgEmptyInputIsAllowed() {
+        Map<String, Object> empty = Map.of();
+        NodeConfig sugar = apply(BuiltInNodes.service("createOrder", empty));
+        assertEquals(NodeTypes.SERVICE_TASK, sugar.type());
+        assertEquals("createOrder", sugar.props().get("activity"));
+        assertEquals(empty, sugar.props().get("activityInput"));
     }
 
     @Test

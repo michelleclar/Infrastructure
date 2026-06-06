@@ -56,10 +56,14 @@ import java.util.Set;
  *
  * <h2>Routing model</h2>
  *
- * Edges are exclusively routed by {@link EdgeDefinition#outcome()} after each node completes. When
- * no outcome edge matches, the runtime falls back to a single edge with no event/outcome/condition
- * (the canonical "default" edge). Edges declaring only {@code event} or only {@code condition} are
- * not used by this runtime; declare an explicit {@code outcome} on every routing edge instead.
+ * After each node completes the runtime calls {@link #pickNextEdge}: outgoing edges are first
+ * matched by {@link EdgeDefinition#event()} against the node's outcome name (this is the post-G2
+ * primary path — the DSL {@code .on(name)} writes the outcome name into the {@code event} field).
+ * The first edge whose {@link EdgeDefinition#when()} guard expression evaluates to {@code true}
+ * (or is {@code null}/blank) wins. As a legacy fallback, edges whose {@link
+ * EdgeDefinition#outcome()} equals the outcome are tried next (for hand-constructed definitions).
+ * If neither matches, the runtime falls back to a single edge with no event/outcome/when (the
+ * canonical "default" edge).
  *
  * <h2>WAITING translation</h2>
  *
@@ -264,8 +268,7 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
         if (payload.containsKey(RuntimeIntents.SUB_WORKFLOW_ID)) {
             return driveSubProcess(handler, config, payload);
         }
-        if (payload.containsKey(RuntimeIntents.AWAIT_EVENT)
-                || payload.containsKey(RuntimeIntents.AWAITED_EVENT)) {
+        if (payload.containsKey(RuntimeIntents.AWAIT_EVENT)) {
             return driveAwait(handler, config, payload);
         }
         return NodeResult.failed("unknown waiting intent: " + payload.keySet());
@@ -306,7 +309,6 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
     private NodeResult driveAwait(
             NodeHandler<Object> handler, Object config, Map<String, Object> payload) {
         Object awaitObj = payload.get(RuntimeIntents.AWAIT_EVENT);
-        if (awaitObj == null) awaitObj = payload.get(RuntimeIntents.AWAITED_EVENT);
         if (awaitObj == null) return NodeResult.failed("await intent missing event name");
 
         final String capturedNodeId = ctx.currentNodeId();
@@ -711,8 +713,10 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
                 }
             }
             // Legacy: hand-constructed EdgeDefinition objects may still set the outcome field.
-            for (EdgeDefinition candidate :
-                    graph.nextCandidates(currentNodeId, EdgeMatch.byOutcome(outcome))) {
+            @SuppressWarnings("deprecation")
+            List<EdgeDefinition> legacyOutcomeCandidates =
+                    graph.nextCandidates(currentNodeId, EdgeMatch.byOutcome(outcome));
+            for (EdgeDefinition candidate : legacyOutcomeCandidates) {
                 if (matchesCondition(candidate.when(), ctx)) {
                     return candidate;
                 }

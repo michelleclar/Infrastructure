@@ -165,6 +165,25 @@ public final class FlowDef {
         nodeConfigs.putIfAbsent(name, config);
     }
 
+    /**
+     * Returns the type string of {@code name} if the node is already registered in
+     * {@link #nodeConfigs} as a type <em>other than</em> {@code taskGroup}, or {@code null}
+     * otherwise (unregistered or already a taskGroup).
+     *
+     * <p>Used by {@link FlowFrom#join} to detect the misuse pattern where a node that was
+     * already declared with meaningful config is later silently turned into a {@code taskGroup}.
+     */
+    String registeredNonTaskGroupType(String name) {
+        NodeConfig existing = nodeConfigs.get(name);
+        if (existing == null) {
+            return null;
+        }
+        if (NodeTypes.TASK_GROUP.equals(existing.type())) {
+            return null;
+        }
+        return existing.type();
+    }
+
     /** Called by {@link FlowFrom.FlowTo} and {@link FlowJoin.FlowJoinTo} to store an edge. */
     void registerEdge(EdgeDefinition edge) {
         edges.add(edge);

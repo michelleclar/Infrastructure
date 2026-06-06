@@ -2,6 +2,7 @@ package org.carl.infrastructure.workflow.dsl;
 
 import org.carl.infrastructure.workflow.spi.NodeTypes;
 
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -32,6 +33,23 @@ public final class BuiltInNodes {
         return b -> b.type(NodeTypes.SERVICE_TASK).set("activity", activity);
     }
 
+    /**
+     * {@link NodeTypes#SERVICE_TASK} configurer that pins both the {@code activity} and
+     * {@code activityInput} properties in one call, avoiding the need for {@code .andThen}.
+     *
+     * @param activity the activity name
+     * @param activityInput the input map passed to the activity; {@code null} is allowed and
+     *     equivalent to {@code Map.of()}
+     */
+    public static Consumer<NodeBuilder> service(String activity, Map<String, Object> activityInput) {
+        return b -> {
+            b.type(NodeTypes.SERVICE_TASK).set("activity", activity);
+            if (activityInput != null) {
+                b.set("activityInput", activityInput);
+            }
+        };
+    }
+
     /** {@link NodeTypes#APPROVAL_TASK} configurer that pins the {@code assignee} property. */
     public static Consumer<NodeBuilder> approval(String assignee) {
         return b -> b.type(NodeTypes.APPROVAL_TASK).set("assignee", assignee);
@@ -42,9 +60,9 @@ public final class BuiltInNodes {
         return b -> b.type(NodeTypes.USER_TASK).set("assignee", assignee);
     }
 
-    /** {@link NodeTypes#EVENT_TASK} configurer that pins the {@code awaitedEvent} property. */
-    public static Consumer<NodeBuilder> event(String awaitedEvent) {
-        return b -> b.type(NodeTypes.EVENT_TASK).set("awaitedEvent", awaitedEvent);
+    /** {@link NodeTypes#EVENT_TASK} configurer that pins the {@code awaitEvent} property. */
+    public static Consumer<NodeBuilder> event(String awaitEvent) {
+        return b -> b.type(NodeTypes.EVENT_TASK).set("awaitEvent", awaitEvent);
     }
 
     /**

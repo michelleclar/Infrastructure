@@ -19,19 +19,18 @@ public final class RuntimeIntents {
     /** Activity input (Map&lt;String,Object&gt;). */
     public static final String ACTIVITY_INPUT = "activityInput";
 
-    // approvalTask / userTask.
+    // approvalTask / userTask / eventTask.
     /** Assignee identifier or expression (string). */
     public static final String ASSIGNEE = "assignee";
 
-    /** Event name that completes the task (string). */
+    /**
+     * Event name that the handler waits for (string). Used by approvalTask, userTask, and
+     * eventTask alike.
+     */
     public static final String AWAIT_EVENT = "awaitEvent";
 
     /** ISO-8601 timeout duration (string, e.g. {@code "PT24H"}). */
     public static final String TIMEOUT_DURATION = "timeoutDuration";
-
-    // eventTask.
-    /** Awaited event name (string). */
-    public static final String AWAITED_EVENT = "awaitedEvent";
 
     // timerTask.
     /** ISO-8601 duration (string). */

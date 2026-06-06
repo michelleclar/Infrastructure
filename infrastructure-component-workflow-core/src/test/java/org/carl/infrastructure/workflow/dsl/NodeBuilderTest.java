@@ -44,33 +44,33 @@ class NodeBuilderTest {
     }
 
     @Test
-    void configBulkWritesAllEntries() {
+    void setAllBulkWritesAllEntries() {
         Map<String, Object> input = new LinkedHashMap<>();
         input.put("a", 1);
         input.put("b", "two");
 
-        NodeConfig cfg = new NodeBuilder().type("custom").config(input).buildConfig();
+        NodeConfig cfg = new NodeBuilder().type("custom").setAll(input).buildConfig();
 
         assertEquals(1, cfg.props().get("a"));
         assertEquals("two", cfg.props().get("b"));
     }
 
     @Test
-    void configNullInputIsNoOp() {
-        NodeConfig cfg = new NodeBuilder().type("custom").config(null).set("k", "v").buildConfig();
+    void setAllNullInputIsNoOp() {
+        NodeConfig cfg = new NodeBuilder().type("custom").setAll((Object) null).set("k", "v").buildConfig();
         assertEquals(Map.of("k", "v"), cfg.props());
     }
 
     @Test
-    void setBeforeConfigDoesNotConflict() {
-        // set(...) writes; subsequent config(...) only adds entries from the map. Keys not
-        // mentioned by config(...) survive intact.
+    void setBeforeSetAllDoesNotConflict() {
+        // set(...) writes; subsequent setAll(...) only adds entries from the map. Keys not
+        // mentioned by setAll(...) survive intact.
         NodeConfig cfg =
                 new NodeBuilder()
                         .type("custom")
                         .set("keep", "yes")
                         .set("override", "before")
-                        .config(Map.of("override", "after", "extra", "added"))
+                        .setAll(Map.of("override", "after", "extra", "added"))
                         .buildConfig();
 
         assertEquals("yes", cfg.props().get("keep"));

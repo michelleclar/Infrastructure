@@ -1,9 +1,19 @@
 package org.carl.infrastructure.workflow.spi;
 
 /**
- * Canonical built-in node type discriminators.
+ * Canonical built-in node type discriminators (string constants).
  *
- * <p>Used as {@code NodeDefinition.type} values for the built-in node handlers.
+ * <p>Used as {@code NodeDefinition.type} values for the built-in node handlers and inside the
+ * runtime where a plain string is required (JSON wire format, registry lookups, switch
+ * statements).
+ *
+ * <p>For typed DSL contexts (compile-time safety, IDE autocomplete, refactor support) prefer the
+ * matching {@link BuiltInNodeType} enum constants:
+ *
+ * <pre>
+ * flow.node("step1", b -&gt; b.type(BuiltInNodeType.SERVICE_TASK));   // typed
+ * flow.node("step1", b -&gt; b.type(NodeTypes.SERVICE_TASK));         // string (still valid)
+ * </pre>
  */
 public final class NodeTypes {
 

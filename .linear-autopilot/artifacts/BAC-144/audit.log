@@ -1,0 +1,2 @@
+{"ts":"2026-05-18T10:58:50+00:00","role":"PM","actor":"Codex","action":"issue_created","issue":"BAC-144","title":"Add async HTTP client component with lifecycle interceptors","mode":"create_single","project":"Backend Infrastructure","artifacts":["spec.md","plan.md"],"from":"unspec'd","to":"spec_ready"}
+{"ts":"2026-05-18T11:00:15.901Z","role":"PM","actor":"Codex","action":"linear_comment_posted","issue":"BAC-144","linear_comment_id":"4d7b5e6b-b844-4287-8bb7-466f6d1790cf"}

@@ -28,24 +28,25 @@ import java.util.concurrent.ConcurrentMap;
 public final class NodeHandlerRegistry {
 
     private final ConcurrentMap<String, NodeHandler<?>> handlers = new ConcurrentHashMap<>();
-    private volatile boolean strictDeterminismCheck = true;
 
     /**
-     * Retained for backward compatibility. Has no effect: {@link #register(NodeHandler)} is always
-     * strict.
+     * No-op retained for backward compatibility. {@link #register(NodeHandler)} is always strict —
+     * it unconditionally calls {@link DeterminismGuard#assertPure(Class)}. Calling this method has
+     * no effect.
      *
      * @return this registry for chaining.
      */
     public NodeHandlerRegistry strict() {
-        this.strictDeterminismCheck = true;
         return this;
     }
 
     /**
-     * @return whether {@link #strict()} has been enabled on this registry (always {@code true}).
+     * Always returns {@code true}: the registry is always strict.
+     *
+     * @return {@code true}
      */
     public boolean isStrict() {
-        return strictDeterminismCheck;
+        return true;
     }
 
     /**

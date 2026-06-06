@@ -62,6 +62,15 @@ public final class FlowFrom {
      */
     public FlowJoin join(JoinSpec spec) {
         Objects.requireNonNull(spec, "spec");
+        String conflictingType = flowDef.registeredNonTaskGroupType(fromNodeName);
+        if (conflictingType != null) {
+            throw new IllegalStateException(
+                    "node '"
+                            + fromNodeName
+                            + "' is already registered as type '"
+                            + conflictingType
+                            + "'; cannot turn it into a taskGroup via flow.from().join()");
+        }
         flowDef.registerJoinSpec(fromNodeName, spec);
         flowDef.ensureNode(
                 fromNodeName,

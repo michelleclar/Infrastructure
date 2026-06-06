@@ -37,8 +37,8 @@ public final class EventTaskHandler implements NodeHandler<EventTaskConfig> {
     public NodeResult run(NodeExecutionContext ctx, EventTaskConfig config) {
         Map<String, Object> payload = new LinkedHashMap<>();
         if (config != null) {
-            if (config.awaitedEvent() != null) {
-                payload.put(RuntimeIntents.AWAITED_EVENT, config.awaitedEvent());
+            if (config.awaitEvent() != null) {
+                payload.put(RuntimeIntents.AWAIT_EVENT, config.awaitEvent());
             }
             if (config.timeoutDuration() != null) {
                 payload.put(RuntimeIntents.TIMEOUT_DURATION, config.timeoutDuration());
@@ -57,8 +57,8 @@ public final class EventTaskHandler implements NodeHandler<EventTaskConfig> {
             return true;
         }
         return config != null
-                && config.awaitedEvent() != null
-                && config.awaitedEvent().equals(event.name());
+                && config.awaitEvent() != null
+                && config.awaitEvent().equals(event.name());
     }
 
     @Override
@@ -69,7 +69,7 @@ public final class EventTaskHandler implements NodeHandler<EventTaskConfig> {
         if (TIMEOUT_EVENT.equals(event.name())) {
             return NodeResult.completed(Outcomes.TIMEOUT);
         }
-        if (cfg != null && cfg.awaitedEvent() != null && cfg.awaitedEvent().equals(event.name())) {
+        if (cfg != null && cfg.awaitEvent() != null && cfg.awaitEvent().equals(event.name())) {
             return NodeResult.completed(Outcomes.RECEIVED);
         }
         return NodeResult.waiting();

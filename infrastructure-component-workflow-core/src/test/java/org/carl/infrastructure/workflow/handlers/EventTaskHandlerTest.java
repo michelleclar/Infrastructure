@@ -31,7 +31,7 @@ class EventTaskHandlerTest {
         NodeResult r = handler.run(new TestContext(), cfg);
         assertEquals(NodeStatus.WAITING, r.status());
         Map<String, Object> p = r.payload();
-        assertEquals("paid", p.get(RuntimeIntents.AWAITED_EVENT));
+        assertEquals("paid", p.get(RuntimeIntents.AWAIT_EVENT));
         assertEquals("PT10M", p.get(RuntimeIntents.TIMEOUT_DURATION));
     }
 

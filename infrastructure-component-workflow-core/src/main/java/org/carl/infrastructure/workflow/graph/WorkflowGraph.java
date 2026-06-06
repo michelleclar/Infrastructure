@@ -111,6 +111,7 @@ public final class WorkflowGraph {
 
     // ----- routing -----
 
+    @SuppressWarnings("deprecation")
     public List<EdgeDefinition> nextCandidates(String currentNodeId, EdgeMatch match) {
         Objects.requireNonNull(match, "match");
         List<EdgeDefinition> all = outgoing(currentNodeId);
