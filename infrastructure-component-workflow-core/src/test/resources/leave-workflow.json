@@ -1,0 +1,67 @@
+{
+  "id": "leave",
+  "name": "请假流程",
+  "nodes": [
+    {
+      "id": "requestLeave",
+      "label": "发起请假",
+      "type": "serviceTask",
+      "templateId": null,
+      "config": {
+        "activity": "createLeaveRequest"
+      }
+    },
+    {
+      "id": "leaveApproval",
+      "label": "发起请假审批",
+      "type": "taskGroup",
+      "templateId": null,
+      "config": {
+        "join": {
+          "type": "all"
+        },
+        "tasks": [
+          {
+            "id": "hrApproval",
+            "label": "HR 审批",
+            "type": "approvalTask",
+            "config": {
+              "assignee": "${ctx.hrId}"
+            }
+          },
+          {
+            "id": "managerApproval",
+            "label": "部门主管审批",
+            "type": "approvalTask",
+            "config": {
+              "assignee": "${ctx.departmentManagerId}"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "requestLeave",
+      "to": "leaveApproval",
+      "event": "提交",
+      "outcome": null,
+      "when": null
+    },
+    {
+      "from": "leaveApproval",
+      "to": "onLeave",
+      "event": null,
+      "outcome": "审批通过",
+      "when": null
+    },
+    {
+      "from": "leaveApproval",
+      "to": "requestLeave",
+      "event": null,
+      "outcome": "审批拒绝",
+      "when": null
+    }
+  ]
+}

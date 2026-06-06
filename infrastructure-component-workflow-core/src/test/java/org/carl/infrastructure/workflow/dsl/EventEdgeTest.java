@@ -1,0 +1,94 @@
+package org.carl.infrastructure.workflow.dsl;
+
+import static org.carl.infrastructure.workflow.dsl.BuiltInNodes.approval;
+import static org.carl.infrastructure.workflow.dsl.BuiltInNodes.endTask;
+import static org.carl.infrastructure.workflow.dsl.BuiltInNodes.service;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.carl.infrastructure.workflow.definition.EdgeDefinition;
+import org.carl.infrastructure.workflow.definition.WorkflowDefinition;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+/**
+ * Verifies that {@code FlowFrom#on(...)} and {@code FlowJoin#on(...)} write the supplied name into
+ * {@link EdgeDefinition#event()} and leave {@link EdgeDefinition#outcome()} {@code null}.
+ */
+class EventEdgeTest {
+
+    private static EdgeDefinition firstEdgeFrom(WorkflowDefinition def, String from) {
+        return def.edges().stream().filter(e -> from.equals(e.from())).findFirst().orElseThrow();
+    }
+
+    @Test
+    void simpleOnWritesEventNotOutcome() {
+        FlowDef flow = Flow.define("w", "W");
+        flow.start("X");
+        flow.node("X", service("doX"));
+        flow.node("Y", endTask());
+        flow.from("X").on("提交").to("Y");
+
+        WorkflowDefinition def = flow.build();
+        EdgeDefinition edge = firstEdgeFrom(def, "X");
+
+        assertEquals("X", edge.from());
+        assertEquals("Y", edge.to());
+        assertEquals("提交", edge.event());
+        assertNull(edge.outcome());
+        assertNull(edge.when());
+    }
+
+    @Test
+    void joinFlowOnWritesEventNotOutcome() {
+        FlowDef flow = Flow.define("w", "W");
+        flow.start("发起");
+        flow.node("发起", service("createReq"));
+        flow.node("休假", endTask());
+
+        flow.from("发起").on("提交").to("审批");
+        flow.from("审批")
+                .join(Dsl.all(Dsl.node("HR", approval("hr")), Dsl.node("主管", approval("manager"))))
+                .on("审批通过")
+                .to("休假")
+                .on("审批拒绝")
+                .to("发起");
+
+        WorkflowDefinition def = flow.build();
+
+        List<EdgeDefinition> fromJoin =
+                def.edges().stream().filter(e -> "审批".equals(e.from())).toList();
+        assertEquals(2, fromJoin.size());
+
+        EdgeDefinition approved =
+                fromJoin.stream().filter(e -> "审批通过".equals(e.event())).findFirst().orElseThrow();
+        assertEquals("休假", approved.to());
+        assertNull(approved.outcome());
+
+        EdgeDefinition rejected =
+                fromJoin.stream().filter(e -> "审批拒绝".equals(e.event())).findFirst().orElseThrow();
+        assertEquals("发起", rejected.to());
+        assertNull(rejected.outcome());
+
+        // sanity: no edge from the join node carries a non-null outcome anymore
+        assertTrue(fromJoin.stream().allMatch(e -> e.outcome() == null));
+    }
+
+    @Test
+    void whenChainWritesGuardExpression() {
+        FlowDef flow = Flow.define("w", "W");
+        flow.start("X");
+        flow.node("X", service("doX"));
+        flow.node("Y", endTask());
+        flow.from("X").on("提交").when("${ctx.variables.flag == true}").to("Y");
+
+        WorkflowDefinition def = flow.build();
+        EdgeDefinition edge = firstEdgeFrom(def, "X");
+
+        assertEquals("提交", edge.event());
+        assertEquals("${ctx.variables.flag == true}", edge.when());
+        assertNull(edge.outcome());
+    }
+}
