@@ -16,6 +16,9 @@ import io.temporal.workflow.Workflow;
 import org.carl.infrastructure.workflow.archive.ArchiveActivities;
 import org.carl.infrastructure.workflow.archive.WorkflowArchiverWorkflow;
 import org.carl.infrastructure.workflow.definition.EdgeDefinition;
+import org.carl.infrastructure.workflow.interceptor.DeterministicInterceptor;
+import org.carl.infrastructure.workflow.interceptor.InterceptorContext;
+import org.carl.infrastructure.workflow.interceptor.WorkflowInterceptorRegistry;
 import org.carl.infrastructure.workflow.definition.NodeDefinition;
 import org.carl.infrastructure.workflow.definition.NodeResult;
 import org.carl.infrastructure.workflow.definition.NodeStatus;
@@ -91,6 +94,16 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
                     .setRetryOptions(RetryOptions.newBuilder().setMaximumAttempts(1).build())
                     .build();
 
+    /**
+     * Activity options for async interceptor hooks: short timeout, no retry (best-effort; errors
+     * must not block the workflow).
+     */
+    private static final ActivityOptions INTERCEPTOR_ACTIVITY_OPTIONS =
+            ActivityOptions.newBuilder()
+                    .setStartToCloseTimeout(Duration.ofSeconds(30))
+                    .setRetryOptions(RetryOptions.newBuilder().setMaximumAttempts(1).build())
+                    .build();
+
     /** Flag indicating whether archival is configured (set by {@link WorkerSetup}). */
     private static boolean archivalEnabled = false;
 
@@ -115,6 +128,11 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
 
     private final Deque<WorkflowEvent> signalQueue = new ArrayDeque<>();
     private final List<CompensationRecord> compensationStack = new ArrayList<>();
+    /**
+     * Collected async hook promises. Populated by {@link #fireHook} when async interceptors are
+     * registered; drained (waited on) before each {@code return result} in {@link #execute}.
+     */
+    private final List<Promise<Void>> asyncHookPromises = new ArrayList<>();
     private ExecutionContext ctx;
     private NodeHandlerRegistry registry;
     private ObjectMapper mapper;
@@ -157,6 +175,9 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
                         input.initialVariables());
         this.startedAt = Instant.now();
 
+        // ── WORKFLOW_START hook ──────────────────────────────────────────────────────────────
+        fireHook(HookPhases.WORKFLOW_START, null, null, null, null);
+
         String startNodeId = resolveStartNode(input.startNodeId(), definition, graph);
         String currentNodeId = startNodeId;
 
@@ -166,8 +187,14 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
             NodeHandler<Object> handler = (NodeHandler<Object>) registry.lookup(node.type());
             Object config = decodeConfig(handler, node.type(), node.config());
 
+            // ── NODE_ENTER hook ──────────────────────────────────────────────────────────────
+            fireHook(HookPhases.NODE_ENTER, node, null, null, null);
+
             NodeResult lastResult = executeNode(node, currentNodeId, handler, config);
             ctx.recordResult(currentNodeId, lastResult);
+
+            // ── NODE_EXIT hook ───────────────────────────────────────────────────────────────
+            fireHook(HookPhases.NODE_EXIT, node, lastResult, null, null);
 
             // Push completed compensable nodes onto the saga stack so they can be rolled back
             // if a later node fails. taskGroup children are executed in a separate code path
@@ -179,10 +206,15 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
 
             if (lastResult.status() == NodeStatus.FAILED
                     || lastResult.status() == NodeStatus.CANCELLED) {
+                // ── NODE_ERROR hook ──────────────────────────────────────────────────────────
+                fireHook(HookPhases.NODE_ERROR, node, lastResult, lastResult.message(), null);
                 runCompensation();
                 this.finished = true;
                 WorkflowResult result = buildResult(currentNodeId, lastResult);
                 archiveIfNeeded(result);
+                // ── WORKFLOW_END hook ────────────────────────────────────────────────────────
+                fireHook(HookPhases.WORKFLOW_END, node, lastResult, null, null);
+                awaitAsyncHooks();
                 return result;
             }
 
@@ -191,6 +223,9 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
                 this.finished = true;
                 WorkflowResult result = buildResult(currentNodeId, lastResult);
                 archiveIfNeeded(result);
+                // ── WORKFLOW_END hook ────────────────────────────────────────────────────────
+                fireHook(HookPhases.WORKFLOW_END, node, lastResult, null, null);
+                awaitAsyncHooks();
                 return result;
             }
             EdgeDefinition nextEdge = pickNextEdge(graph, currentNodeId, lastResult.outcome(), ctx);
@@ -199,6 +234,9 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
                 this.finished = true;
                 WorkflowResult result = buildResult(currentNodeId, lastResult);
                 archiveIfNeeded(result);
+                // ── WORKFLOW_END hook ────────────────────────────────────────────────────────
+                fireHook(HookPhases.WORKFLOW_END, node, lastResult, null, null);
+                awaitAsyncHooks();
                 return result;
             }
             currentNodeId = nextEdge.to();
@@ -828,6 +866,97 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
                 ctx.snapshotResults(),
                 List.copyOf(ctx.executionRecords()),
                 ctx.snapshotVariables());
+    }
+
+    // ── Interceptor hook helpers ─────────────────────────────────────────────────────────────────
+
+    /**
+     * Fire a lifecycle hook at the given phase.
+     *
+     * <ol>
+     *   <li>Deterministic interceptors are called inline (exceptions are caught + logged).
+     *   <li>Async interceptors are dispatched to {@link AsyncInterceptorActivity} via
+     *       {@link Async#procedure}; the returned promise is added to {@link #asyncHookPromises}.
+     * </ol>
+     *
+     * <p>When no interceptors are registered this method returns immediately with no overhead (R6).
+     */
+    private void fireHook(
+            String phase,
+            NodeDefinition node,
+            NodeResult result,
+            String errorMessage,
+            WorkflowEvent event) {
+        WorkflowInterceptorRegistry reg = InterceptorHolder.registry();
+
+        // 1. Inline deterministic interceptors
+        if (!reg.deterministic().isEmpty()) {
+            InterceptorContext ictx =
+                    new SimpleInterceptorContext(
+                            ctx.workflowId(),
+                            ctx.instanceId(),
+                            ctx.definitionId(),
+                            ctx.businessData());
+            for (DeterministicInterceptor di : reg.deterministic()) {
+                try {
+                    switch (phase) {
+                        case HookPhases.WORKFLOW_START -> di.onWorkflowStart(ictx);
+                        case HookPhases.WORKFLOW_END   -> di.onWorkflowEnd(ictx, result);
+                        case HookPhases.NODE_ENTER     -> di.onNodeEnter(ictx, node);
+                        case HookPhases.NODE_EXIT      -> di.onNodeExit(ictx, node, result);
+                        case HookPhases.NODE_ERROR     -> di.onNodeError(ictx, node, errorMessage);
+                        case HookPhases.EVENT          -> di.onEvent(ictx, event);
+                        case HookPhases.COMPENSATE     -> di.onCompensate(ictx, node, result);
+                        default -> {
+                            // unknown phase — ignore
+                        }
+                    }
+                } catch (RuntimeException e) {
+                    Workflow.getLogger(GenericWorkflowImpl.class)
+                            .warn(
+                                    "DeterministicInterceptor {} threw on {}: {}",
+                                    di.getClass().getSimpleName(),
+                                    phase,
+                                    e.getMessage());
+                }
+            }
+        }
+
+        // 2. Async interceptors — dispatch to activity (non-blocking)
+        if (!reg.async().isEmpty()) {
+            AsyncHookInvocation inv =
+                    new AsyncHookInvocation(
+                            phase,
+                            ctx.workflowId(),
+                            ctx.instanceId(),
+                            ctx.definitionId(),
+                            ctx.businessData(),
+                            node,
+                            result,
+                            errorMessage,
+                            event);
+            AsyncInterceptorActivity stub =
+                    Workflow.newActivityStub(
+                            AsyncInterceptorActivity.class, INTERCEPTOR_ACTIVITY_OPTIONS);
+            asyncHookPromises.add(Async.procedure(stub::invoke, inv));
+        }
+    }
+
+    /**
+     * Wait for all outstanding async hook promises (best-effort). Called before each terminal
+     * {@code return} in {@link #execute}. Exceptions from hooks are swallowed so a failing hook
+     * never prevents the workflow from completing (R7).
+     */
+    private void awaitAsyncHooks() {
+        if (asyncHookPromises.isEmpty()) {
+            return;
+        }
+        try {
+            Promise.allOf(asyncHookPromises).get();
+        } catch (RuntimeException ignored) {
+            Workflow.getLogger(GenericWorkflowImpl.class)
+                    .warn("One or more async interceptor hooks failed; workflow result unaffected");
+        }
     }
 
     /**

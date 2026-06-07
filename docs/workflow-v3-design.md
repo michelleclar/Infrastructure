@@ -594,12 +594,46 @@ record WorkflowState(
 
 ```java
 WorkerSetup.setup(worker, handlerRegistry, activityRegistry);
-WorkerSetup.setup(worker, handlerRegistry, activityRegistry, archiveActivities); // 可选启用归档
+WorkerSetup.setup(worker, handlerRegistry, activityRegistry, archiveActivities);  // 可选启用归档
+WorkerSetup.setup(worker, handlerRegistry, activityRegistry, interceptorRegistry); // 可选启用 hook
+WorkerSetup.setup(worker, handlerRegistry, activityRegistry, archiveActivities, interceptorRegistry);
 ```
 
-注册 GenericWorkflow + GenericActivity 实现到 worker；可选注册 archive workflow + activities。
+注册 GenericWorkflow + GenericActivity 实现到 worker；可选注册 archive workflow + activities；可选注册 `AsyncInterceptorActivity` impl 处理异步 hook。
 
-### 9.8 BusinessActivityRegistry
+### 9.8 Interceptor 集成（Hook 派发）
+
+业务通过 `WorkflowInterceptorRegistry.register(interceptor)` 注册任意数量的 `DeterministicInterceptor` 或 `AsyncInterceptor`（同一对象可同时实现两个接口）。`InterceptorHolder` 是进程级单例 + 默认空 registry（zero-overhead default）。
+
+**主循环接入的 5 个 phase**：
+
+| Phase | 调用位置 | 派发方式 |
+|-------|---------|---------|
+| `WORKFLOW_START` | `startedAt` 赋值后、`resolveStartNode` 之前 | Deterministic 内联 + Async Activity |
+| `NODE_ENTER` | `executeNode()` 调用之前 | 同上 |
+| `NODE_EXIT` | `ctx.recordResult()` 之后 | 同上 |
+| `NODE_ERROR` | FAILED / CANCELLED 分支，`runCompensation()` 之前 | 同上 |
+| `WORKFLOW_END` | 三处 `return result` 之前（FAILED 终止、END_TASK 终止、无出边终止） | 同上 + 等齐 async promises |
+
+**未接入**：`EVENT` 和 `COMPENSATE`（触发点在 `driveAwait` / `runCompensation` 内，注入风险较高，留 F2）。
+
+**确定性合同**：
+- Deterministic interceptor 在 workflow 函数内联执行，**异常被捕获 + log warn + swallow**，不会杀掉工作流
+- Async interceptor 经由 `Workflow.newActivityStub(AsyncInterceptorActivity.class).invoke(AsyncHookInvocation)` 派发到 Activity，每次 hook 触发产生一个 `Promise<Void>`，收集到 `asyncHookPromises` 列表
+- 每个 `return result` 之前 `Promise.allOf(asyncHookPromises).get()` 等齐，确保 workflow 终止前所有 hook 持久化
+- Activity 端逐个调用 `AsyncInterceptor`，单个抛错 log + continue，不影响其他 interceptor
+
+**注册示例**：
+
+```java
+WorkflowInterceptorRegistry interceptorRegistry = new WorkflowInterceptorRegistry();
+interceptorRegistry.register(new MyMetricsInterceptor());        // Deterministic 计数器
+interceptorRegistry.register(new MyAuditAsyncInterceptor());     // Async 写库
+
+WorkerSetup.setup(worker, handlerRegistry, activityRegistry, interceptorRegistry);
+```
+
+### 9.9 BusinessActivityRegistry
 
 业务通过 string 名注册 Activity：
 
@@ -759,7 +793,7 @@ assert result.nodeResults().get("approvals").outcome().equals(Outcomes.APPROVED)
 | 3 | `NodeResult.payload` / `NodeConfig.props` / `NodeDefinition.config(JsonNode)` 三个名字 | **非问题**：三者处于不同生命周期层（运行时产物 / DSL 中间态 / 持久化 JSON），名字巧合但语义不重叠，保留各自名字 | 不改代码 |
 | 4 | ~~`BuiltInNodes.service(activity)` 无 `activityInput` 参数~~ | ✅ **已修（阶段 12）**：新增 `service(String, Map<String,Object>)` 双参重载 | — |
 | 5 | `EdgeMatch.ByOutcome` 已 `@Deprecated`，`WorkflowGraph.nextCandidates` 内部仍引用 | ✅ **已修（阶段 12）**：在 `nextCandidates` 方法加 `@SuppressWarnings("deprecation")`；`GenericWorkflowImpl.pickNextEdge` legacy 分支同样 suppress；`ByOutcome` 本身保留以维持运行时向后兼容 | 下一个大版本可干净删除 |
-| 6 | Interceptor SPI 已建好但 `GenericWorkflowImpl` 未集成 hook 派发 | hook 注册了不起作用 | 任务 F：在 GenericWorkflowImpl 关键路径插入 hook 调用 + Async 派发到 Activity |
+| 6 | ~~Interceptor SPI 已建好但 `GenericWorkflowImpl` 未集成 hook 派发~~ | ✅ **已修（阶段 13）**：`fireHook` + `awaitAsyncHooks` 接入主循环 5 个 phase（WORKFLOW_START / NODE_ENTER / NODE_EXIT / NODE_ERROR / WORKFLOW_END）；新增 `InterceptorHolder` 进程级单例 + `AsyncInterceptorActivity` 桥派发到 Temporal Activity；`WorkerSetup` 新增 2 个 overload 接受 `WorkflowInterceptorRegistry` | EVENT / COMPENSATE 两个 phase 留 F2（触发点位于 driveAwait / runCompensation，注入风险较高） |
 | 7 | `ChildNodeSpec.nestedJoin` POJO 字段就绪但 `TaskGroupHandler` 未递归 | 不能嵌套 taskGroup | 任务 G：在 TaskGroupHandler 里递归展开 nestedJoin |
 | 8 | ~~`flow.from(X).join(...)` 让 X 自变 taskGroup，X 的原配置静默丢失~~ | ✅ **已修（阶段 12）**：`FlowFrom.join()` 加前置校验：若 X 已注册为非 taskGroup 类型，立即抛 `IllegalStateException` + 清晰 message | — |
 
@@ -788,23 +822,23 @@ assert result.nodeResults().get("approvals").outcome().equals(Outcomes.APPROVED)
 | 阶段 3：Java DSL（builder + BuiltInNodes + Flow chain + join） | ✅ |
 | 阶段 4：WorkflowGraph 校验 + 可达性 + Tarjan 循环 | ✅ |
 | 阶段 5：Jakarta EL ConditionEvaluator | ✅ |
-| 阶段 6：Interceptor SPI（Deterministic + Async + Registry） | ✅ SPI / ⚠️ 未集成 runtime |
+| 阶段 6：Interceptor SPI（Deterministic + Async + Registry） | ✅ |
 | 阶段 7：Temporal GenericWorkflow + RuntimeIntents 翻译 + Saga 补偿 + Signal + Timer + Activity + Child Workflow | ✅ |
 | 阶段 8：端到端 demo（请假 + 会签 + 补偿 + 子流程 + 条件路由 + 回环） | ✅ 17 通过 / 0 失败 |
 | 阶段 9：远程 Temporal + DB 归档集成测试 | ⏸ 跳过（需环境） |
 | 阶段 10：V3 文档 | ✅ 本文档 |
 | 阶段 11：DSL typed 自定义节点（`NodeType` 接口 + `BuiltInNodeType` enum + `NodeBuilder.setAll(POJO)`） | ✅ workflow-core 271 测试通过 |
 | 阶段 12：§13 语义清理 + 死代码扫尾（E1 awaitEvent 统一 / E2 setAll 重命名 / E4 service 双参 / E5 deprecation suppress / E8 FlowFrom.join 校验） | ✅ workflow-core 276 测试通过；workflow-temporal compileTestJava 通过 |
+| 阶段 13：Interceptor runtime 集成（F：5/7 phase 内联 + Activity 派发；新增 `InterceptorHolder` / `HookPhases` / `AsyncHookInvocation` / `AsyncInterceptorActivity(Impl)` / `SimpleInterceptorContext`；`WorkerSetup` 双 overload） | ✅ workflow-temporal 23 通过 / 0 失败；端到端 17 个 demo 不破 |
 
 ---
 
 ## 16. 后续工作（按优先级）
 
-1. **集成 Interceptor 到 GenericWorkflowImpl**——SPI 已建，但 hook 不会触发
-2. **修 §13 列出的 4 项命名一致性问题**——一次性改完，避免长尾债
-3. **TaskGroupHandler 递归 nestedJoin**——支持任意层级嵌套会签
-4. **`flow.from(X).join(...)` 重叠语义校验**——避免 LeaveProcess.coSignFlow 那种 bug 再发生
-5. **DB 归档 + 远端 Temporal 集成测试**——需要环境，但写好 docker-compose 后可加入 CI
+1. **Interceptor F2**：接入 EVENT / COMPENSATE 两个 phase（触发点在 `driveAwait` / `runCompensation`，需要谨慎处理确定性与 ctx 重置时机）
+2. **TaskGroupHandler 递归 nestedJoin**——支持任意层级嵌套会签
+3. **DB 归档 + 远端 Temporal 集成测试**——需要环境，但写好 docker-compose 后可加入 CI
+4. **下一个大版本可彻底删除 `EdgeMatch.ByOutcome`**——目前 deprecated + suppress；删除前需保证所有手构 `EdgeDefinition` 都已迁移到 `event` 字段
 
 ---
 
@@ -820,4 +854,5 @@ assert result.nodeResults().get("approvals").outcome().equals(Outcomes.APPROVED)
 | DSL 怎么用 | 本文档 §7 + `workflow-temporal/test/.../leave/LeaveProcess.java` |
 | 表达式语法 | `workflow-core/.../spi/ConditionEvaluator.java` 的 class javadoc |
 | Temporal 适配 | `workflow-temporal/.../runtime/GenericWorkflowImpl.java` |
+| Interceptor 集成 | `workflow-temporal/.../runtime/InterceptorHolder.java` + `HookPhases.java` + `AsyncInterceptorActivity(Impl).java` + `test/.../interceptor/InterceptorIntegrationTest.java` |
 | 端到端 demo | `workflow-temporal/test/.../leave/LeaveTaskGroupExampleTest.java` |
