@@ -270,10 +270,18 @@ public final class FlowDef {
      *   "join": {"type": "all"},
      *   "tasks": [
      *     {"id": "HR 审批", "label": "HR 审批", "type": "approvalTask", "config": {...}},
+     *     {"id": "管理层", "label": "管理层", "type": "taskGroup",
+     *      "config": {"join": {"type": "any"}, "tasks": [...]}},   // nested taskGroup
      *     ...
      *   ]
      * }
      * </pre>
+     *
+     * <p>When a child has a non-{@code null} {@link ChildNodeSpec#nestedJoin()}, it is serialised as
+     * a nested {@code taskGroup}: {@code type="taskGroup"} and {@code config} is the recursively
+     * built JSON produced by calling this method again on the nested {@link JoinSpec}. Leaf children
+     * (where {@code nestedJoin} is {@code null}) are serialised directly from their {@link
+     * ChildNodeSpec#config()}.
      */
     private static com.fasterxml.jackson.databind.JsonNode buildTaskGroupConfig(JoinSpec spec) {
         ObjectNode root = MAPPER.createObjectNode();
@@ -286,8 +294,15 @@ public final class FlowDef {
             ObjectNode task = tasks.addObject();
             task.put("id", child.name());
             task.put("label", child.name());
-            task.put("type", child.config().type());
-            task.set("config", MAPPER.valueToTree(child.config().props()));
+            if (child.nestedJoin() != null) {
+                // Recursive case: this child is itself a taskGroup.
+                task.put("type", NodeTypes.TASK_GROUP);
+                task.set("config", buildTaskGroupConfig(child.nestedJoin()));
+            } else {
+                // Leaf case: serialise from the node config directly.
+                task.put("type", child.config().type());
+                task.set("config", MAPPER.valueToTree(child.config().props()));
+            }
         }
 
         return root;

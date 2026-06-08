@@ -12,6 +12,8 @@ import org.carl.infrastructure.workflow.dsl.Flow;
 import org.carl.infrastructure.workflow.dsl.FlowDef;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
 import org.carl.infrastructure.workflow.spi.Outcomes;
+import org.carl.infrastructure.workflow.dsl.NodeConfig;
+import org.carl.infrastructure.workflow.dsl.JoinSpec;
 
 /** Static {@link WorkflowDefinition}s used by the leave end-to-end tests. */
 final class LeaveProcess {
@@ -163,6 +165,52 @@ final class LeaveProcess {
         flow.from("requestLeave").on(Outcomes.SUCCESS).to("leaveApproval");
         flow.from("leaveApproval").on(Outcomes.APPROVED).to("done");
         flow.from("leaveApproval").on(Outcomes.REJECTED).to("requestLeave");
+
+        return flow.build();
+    }
+
+    /**
+     * Nested taskGroup approval flow: outer ALL (HR + management-layer), where management-layer is
+     * itself an ANY (manager OR CFO).
+     *
+     * <pre>
+     * requestLeave --(SUCCESS)--> approvals (taskGroup ALL)
+     *   approvals
+     *     ├── hrApproval         (approvalTask, "hr")
+     *     └── managementApproval (taskGroup ANY)
+     *         ├── managerApproval (approvalTask, "manager")
+     *         └── cfoApproval    (approvalTask, "cfo")
+     *   approvals --APPROVED--> onLeave --(SUCCESS)--> completed
+     *   approvals --REJECTED--> rejected
+     * </pre>
+     */
+    static WorkflowDefinition nestedApprovalFlow() {
+        FlowDef flow = Flow.define("leaveNestedApprovalV2", "请假嵌套审批流程 V2");
+        flow.start("requestLeave");
+
+        flow.node(
+                "requestLeave",
+                BuiltInNodes.service("createLeaveRequest")
+                        .andThen(b -> b.set("activityInput", Map.of("employeeId", "alice"))));
+        flow.node("onLeave", BuiltInNodes.service("notifyManager"));
+        flow.node("completed", b -> b.type(NodeTypes.END_TASK).label("完成"));
+        flow.node("rejected",  b -> b.type(NodeTypes.END_TASK).label("已拒绝"));
+
+        // Inner ANY gate: manager OR CFO
+        JoinSpec managementLayer = any(
+                node("managerApproval", BuiltInNodes.approval("manager")),
+                node("cfoApproval",     BuiltInNodes.approval("cfo")));
+
+        flow.from("requestLeave").on(Outcomes.SUCCESS).to("approvals");
+        flow.from("approvals")
+                .join(all(
+                        node("hrApproval", BuiltInNodes.approval("hr")),
+                        node("managementApproval",
+                                new NodeConfig(NodeTypes.TASK_GROUP, Map.of()),
+                                managementLayer)))
+                .on(Outcomes.APPROVED).to("onLeave")
+                .on(Outcomes.REJECTED).to("rejected");
+        flow.from("onLeave").on(Outcomes.SUCCESS).to("completed");
 
         return flow.build();
     }

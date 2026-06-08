@@ -143,6 +143,7 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
     /** Tracks a successfully-completed compensable node for potential saga rollback. */
     private record CompensationRecord(
             String nodeId,
+            NodeDefinition node,
             @SuppressWarnings("rawtypes") NodeHandler handler,
             Object config,
             NodeResult completedResult) {}
@@ -201,7 +202,7 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
             // (driveTaskGroup / executeChildSafely) so they never reach this branch.
             if (handler.compensable() && lastResult.status() == NodeStatus.COMPLETED) {
                 compensationStack.add(
-                        new CompensationRecord(currentNodeId, handler, config, lastResult));
+                        new CompensationRecord(currentNodeId, node, handler, config, lastResult));
             }
 
             if (lastResult.status() == NodeStatus.FAILED
@@ -295,25 +296,28 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
         Map<String, Object> payload = waiting.payload();
 
         if (payload.containsKey(RuntimeIntents.ACTIVITY)) {
-            return driveActivity(handler, config, payload);
+            return driveActivity(handler, config, payload, node);
         }
         if (payload.containsKey(RuntimeIntents.DURATION)) {
-            return driveTimer(handler, config, payload);
+            return driveTimer(handler, config, payload, node);
         }
         if (payload.containsKey(RuntimeIntents.CHILDREN)) {
             return driveTaskGroup(handler, config, payload, node, qualifier);
         }
         if (payload.containsKey(RuntimeIntents.SUB_WORKFLOW_ID)) {
-            return driveSubProcess(handler, config, payload);
+            return driveSubProcess(handler, config, payload, node);
         }
         if (payload.containsKey(RuntimeIntents.AWAIT_EVENT)) {
-            return driveAwait(handler, config, payload);
+            return driveAwait(handler, config, payload, node);
         }
         return NodeResult.failed("unknown waiting intent: " + payload.keySet());
     }
 
     private NodeResult driveActivity(
-            NodeHandler<Object> handler, Object config, Map<String, Object> payload) {
+            NodeHandler<Object> handler,
+            Object config,
+            Map<String, Object> payload,
+            NodeDefinition node) {
         String activityName = String.valueOf(payload.get(RuntimeIntents.ACTIVITY));
         @SuppressWarnings("unchecked")
         Map<String, Object> input =
@@ -333,19 +337,25 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
         JsonNode eventJson = mapper.valueToTree(eventPayload);
         WorkflowEvent event =
                 new WorkflowEvent(ServiceTaskHandler.ACTIVITY_RESULT_EVENT, eventJson);
-        return deliver(handler, config, event);
+        return deliver(handler, config, event, node);
     }
 
     private NodeResult driveTimer(
-            NodeHandler<Object> handler, Object config, Map<String, Object> payload) {
+            NodeHandler<Object> handler,
+            Object config,
+            Map<String, Object> payload,
+            NodeDefinition node) {
         Duration duration = parseDurationOrThrow(payload.get(RuntimeIntents.DURATION));
         Workflow.sleep(duration);
         WorkflowEvent event = new WorkflowEvent(TimerTaskHandler.FIRED_EVENT, null);
-        return deliver(handler, config, event);
+        return deliver(handler, config, event, node);
     }
 
     private NodeResult driveAwait(
-            NodeHandler<Object> handler, Object config, Map<String, Object> payload) {
+            NodeHandler<Object> handler,
+            Object config,
+            Map<String, Object> payload,
+            NodeDefinition node) {
         Object awaitObj = payload.get(RuntimeIntents.AWAIT_EVENT);
         if (awaitObj == null) return NodeResult.failed("await intent missing event name");
 
@@ -366,13 +376,13 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
                 String timeoutEventName = resolveTimeoutEventName(handler);
                 ctx.setCurrentNodeId(capturedNodeId);
                 WorkflowEvent timeoutEvent = new WorkflowEvent(timeoutEventName, null);
-                return deliver(handler, config, timeoutEvent);
+                return deliver(handler, config, timeoutEvent, node);
             }
             matched = pollMatchingCanAccept(handler, config, capturedNodeId);
         }
         if (matched == null) return NodeResult.waiting();
         ctx.setCurrentNodeId(capturedNodeId);
-        return deliver(handler, config, matched);
+        return deliver(handler, config, matched, node);
     }
 
     private NodeExecutionContext fixedNodeCtx(String nodeId, WorkflowEvent event) {
@@ -457,7 +467,7 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
                             org.carl.infrastructure.workflow.handlers.TaskGroupHandler
                                     .CHILD_COMPLETED_EVENT,
                             null);
-            return deliver(handler, config, ev);
+            return deliver(handler, config, ev, parentNode);
         }
 
         // Fan-out: each child runs in its own coroutine so they can independently consume
@@ -526,7 +536,7 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
                                 org.carl.infrastructure.workflow.handlers.TaskGroupHandler
                                         .CHILD_COMPLETED_EVENT,
                                 null);
-                aggregated = deliver(handler, config, ev);
+                aggregated = deliver(handler, config, ev, parentNode);
                 if (aggregated.status() != NodeStatus.WAITING) {
                     scope.cancel(
                             "taskGroup '"
@@ -558,7 +568,10 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
      * to the handler as a {@link SubProcessHandler#COMPLETED_EVENT} event.
      */
     private NodeResult driveSubProcess(
-            NodeHandler<Object> handler, Object config, Map<String, Object> payload) {
+            NodeHandler<Object> handler,
+            Object config,
+            Map<String, Object> payload,
+            NodeDefinition node) {
         String subWorkflowId = String.valueOf(payload.get(RuntimeIntents.SUB_WORKFLOW_ID));
         String childDefJsonString = (String) payload.get(RuntimeIntents.SUB_DEFINITION_JSON);
 
@@ -607,7 +620,7 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
         eventPayload.put("subOutcome", subOutcome);
         JsonNode eventJson = mapper.valueToTree(eventPayload);
         WorkflowEvent event = new WorkflowEvent(SubProcessHandler.COMPLETED_EVENT, eventJson);
-        return deliver(handler, config, event);
+        return deliver(handler, config, event, node);
     }
 
     /**
@@ -647,6 +660,8 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
             ctx.setCurrentNodeId(rec.nodeId());
             ctx.setCurrentEvent(null);
             try {
+                // ── COMPENSATE hook ──────────────────────────────────────────────────────────
+                fireHook(HookPhases.COMPENSATE, rec.node(), rec.completedResult(), null, null);
                 NodeResult compResult =
                         rec.handler().compensate(ctx, rec.config(), rec.completedResult());
                 if (compResult != null
@@ -655,7 +670,7 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
                         && compResult.payload().containsKey(RuntimeIntents.ACTIVITY)) {
                     // Execute the compensating activity (result is intentionally ignored — best
                     // effort; any throw is caught by the outer try/catch).
-                    driveActivity(rec.handler(), rec.config(), compResult.payload());
+                    driveActivity(rec.handler(), rec.config(), compResult.payload(), rec.node());
                 }
             } catch (RuntimeException e) {
                 Workflow.getLogger(GenericWorkflowImpl.class)
@@ -664,12 +679,15 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
         }
     }
 
-    private NodeResult deliver(NodeHandler<Object> handler, Object config, WorkflowEvent event) {
+    private NodeResult deliver(
+            NodeHandler<Object> handler, Object config, WorkflowEvent event, NodeDefinition node) {
         ctx.setCurrentEvent(event);
         if (event != null) {
             lastEventName = event.name();
         }
         NodeResult next = handler.onEvent(ctx, event, config);
+        // ── EVENT hook ───────────────────────────────────────────────────────────────────────
+        fireHook(HookPhases.EVENT, node, null, null, event);
         return next == null ? NodeResult.waiting() : next;
     }
 

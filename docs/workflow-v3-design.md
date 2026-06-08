@@ -447,7 +447,7 @@ flow.from("approvals").join(Dsl.all(
 record ChildNodeSpec(String name, NodeConfig config, JoinSpec nestedJoin)
 ```
 
-POJO / JSON 层可以表达任意层级嵌套。`TaskGroupHandler` v1 不递归实现 nestedJoin——这是 follow-up。
+POJO / JSON 层可以表达任意层级嵌套。`FlowDef.buildTaskGroupConfig` 递归把 `nestedJoin != null` 的子节点序列化为 `type="taskGroup"` + 内嵌 config；运行时通过 `executeChildSafely` → `registry.lookup("taskGroup")` → `TaskGroupHandler` → `driveTaskGroup` 链路天然递归，无需特殊处理。2 层端到端 + 3 层 JSON 已验证。
 
 ---
 
@@ -793,8 +793,8 @@ assert result.nodeResults().get("approvals").outcome().equals(Outcomes.APPROVED)
 | 3 | `NodeResult.payload` / `NodeConfig.props` / `NodeDefinition.config(JsonNode)` 三个名字 | **非问题**：三者处于不同生命周期层（运行时产物 / DSL 中间态 / 持久化 JSON），名字巧合但语义不重叠，保留各自名字 | 不改代码 |
 | 4 | ~~`BuiltInNodes.service(activity)` 无 `activityInput` 参数~~ | ✅ **已修（阶段 12）**：新增 `service(String, Map<String,Object>)` 双参重载 | — |
 | 5 | `EdgeMatch.ByOutcome` 已 `@Deprecated`，`WorkflowGraph.nextCandidates` 内部仍引用 | ✅ **已修（阶段 12）**：在 `nextCandidates` 方法加 `@SuppressWarnings("deprecation")`；`GenericWorkflowImpl.pickNextEdge` legacy 分支同样 suppress；`ByOutcome` 本身保留以维持运行时向后兼容 | 下一个大版本可干净删除 |
-| 6 | ~~Interceptor SPI 已建好但 `GenericWorkflowImpl` 未集成 hook 派发~~ | ✅ **已修（阶段 13）**：`fireHook` + `awaitAsyncHooks` 接入主循环 5 个 phase（WORKFLOW_START / NODE_ENTER / NODE_EXIT / NODE_ERROR / WORKFLOW_END）；新增 `InterceptorHolder` 进程级单例 + `AsyncInterceptorActivity` 桥派发到 Temporal Activity；`WorkerSetup` 新增 2 个 overload 接受 `WorkflowInterceptorRegistry` | EVENT / COMPENSATE 两个 phase 留 F2（触发点位于 driveAwait / runCompensation，注入风险较高） |
-| 7 | `ChildNodeSpec.nestedJoin` POJO 字段就绪但 `TaskGroupHandler` 未递归 | 不能嵌套 taskGroup | 任务 G：在 TaskGroupHandler 里递归展开 nestedJoin |
+| 6 | ~~Interceptor SPI 已建好但 `GenericWorkflowImpl` 未集成 hook 派发~~ | ✅ **已修（阶段 13/14）**：7/7 phase 全部接入。阶段 13 接 5 个（WORKFLOW_START / NODE_ENTER / NODE_EXIT / NODE_ERROR / WORKFLOW_END），阶段 14（F2）补 EVENT（`deliver` 内 `handler.onEvent` 之后）+ COMPENSATE（`runCompensation` 内 `handler.compensate` 之前）。`CompensationRecord` 加 `NodeDefinition` 字段；所有 `deliver` / `drive*` 链路传 `node` 参数 | — |
+| 7 | ~~`ChildNodeSpec.nestedJoin` POJO 字段就绪但运行时不支持递归~~ | ✅ **已修（阶段 15）**：`FlowDef.buildTaskGroupConfig` 递归处理 `nestedJoin`——嵌套子节点序列化为 `type="taskGroup"` + recursively built config。Runtime 零改动（`executeChildSafely` → `registry.lookup("taskGroup")` → `TaskGroupHandler` → `driveTaskGroup` 链路天然递归） | — |
 | 8 | ~~`flow.from(X).join(...)` 让 X 自变 taskGroup，X 的原配置静默丢失~~ | ✅ **已修（阶段 12）**：`FlowFrom.join()` 加前置校验：若 X 已注册为非 taskGroup 类型，立即抛 `IllegalStateException` + 清晰 message | — |
 
 ---
@@ -830,15 +830,15 @@ assert result.nodeResults().get("approvals").outcome().equals(Outcomes.APPROVED)
 | 阶段 11：DSL typed 自定义节点（`NodeType` 接口 + `BuiltInNodeType` enum + `NodeBuilder.setAll(POJO)`） | ✅ workflow-core 271 测试通过 |
 | 阶段 12：§13 语义清理 + 死代码扫尾（E1 awaitEvent 统一 / E2 setAll 重命名 / E4 service 双参 / E5 deprecation suppress / E8 FlowFrom.join 校验） | ✅ workflow-core 276 测试通过；workflow-temporal compileTestJava 通过 |
 | 阶段 13：Interceptor runtime 集成（F：5/7 phase 内联 + Activity 派发；新增 `InterceptorHolder` / `HookPhases` / `AsyncHookInvocation` / `AsyncInterceptorActivity(Impl)` / `SimpleInterceptorContext`；`WorkerSetup` 双 overload） | ✅ workflow-temporal 23 通过 / 0 失败；端到端 17 个 demo 不破 |
+| 阶段 14：Interceptor EVENT + COMPENSATE（F2：`deliver` / `drive*` 链路传 node 参数；`CompensationRecord` 加 NodeDefinition；fireHook(EVENT) 在 onEvent 后；fireHook(COMPENSATE) 在 compensate 前） | ✅ workflow-temporal 27 通过 / 0 失败（+2 新 hook 测试） |
+| 阶段 15：TaskGroup 递归 nestedJoin（G：`FlowDef.buildTaskGroupConfig` 递归子 taskGroup；runtime 零改动） | ✅ workflow-core 278 通过 + workflow-temporal 27 通过；2 层端到端 + 3 层 JSON 验证 |
 
 ---
 
 ## 16. 后续工作（按优先级）
 
-1. **Interceptor F2**：接入 EVENT / COMPENSATE 两个 phase（触发点在 `driveAwait` / `runCompensation`，需要谨慎处理确定性与 ctx 重置时机）
-2. **TaskGroupHandler 递归 nestedJoin**——支持任意层级嵌套会签
-3. **DB 归档 + 远端 Temporal 集成测试**——需要环境，但写好 docker-compose 后可加入 CI
-4. **下一个大版本可彻底删除 `EdgeMatch.ByOutcome`**——目前 deprecated + suppress；删除前需保证所有手构 `EdgeDefinition` 都已迁移到 `event` 字段
+1. **DB 归档 + 远端 Temporal 集成测试**——需要环境，但写好 docker-compose 后可加入 CI
+2. **下一个大版本可彻底删除 `EdgeMatch.ByOutcome`**——目前 deprecated + suppress；删除前需保证所有手构 `EdgeDefinition` 都已迁移到 `event` 字段
 
 ---
 

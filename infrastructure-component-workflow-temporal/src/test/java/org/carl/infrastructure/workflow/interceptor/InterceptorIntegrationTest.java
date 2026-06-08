@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.temporal.client.WorkflowClient;
 import io.temporal.client.WorkflowOptions;
@@ -31,12 +33,15 @@ import org.carl.infrastructure.workflow.runtime.WorkflowResult;
 import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
 import org.carl.infrastructure.workflow.spi.Outcomes;
+import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -90,6 +95,17 @@ class InterceptorIntegrationTest {
         @Override
         public void onNodeError(InterceptorContext ctx, NodeDefinition node, String errorMessage) {
             deterministicHits.add("error:" + node.id());
+        }
+
+        @Override
+        public void onEvent(InterceptorContext ctx, WorkflowEvent event) {
+            deterministicHits.add("event:" + event.name());
+        }
+
+        @Override
+        public void onCompensate(
+                InterceptorContext ctx, NodeDefinition node, NodeResult originalResult) {
+            deterministicHits.add("compensate:" + node.id());
         }
     }
 
@@ -158,25 +174,30 @@ class InterceptorIntegrationTest {
 
         assertEquals(NodeStatus.COMPLETED, result.finalStatus());
 
-        // Verify the deterministic interceptor saw the expected lifecycle events in order.
-        // Expected sequence: start, enter:work, exit:work, enter:completed, exit:completed, end
-        assertEquals(
-                "start:interceptor-test-flow",
-                deterministicHits.get(0),
-                "First hit must be WORKFLOW_START");
-        assertEquals("enter:work", deterministicHits.get(1), "Second hit must be NODE_ENTER work");
-        assertEquals(
-                "exit:work:SUCCESS", deterministicHits.get(2), "Third hit must be NODE_EXIT work");
-        assertEquals(
-                "enter:completed",
-                deterministicHits.get(3),
-                "Fourth hit must be NODE_ENTER completed");
-        // exit:completed comes next, then WORKFLOW_END
+        // Verify the deterministic interceptor saw the expected lifecycle events.
+        // Expected: start, enter:work, event:_activityResult, exit:work,
+        //           enter:completed, exit:completed, end
+        assertTrue(
+                deterministicHits.contains("start:interceptor-test-flow"),
+                "WORKFLOW_START hook must fire; hits=" + deterministicHits);
+        assertTrue(
+                deterministicHits.contains("enter:work"),
+                "NODE_ENTER work must fire; hits=" + deterministicHits);
+        assertTrue(
+                deterministicHits.contains("event:_activityResult"),
+                "EVENT hook must fire for activity result; hits=" + deterministicHits);
+        assertTrue(
+                deterministicHits.contains("exit:work:SUCCESS"),
+                "NODE_EXIT work must fire; hits=" + deterministicHits);
+        assertTrue(
+                deterministicHits.contains("enter:completed"),
+                "NODE_ENTER completed must fire; hits=" + deterministicHits);
         assertTrue(
                 deterministicHits.contains("end:COMPLETED"),
                 "WORKFLOW_END hook must fire; hits=" + deterministicHits);
-        // Total: start + enter:work + exit:work + enter:completed + exit:completed + end = 6
-        assertEquals(6, deterministicHits.size(), "Expected exactly 6 hook hits; got: " + deterministicHits);
+        // Total: start + enter:work + event:_activityResult + exit:work
+        //        + enter:completed + exit:completed + end = 7
+        assertEquals(7, deterministicHits.size(), "Expected exactly 7 hook hits; got: " + deterministicHits);
     }
 
     /**
@@ -251,6 +272,100 @@ class InterceptorIntegrationTest {
         assertTrue(deterministicHits.isEmpty(), "No interceptor hits expected");
     }
 
+    /**
+     * When a signal is accepted by handler.onEvent, the EVENT hook must fire with the event name.
+     * Flow: approvalTask waits for "approval" signal → approved → endTask.
+     */
+    @Test
+    @Timeout(30)
+    void eventHook_firedOnSignalConsumption() throws Exception {
+        WorkflowDefinition def = approvalFlow();
+        WorkflowInput input = WorkflowInput.from(def, Map.of("employee", "alice"));
+
+        GenericWorkflow workflow =
+                client.newWorkflowStub(
+                        GenericWorkflow.class,
+                        WorkflowOptions.newBuilder()
+                                .setTaskQueue(TASK_QUEUE)
+                                .setWorkflowId("event-hook-test-" + UUID.randomUUID())
+                                .build());
+        WorkflowClient.start(workflow::execute, input);
+
+        // Give the workflow time to reach the approvalTask await state, then signal approval.
+        testEnv.sleep(Duration.ofSeconds(1));
+        ObjectNode decisionPayload = JsonNodeFactory.instance.objectNode().put("decision", "approved");
+        workflow.signal(new WorkflowEvent("approval", decisionPayload));
+
+        WorkflowResult result = WorkflowStub.fromTyped(workflow).getResult(WorkflowResult.class);
+
+        assertEquals(NodeStatus.COMPLETED, result.finalStatus(), "Workflow must complete after approval");
+        assertTrue(
+                deterministicHits.contains("event:approval"),
+                "EVENT hook must fire with 'approval'; hits=" + deterministicHits);
+    }
+
+    /**
+     * When a saga-compensable node rolls back, the COMPENSATE hook must fire before compensate().
+     * Flow: node1 (compensable serviceTask) → node2 (serviceTask that fails) → compensation of node1.
+     */
+    @Test
+    @Timeout(30)
+    void compensateHook_firedOnSagaRollback() throws Exception {
+        // Build a minimal saga: node1 (compensable) → node2 (fails).
+        FlowDef flow = Flow.define("compensate-hook-test", "Compensate Hook Test");
+        flow.start("node1");
+        flow.node(
+                "node1",
+                BuiltInNodes.service("doCompensableWork")
+                        .andThen(b -> b.set("compensateActivity", "undoWork")));
+        flow.node("node2", BuiltInNodes.service("doFailingWork"));
+        flow.from("node1").on(Outcomes.SUCCESS).to("node2");
+        WorkflowDefinition def = flow.build();
+
+        // Register the activities: doCompensableWork succeeds, doFailingWork throws,
+        // undoWork (compensate) succeeds.
+        testEnv.close();
+        deterministicHits.clear();
+
+        testEnv = TestWorkflowEnvironment.newInstance();
+        Worker worker = testEnv.newWorker(TASK_QUEUE);
+
+        NodeHandlerRegistry handlerRegistry = new NodeHandlerRegistry();
+        BuiltInHandlers.registerAll(handlerRegistry);
+
+        BusinessActivityRegistry activityRegistry = new BusinessActivityRegistry();
+        activityRegistry.register("doCompensableWork", input -> Map.of("status", "done"));
+        activityRegistry.register(
+                "doFailingWork",
+                input -> {
+                    throw new RuntimeException("node2 always fails");
+                });
+        activityRegistry.register("undoWork", input -> Map.of());
+
+        WorkflowInterceptorRegistry interceptorRegistry = new WorkflowInterceptorRegistry();
+        interceptorRegistry.register(new RecordingDeterministic());
+
+        WorkerSetup.setup(worker, handlerRegistry, activityRegistry, interceptorRegistry);
+        testEnv.start();
+        client = testEnv.getWorkflowClient();
+
+        WorkflowInput input = WorkflowInput.from(def, null);
+        GenericWorkflow workflow =
+                client.newWorkflowStub(
+                        GenericWorkflow.class,
+                        WorkflowOptions.newBuilder()
+                                .setTaskQueue(TASK_QUEUE)
+                                .setWorkflowId("compensate-hook-test-" + UUID.randomUUID())
+                                .build());
+        WorkflowClient.start(workflow::execute, input);
+        WorkflowResult result = WorkflowStub.fromTyped(workflow).getResult(WorkflowResult.class);
+
+        assertEquals(NodeStatus.FAILED, result.finalStatus(), "Workflow must fail when node2 fails");
+        assertTrue(
+                deterministicHits.contains("compensate:node1"),
+                "COMPENSATE hook must fire for node1; hits=" + deterministicHits);
+    }
+
     // ── Helpers ─────────────────────────────────────────────────────────────────────────────────
 
     /** A simple 2-node workflow: serviceTask(work) → endTask(completed). */
@@ -260,6 +375,23 @@ class InterceptorIntegrationTest {
         flow.node("work", BuiltInNodes.service("doWork"));
         flow.node("completed", b -> b.type(NodeTypes.END_TASK).label("Completed"));
         flow.from("work").on(Outcomes.SUCCESS).to("completed");
+        return flow.build();
+    }
+
+    /**
+     * Minimal approval flow: approvalTask(approval) → endTask(approved) or endTask(rejected).
+     * Used by eventHook_firedOnSignalConsumption.
+     */
+    private static WorkflowDefinition approvalFlow() {
+        FlowDef flow = Flow.define("interceptor-approval-flow", "Approval Event Hook Test");
+        flow.start("approval");
+        flow.node(
+                "approval",
+                BuiltInNodes.approval("manager").andThen(b -> b.set("awaitEvent", "approval")));
+        flow.node("approved", b -> b.type(NodeTypes.END_TASK).label("Approved"));
+        flow.node("rejected", b -> b.type(NodeTypes.END_TASK).label("Rejected"));
+        flow.from("approval").on(Outcomes.APPROVED).to("approved");
+        flow.from("approval").on(Outcomes.REJECTED).to("rejected");
         return flow.build();
     }
 
