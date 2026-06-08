@@ -56,3 +56,5 @@ bin/
 /.qoder/
 /infrastructure-component/workflow/src/main/gen/
 /.qoderignore
+/.linear-autopilot/
+/.claude/
