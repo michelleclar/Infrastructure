@@ -135,7 +135,7 @@ public class QuickStartExample {
                         .put("manager", "bob")
                         .put("days", 3);
 
-        var input = new WorkflowInput(workflow, businessData, Map.of(), null);
+        var input = new WorkflowInput(workflow, businessData, Map.of(), null, Boolean.TRUE);
 
         // 启动工作流
         String workflowId = "quick-start-" + UUID.randomUUID();

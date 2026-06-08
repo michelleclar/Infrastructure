@@ -21,15 +21,30 @@ import java.util.Map;
  * @param initialVariables optional, seed for the mutable variables map.
  * @param startNodeId optional. When {@code null}/blank, the runtime falls back to the unique start
  *     node returned by {@link org.carl.infrastructure.workflow.graph.WorkflowGraph#startNodes()}.
+ * @param archive optional per-execution flag. When {@code Boolean.TRUE}, the runtime fires the
+ *     archival activity (best-effort, fire-and-forget) on terminal completion. {@code null} or
+ *     {@code Boolean.FALSE} disables archival for this execution. Replaces the previous JVM-wide
+ *     static flag, which caused cross-test pollution when multiple workers shared one JVM.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record WorkflowInput(
         WorkflowDefinition workflowDefinition,
         JsonNode businessData,
         Map<String, Object> initialVariables,
-        String startNodeId) {
+        String startNodeId,
+        Boolean archive) {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    /** True iff {@link #archive} is {@code Boolean.TRUE}. Null is treated as off. */
+    public boolean archiveEnabled() {
+        return Boolean.TRUE.equals(archive);
+    }
+
+    /** Returns a copy of this input with the archive flag overridden. */
+    public WorkflowInput withArchive(boolean enabled) {
+        return new WorkflowInput(workflowDefinition, businessData, initialVariables, startNodeId, enabled);
+    }
 
     /**
      * Convenience method to create a WorkflowInput from a WorkflowDefinition.
@@ -40,7 +55,7 @@ public record WorkflowInput(
      */
     public static WorkflowInput from(
             WorkflowDefinition definition, Map<String, Object> businessData) {
-        return from(definition, businessData, Map.of(), null);
+        return from(definition, businessData, Map.of(), null, null);
     }
 
     /**
@@ -57,9 +72,18 @@ public record WorkflowInput(
             Map<String, Object> businessData,
             Map<String, Object> initialVariables,
             String startNodeId) {
-        // valueToTree(null) returns NullNode, which then fails the historical ObjectNode cast.
-        // Normalise null/missing to an empty ObjectNode so downstream consumers always see a
-        // mutable object container.
+        return from(definition, businessData, initialVariables, startNodeId, null);
+    }
+
+    /**
+     * Full convenience method with explicit archive flag.
+     */
+    public static WorkflowInput from(
+            WorkflowDefinition definition,
+            Map<String, Object> businessData,
+            Map<String, Object> initialVariables,
+            String startNodeId,
+            Boolean archive) {
         ObjectNode dataJson;
         if (businessData == null) {
             dataJson = MAPPER.createObjectNode();
@@ -67,6 +91,6 @@ public record WorkflowInput(
             JsonNode tree = MAPPER.valueToTree(businessData);
             dataJson = (tree instanceof ObjectNode on) ? on : MAPPER.createObjectNode();
         }
-        return new WorkflowInput(definition, dataJson, initialVariables, startNodeId);
+        return new WorkflowInput(definition, dataJson, initialVariables, startNodeId, archive);
     }
 }

@@ -46,7 +46,7 @@ infrastructure-component-workflow-temporal   （依赖 workflow-core + temporal-
   runtime/      GenericWorkflow / GenericWorkflowImpl / GenericActivity / GenericActivityImpl
                 BusinessActivityRegistry / HandlerHolder / ObjectMapperHolder / WorkerSetup
                 WorkflowInput / WorkflowResult / WorkflowState / WorkflowInstanceSnapshot / ExecutionContext / ActivityCall / ActivityResult
-  archive/      ArchiveActivities / DatabaseArchiveActivities / WorkflowArchiverWorkflow(Impl) （可选，按需启用）
+  archive/      ArchiveActivities / DatabaseArchiveActivities（可选，按 WorkflowInput.archive 启用）
   example/      QuickStartExample（main 入口）
 ```
 
@@ -556,7 +556,7 @@ record WorkflowState(
       - FAILED → 触发 saga 补偿（反向遍历 compensationStack）→ 终止
       - CANCELLED → 终止
    e. 节点 compensable 且 COMPLETED → 推入 compensationStack
-5. 终止：返回 WorkflowResult；可选触发 archival child workflow
+5. 终止：返回 WorkflowResult；若 `WorkflowInput.archive=true` 则 `Async.procedure` 调用 `ArchiveActivities.archive` （fire-and-forget；失败吞错，不影响主流程结果）
 ```
 
 ### 9.4 pickNextEdge 的路由策略（G2 适配后）
@@ -599,7 +599,7 @@ WorkerSetup.setup(worker, handlerRegistry, activityRegistry, interceptorRegistry
 WorkerSetup.setup(worker, handlerRegistry, activityRegistry, archiveActivities, interceptorRegistry);
 ```
 
-注册 GenericWorkflow + GenericActivity 实现到 worker；可选注册 archive workflow + activities；可选注册 `AsyncInterceptorActivity` impl 处理异步 hook。
+注册 GenericWorkflow + GenericActivity 实现到 worker；可选注册 archive activity（实际是否调用由 per-execution `WorkflowInput.archive` 决定，不再是全局 static）；可选注册 `AsyncInterceptorActivity` impl 处理异步 hook。
 
 ### 9.8 Interceptor 集成（Hook 派发）
 
@@ -825,20 +825,20 @@ assert result.nodeResults().get("approvals").outcome().equals(Outcomes.APPROVED)
 | 阶段 6：Interceptor SPI（Deterministic + Async + Registry） | ✅ |
 | 阶段 7：Temporal GenericWorkflow + RuntimeIntents 翻译 + Saga 补偿 + Signal + Timer + Activity + Child Workflow | ✅ |
 | 阶段 8：端到端 demo（请假 + 会签 + 补偿 + 子流程 + 条件路由 + 回环） | ✅ 17 通过 / 0 失败 |
-| 阶段 9：远程 Temporal + DB 归档集成测试 | ⏸ 跳过（需环境） |
+| 阶段 9：远程 Temporal + DB 归档集成测试 | ✅ 28 通过 / 0 失败（含 LeaveWorkflowRemoteTest / LeaveFlowDslRemoteTest / DatabaseArchiveIntegrationTest） |
 | 阶段 10：V3 文档 | ✅ 本文档 |
 | 阶段 11：DSL typed 自定义节点（`NodeType` 接口 + `BuiltInNodeType` enum + `NodeBuilder.setAll(POJO)`） | ✅ workflow-core 271 测试通过 |
 | 阶段 12：§13 语义清理 + 死代码扫尾（E1 awaitEvent 统一 / E2 setAll 重命名 / E4 service 双参 / E5 deprecation suppress / E8 FlowFrom.join 校验） | ✅ workflow-core 276 测试通过；workflow-temporal compileTestJava 通过 |
 | 阶段 13：Interceptor runtime 集成（F：5/7 phase 内联 + Activity 派发；新增 `InterceptorHolder` / `HookPhases` / `AsyncHookInvocation` / `AsyncInterceptorActivity(Impl)` / `SimpleInterceptorContext`；`WorkerSetup` 双 overload） | ✅ workflow-temporal 23 通过 / 0 失败；端到端 17 个 demo 不破 |
 | 阶段 14：Interceptor EVENT + COMPENSATE（F2：`deliver` / `drive*` 链路传 node 参数；`CompensationRecord` 加 NodeDefinition；fireHook(EVENT) 在 onEvent 后；fireHook(COMPENSATE) 在 compensate 前） | ✅ workflow-temporal 27 通过 / 0 失败（+2 新 hook 测试） |
 | 阶段 15：TaskGroup 递归 nestedJoin（G：`FlowDef.buildTaskGroupConfig` 递归子 taskGroup；runtime 零改动） | ✅ workflow-core 278 通过 + workflow-temporal 27 通过；2 层端到端 + 3 层 JSON 验证 |
+| 阶段 16：归档去全局静态 + fire-and-forget（`WorkflowInput.archive` 5 号字段 → per-execution；`GenericWorkflowImpl` 删 `static archivalEnabled` / `enableArchival` / `isArchivalEnabled`；`archiveIfNeeded` 改 `Async.procedure` 入 `asyncHookPromises` 由 `awaitAsyncHooks` 吞错；删死代码 `WorkflowArchiverWorkflow(Impl)` / `InMemoryArchiveActivities` 及 `WorkerSetup` 中的注册） | ✅ 远端 `TEMPORAL_TARGET` 全模块 28 通过 / 0 失败（修复 27 failed 全局污染问题） |
 
 ---
 
 ## 16. 后续工作（按优先级）
 
-1. **DB 归档 + 远端 Temporal 集成测试**——需要环境，但写好 docker-compose 后可加入 CI
-2. **下一个大版本可彻底删除 `EdgeMatch.ByOutcome`**——目前 deprecated + suppress；删除前需保证所有手构 `EdgeDefinition` 都已迁移到 `event` 字段
+1. **下一个大版本可彻底删除 `EdgeMatch.ByOutcome`**——目前 deprecated + suppress；删除前需保证所有手构 `EdgeDefinition` 都已迁移到 `event` 字段
 
 ---
 

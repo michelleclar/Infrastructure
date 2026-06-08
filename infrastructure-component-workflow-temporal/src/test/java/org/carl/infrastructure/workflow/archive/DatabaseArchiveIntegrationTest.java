@@ -279,7 +279,8 @@ class DatabaseArchiveIntegrationTest {
     }
 
     private WorkflowInput newInput(WorkflowDefinition def) throws Exception {
-        return WorkflowInput.from(def, Map.of("employee", "alice", "days", 3));
+        return WorkflowInput.from(def, Map.of("employee", "alice", "days", 3))
+                .withArchive(true);
     }
 
     private static ObjectNode decisionPayload(String decision) {

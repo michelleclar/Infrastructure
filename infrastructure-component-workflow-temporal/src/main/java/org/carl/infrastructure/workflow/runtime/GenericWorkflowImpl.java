@@ -14,7 +14,6 @@ import io.temporal.workflow.Promise;
 import io.temporal.workflow.Workflow;
 
 import org.carl.infrastructure.workflow.archive.ArchiveActivities;
-import org.carl.infrastructure.workflow.archive.WorkflowArchiverWorkflow;
 import org.carl.infrastructure.workflow.definition.EdgeDefinition;
 import org.carl.infrastructure.workflow.interceptor.DeterministicInterceptor;
 import org.carl.infrastructure.workflow.interceptor.InterceptorContext;
@@ -104,26 +103,6 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
                     .setRetryOptions(RetryOptions.newBuilder().setMaximumAttempts(1).build())
                     .build();
 
-    /** Flag indicating whether archival is configured (set by {@link WorkerSetup}). */
-    private static boolean archivalEnabled = false;
-
-    /**
-     * Enables workflow archival. Called by {@link WorkerSetup} when archival activities are
-     * registered.
-     */
-    static void enableArchival() {
-        archivalEnabled = true;
-    }
-
-    /**
-     * Checks if workflow archival is enabled.
-     *
-     * @return {@code true} if archival is configured, {@code false} otherwise
-     */
-    static boolean isArchivalEnabled() {
-        return archivalEnabled;
-    }
-
     // Mutable workflow state -----------------------------------------------------------------
 
     private final Deque<WorkflowEvent> signalQueue = new ArrayDeque<>();
@@ -139,6 +118,8 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
     private boolean finished;
     private String lastEventName;
     private Instant startedAt;
+    /** Per-execution archive opt-in flag, read from {@link WorkflowInput#archiveEnabled()}. */
+    private boolean archiveEnabled;
 
     /** Tracks a successfully-completed compensable node for potential saga rollback. */
     private record CompensationRecord(
@@ -175,6 +156,7 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
                         input.businessData(),
                         input.initialVariables());
         this.startedAt = Instant.now();
+        this.archiveEnabled = input.archiveEnabled();
 
         // ── WORKFLOW_START hook ──────────────────────────────────────────────────────────────
         fireHook(HookPhases.WORKFLOW_START, null, null, null, null);
@@ -977,21 +959,30 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
         }
     }
 
+    /** Activity options for archive: short timeout, no retry; best-effort. */
+    private static final ActivityOptions ARCHIVE_ACTIVITY_OPTIONS =
+            ActivityOptions.newBuilder()
+                    .setStartToCloseTimeout(Duration.ofSeconds(10))
+                    .setRetryOptions(RetryOptions.newBuilder().setMaximumAttempts(1).build())
+                    .build();
+
     /**
-     * Trigger archival by sending a signal to the archiver workflow.
+     * Fire-and-forget archival on terminal completion.
      *
-     * <p>The archiver workflow runs independently; this method returns immediately after sending
-     * the signal. Archival failures do not affect the parent workflow result.
+     * <p>Gated by the per-execution {@link WorkflowInput#archiveEnabled()} flag — no JVM-wide
+     * static state. When enabled, schedules the archive activity asynchronously via {@link
+     * Async#procedure} and queues the resulting promise into {@link #asyncHookPromises}, which is
+     * drained by {@link #awaitAsyncHooks()} with errors swallowed. So archival failures (including
+     * "Activity Type Archive not registered" when the worker is misconfigured) never affect the
+     * main workflow result.
      *
      * @param result the workflow result to archive; may be null for non-terminal states
      */
     private void archiveIfNeeded(WorkflowResult result) {
-        if (result == null || result.finalStatus() == null) {
-            return; // Not terminal, skip archival
+        if (!archiveEnabled) {
+            return;
         }
-
-        // Skip archival if not configured
-        if (!archivalEnabled) {
+        if (result == null || result.finalStatus() == null) {
             return;
         }
 
@@ -1000,7 +991,7 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
                         Workflow.getInfo().getWorkflowId(),
                         Workflow.getInfo().getRunId(),
                         ctx.definitionId(),
-                        null, // businessKey - can be extracted from businessData later if needed
+                        null,
                         result.finalStatus().name(),
                         startedAt,
                         Instant.now(),
@@ -1011,25 +1002,8 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
                         result.finalVariables(),
                         result.executionRecords());
 
-        // Start archiver workflow and send signal - fire and forget, doesn't block parent workflow
-        // Note: In production, the archiver workflow should be registered on the same task queue
-        String archiverWorkflowId = snapshot.workflowId() + "-archiver";
-        io.temporal.workflow.ChildWorkflowOptions options =
-                io.temporal.workflow.ChildWorkflowOptions.newBuilder()
-                        .setWorkflowId(archiverWorkflowId)
-                        .build();
-
-        // Invoke archival activity directly
-        // Note: This is synchronous within the workflow, but the activity itself should be fast
-        // In production, the activity should write to an async queue or use a non-blocking DB write
-        ActivityOptions activityOptions =
-                ActivityOptions.newBuilder()
-                        .setStartToCloseTimeout(
-                                Duration.ofSeconds(10)) // Short timeout for archival
-                        .setRetryOptions(RetryOptions.newBuilder().setMaximumAttempts(3).build())
-                        .build();
         ArchiveActivities archiveStub =
-                Workflow.newActivityStub(ArchiveActivities.class, activityOptions);
-        archiveStub.archive(snapshot);
+                Workflow.newActivityStub(ArchiveActivities.class, ARCHIVE_ACTIVITY_OPTIONS);
+        asyncHookPromises.add(Async.procedure(archiveStub::archive, snapshot));
     }
 }

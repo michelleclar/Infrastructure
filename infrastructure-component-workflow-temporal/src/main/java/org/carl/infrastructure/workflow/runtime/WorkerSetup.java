@@ -3,8 +3,6 @@ package org.carl.infrastructure.workflow.runtime;
 import io.temporal.worker.Worker;
 
 import org.carl.infrastructure.workflow.archive.ArchiveActivities;
-import org.carl.infrastructure.workflow.archive.WorkflowArchiverWorkflow;
-import org.carl.infrastructure.workflow.archive.WorkflowArchiverWorkflowImpl;
 import org.carl.infrastructure.workflow.interceptor.WorkflowInterceptorRegistry;
 import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
 
@@ -62,10 +60,11 @@ public final class WorkerSetup {
         worker.registerActivitiesImplementations(new GenericActivityImpl(activityRegistry));
 
         if (archiveActivities != null) {
-            GenericWorkflowImpl.enableArchival();
-            worker.registerWorkflowImplementationTypes(WorkflowArchiverWorkflowImpl.class);
             worker.registerActivitiesImplementations(archiveActivities);
         }
+        // Whether archival actually fires is decided per-execution by WorkflowInput.archiveEnabled.
+        // WorkerSetup only owns activity/workflow registration on the worker; the runtime no longer
+        // carries a JVM-wide static flag that could leak across tests sharing one JVM.
     }
 
     /**
