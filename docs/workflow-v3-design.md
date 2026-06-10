@@ -119,11 +119,12 @@ enum NodeStatus { WAITING, COMPLETED, FAILED, CANCELLED }
 ```java
 record WorkflowEvent(
     String name,
-    JsonNode payload
+    JsonNode payload,
+    String eventId          // 可空幂等键；非空时 signal() 据此去重，null/blank 不参与（详见 §9.6）
 )
 ```
 
-外部 signal 和内部合成事件用同一形状。
+外部 signal 和内部合成事件用同一形状。保留 2 参兼容构造器 `WorkflowEvent(name, payload)`（eventId 默认 null），旧调用点与旧 JSON 零改动。
 
 ### 3.6 ExecutionRecord
 
@@ -580,7 +581,48 @@ record WorkflowState(
 
 `signal(WorkflowEvent)` 入队 `signalQueue: Deque<WorkflowEvent>`。runtime 主循环在 `Workflow.await` 等待时被唤醒，取出 event 调 `handler.canAccept + handler.onEvent`。
 
-### 9.6 等待语义对应表
+### 9.6 Signal 事件幂等
+
+#### WorkflowEvent.eventId 可空幂等键
+
+`WorkflowEvent` 是 3 分量 record：`WorkflowEvent(String name, JsonNode payload, String eventId)`。
+
+- `eventId` **可空**：非 null 且非 blank 时参与去重；null 或 blank 时不参与（行为与旧版完全相同）。
+- 保留 2 参兼容构造器 `WorkflowEvent(name, payload)`，`eventId` 默认 `null`。
+- `@JsonInclude(NON_NULL)` 保证旧 JSON（无 `eventId` 字段）反序列化为 `null`，**向后兼容**。
+
+#### signal() 入队前去重
+
+`GenericWorkflowImpl` 持有字段：
+
+```java
+private final Set<String> processedEventIds = new HashSet<>();
+```
+
+`signal(WorkflowEvent event)` 执行时，若 `event.eventId()` 非 null 且非 blank，则：
+- 若 `processedEventIds` 已含该 id，**丢弃**（不入 `signalQueue`，不消费）；
+- 否则 `processedEventIds.add(eventId)` 后正常入队。
+
+`eventId` 为 null/blank 时跳过上述逻辑，直接入队——不影响不携带幂等键的旧 signal。
+
+#### 确定性 / replay 安全
+
+`processedEventIds` 是 workflow 状态的一部分，存在于 workflow 函数的局部内存中。Temporal 在 worker 重启或抢占时按 event history **确定性重放** `signal()` 调用；重放过程中集合会被逐条 signal 记录完整重建，最终与原始执行一致。实现只做 `Set.add` / `Set.contains`，不依赖 HashSet 的迭代顺序，满足 Temporal 的确定性合同。
+
+#### 两种"重复"的区分
+
+| 重复来源 | 是否需要应用层去重 | 处理方式 |
+|----------|--------------------|---------|
+| worker 重启 / 抢占后 Temporal 重放 | **不需要** | Temporal event history 天然保证每条 signal 只"生效"一次 |
+| 客户端重发（网络重试 / 用户重复点击 / 上游重复调用） | **需要** | `eventId` 去重堵上这一 gap |
+
+在 `eventId` 引入之前，客户端重发的同一条 signal 会被当作两次独立 signal 分别入队并消费，这是真实的语义漏洞。
+
+#### 回环场景
+
+若流程有回环（如审批被 rejected 后回到等待 approval 的节点），未去重时滞留在 `signalQueue` 中的重复 signal 可能在下一轮等待中被误消费。加入 `eventId` 去重后，已处理过的 eventId 在整个 workflow 生命周期内不会重复入队，消除了这种跨轮次误消费。
+
+### 9.7 等待语义对应表
 
 | `RuntimeIntents` | runtime 操作 | 完成时合成事件 |
 |------------------|-------------|---------------|
@@ -590,7 +632,7 @@ record WorkflowState(
 | `CHILDREN` + `JOIN_RULE` | 每个 child `Async.function(...)` 启动，`Promise.allOf/anyOf` 等齐 | `_childCompleted`（逐个） |
 | `SUB_WORKFLOW_ID` 或 `SUB_DEFINITION_JSON` | `Workflow.newChildWorkflowStub(GenericWorkflow).execute(...)` | `_subProcessCompleted` |
 
-### 9.7 WorkerSetup
+### 9.8 WorkerSetup
 
 ```java
 WorkerSetup.setup(worker, handlerRegistry, activityRegistry);
@@ -601,7 +643,7 @@ WorkerSetup.setup(worker, handlerRegistry, activityRegistry, archiveActivities, 
 
 注册 GenericWorkflow + GenericActivity 实现到 worker；可选注册 archive activity（实际是否调用由 per-execution `WorkflowInput.archive` 决定，不再是全局 static）；可选注册 `AsyncInterceptorActivity` impl 处理异步 hook。
 
-### 9.8 Interceptor 集成（Hook 派发）
+### 9.9 Interceptor 集成（Hook 派发）
 
 业务通过 `WorkflowInterceptorRegistry.register(interceptor)` 注册任意数量的 `DeterministicInterceptor` 或 `AsyncInterceptor`（同一对象可同时实现两个接口）。`InterceptorHolder` 是进程级单例 + 默认空 registry（zero-overhead default）。
 
@@ -633,7 +675,7 @@ interceptorRegistry.register(new MyAuditAsyncInterceptor());     // Async 写库
 WorkerSetup.setup(worker, handlerRegistry, activityRegistry, interceptorRegistry);
 ```
 
-### 9.9 BusinessActivityRegistry
+### 9.10 BusinessActivityRegistry
 
 业务通过 string 名注册 Activity：
 
@@ -833,6 +875,7 @@ assert result.nodeResults().get("approvals").outcome().equals(Outcomes.APPROVED)
 | 阶段 14：Interceptor EVENT + COMPENSATE（F2：`deliver` / `drive*` 链路传 node 参数；`CompensationRecord` 加 NodeDefinition；fireHook(EVENT) 在 onEvent 后；fireHook(COMPENSATE) 在 compensate 前） | ✅ workflow-temporal 27 通过 / 0 失败（+2 新 hook 测试） |
 | 阶段 15：TaskGroup 递归 nestedJoin（G：`FlowDef.buildTaskGroupConfig` 递归子 taskGroup；runtime 零改动） | ✅ workflow-core 278 通过 + workflow-temporal 27 通过；2 层端到端 + 3 层 JSON 验证 |
 | 阶段 16：归档去全局静态 + fire-and-forget（`WorkflowInput.archive` 5 号字段 → per-execution；`GenericWorkflowImpl` 删 `static archivalEnabled` / `enableArchival` / `isArchivalEnabled`；`archiveIfNeeded` 改 `Async.procedure` 入 `asyncHookPromises` 由 `awaitAsyncHooks` 吞错；删死代码 `WorkflowArchiverWorkflow(Impl)` / `InMemoryArchiveActivities` 及 `WorkerSetup` 中的注册） | ✅ 远端 `TEMPORAL_TARGET` 全模块 28 通过 / 0 失败（修复 27 failed 全局污染问题） |
+| 阶段 17：Signal 事件幂等（`WorkflowEvent` 3 分量 + `eventId` 可空幂等键；保留 2 参兼容构造器 + `@JsonInclude(NON_NULL)` 向后兼容；`GenericWorkflowImpl` 加 `processedEventIds: Set<String>`，`signal()` 入队前去重；null/blank eventId 不参与去重；确定性 replay 安全；堵住客户端重发 + 回环误消费两类 gap） | ✅ |
 
 ---
 

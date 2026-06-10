@@ -46,6 +46,7 @@ import java.time.Instant;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -106,6 +107,14 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
     // Mutable workflow state -----------------------------------------------------------------
 
     private final Deque<WorkflowEvent> signalQueue = new ArrayDeque<>();
+    /**
+     * Idempotency keys of signals already accepted. A signal whose {@link WorkflowEvent#eventId()}
+     * is already present is dropped before it reaches the queue. This is workflow state: Temporal
+     * replays {@link #signal} deterministically from history, so the set is rebuilt identically on
+     * replay. Only add/contains are used (never iterated), so HashSet ordering does not affect
+     * determinism.
+     */
+    private final Set<String> processedEventIds = new HashSet<>();
     private final List<CompensationRecord> compensationStack = new ArrayList<>();
     /**
      * Collected async hook promises. Populated by {@link #fireHook} when async interceptors are
@@ -229,6 +238,11 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
     @Override
     public void signal(WorkflowEvent event) {
         if (event == null) {
+            return;
+        }
+        String id = event.eventId();
+        if (id != null && !id.isBlank() && !processedEventIds.add(id)) {
+            // Duplicate signal: same eventId already accepted — drop for idempotency.
             return;
         }
         signalQueue.add(event);
