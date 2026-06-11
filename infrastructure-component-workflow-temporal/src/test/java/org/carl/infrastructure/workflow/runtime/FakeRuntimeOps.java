@@ -1,6 +1,5 @@
 package org.carl.infrastructure.workflow.runtime;
 
-import org.carl.infrastructure.workflow.definition.NodeDefinition;
 import org.carl.infrastructure.workflow.definition.NodeResult;
 import org.carl.infrastructure.workflow.definition.WorkflowDefinition;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
@@ -13,6 +12,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * In-memory {@link RuntimeOps} for {@link WorkflowInterpreter} unit tests — no Temporal runtime.
@@ -89,15 +89,44 @@ final class FakeRuntimeOps implements RuntimeOps {
     }
 
     @Override
-    public NodeResult runTaskGroup(
-            Map<String, Object> intentPayload,
-            NodeDefinition parentNode,
-            String parentQualifier,
-            TaskGroupChildExecutor childExecutor,
-            TaskGroupJoiner joiner) {
-        throw new UnsupportedOperationException(
-                "taskGroup is not exercised by interpreter unit tests (covered end-to-end on"
-                        + " Temporal)");
+    public TaskGroupScope fanOut(List<Supplier<NodeResult>> childTasks) {
+        // Sequential, eager execution for tests: each child runs to completion in order (a child's
+        // awaitEvent draws from the pre-loaded event queue). Captures business throws like the real
+        // adapter; cancellation is a no-op (eager children have already finished).
+        final List<NodeResult> results = new ArrayList<>(childTasks.size());
+        for (Supplier<NodeResult> task : childTasks) {
+            try {
+                results.add(task.get());
+            } catch (RuntimeException re) {
+                results.add(NodeResult.failed("child threw: " + re.getMessage()));
+            }
+        }
+        return new TaskGroupScope() {
+            @Override
+            public int size() {
+                return results.size();
+            }
+
+            @Override
+            public boolean isChildCompleted(int index) {
+                return true;
+            }
+
+            @Override
+            public void awaitAny() {
+                // all children already complete
+            }
+
+            @Override
+            public NodeResult result(int index) {
+                return results.get(index);
+            }
+
+            @Override
+            public void cancelAll(String reason) {
+                // eager fake: children already ran
+            }
+        };
     }
 
     @Override

@@ -1,22 +1,23 @@
 package org.carl.infrastructure.workflow.runtime;
 
-import org.carl.infrastructure.workflow.definition.NodeDefinition;
 import org.carl.infrastructure.workflow.definition.NodeResult;
 import org.carl.infrastructure.workflow.definition.WorkflowDefinition;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * Side-effect port for {@link WorkflowInterpreter}.
  *
  * <p>The interpreter owns all <em>orchestration decisions</em> (node loop, routing, WAITING
- * dispatch, saga ordering, deterministic hooks) and is pure with respect to Temporal — it never
- * touches {@code Workflow.*}/{@code Async}/{@code ActivityStub}. Every actual side effect goes
- * through this port. {@link GenericWorkflowImpl} implements it with real Temporal APIs; a
- * {@code FakeRuntimeOps} implements it for interpreter unit tests that run on a plain JVM with no
- * Temporal runtime.
+ * dispatch, taskGroup join policy, saga ordering, deterministic hooks) and is pure with respect to
+ * Temporal — it never touches {@code Workflow.*}/{@code Async}/{@code ActivityStub}. Every actual
+ * side effect goes through this port. {@link GenericWorkflowImpl} implements it with real Temporal
+ * APIs; a {@code FakeRuntimeOps} implements it for interpreter unit tests that run on a plain JVM
+ * with no Temporal runtime.
  */
 interface RuntimeOps {
 
@@ -37,17 +38,12 @@ interface RuntimeOps {
             WorkflowDefinition childDef, Map<String, Object> input, String idHint);
 
     /**
-     * Run a {@code taskGroup}: the adapter performs concurrent fan-out + cancellation; the supplied
-     * callbacks re-enter the interpreter to execute each child node and to ask the taskGroup handler
-     * whether the join condition is met. (Stage 19a keeps the concurrency primitive in the adapter;
-     * 19b will finalise this port.)
+     * Fan out concurrent child tasks and return a {@link TaskGroupScope} the interpreter uses to
+     * drive the join loop (await completions, read results, short-circuit cancel). The concurrency
+     * primitive ({@code Async}/{@code CancellationScope}) lives in the adapter; the join
+     * <em>policy</em> (which children, when to short-circuit) lives in the interpreter.
      */
-    NodeResult runTaskGroup(
-            Map<String, Object> intentPayload,
-            NodeDefinition parentNode,
-            String parentQualifier,
-            TaskGroupChildExecutor childExecutor,
-            TaskGroupJoiner joiner);
+    TaskGroupScope fanOut(List<Supplier<NodeResult>> childTasks);
 
     /** Dispatch an async interceptor hook (fire-and-forget; promise collected internally). */
     void emitAsyncHook(AsyncHookInvocation invocation);
@@ -70,18 +66,22 @@ interface RuntimeOps {
         boolean matches(WorkflowEvent event);
     }
 
-    /** Re-enters the interpreter to execute one taskGroup child node. */
-    @FunctionalInterface
-    interface TaskGroupChildExecutor {
-        NodeResult execute(NodeDefinition childNode, String qualifier);
-    }
-
     /**
-     * Asks the taskGroup handler to fold one completed child into the aggregate result; a
-     * non-WAITING return means the group short-circuited.
+     * Handle to a set of concurrently-running taskGroup children. The interpreter drives the join
+     * loop over this; the adapter backs it with Temporal {@code Async}/{@code CancellationScope}.
      */
-    @FunctionalInterface
-    interface TaskGroupJoiner {
-        NodeResult onChildCompleted();
+    interface TaskGroupScope {
+        int size();
+
+        boolean isChildCompleted(int index);
+
+        /** Block until at least one not-yet-collected child completes. */
+        void awaitAny();
+
+        /** Final result of a child (Temporal cancellation → cancelled, other throw → failed). */
+        NodeResult result(int index);
+
+        /** Cancel all still-pending children. */
+        void cancelAll(String reason);
     }
 }

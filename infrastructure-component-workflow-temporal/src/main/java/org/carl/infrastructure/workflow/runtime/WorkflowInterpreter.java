@@ -16,6 +16,7 @@ import org.carl.infrastructure.workflow.handlers.EventTaskHandler;
 import org.carl.infrastructure.workflow.handlers.RuntimeIntents;
 import org.carl.infrastructure.workflow.handlers.ServiceTaskHandler;
 import org.carl.infrastructure.workflow.handlers.SubProcessHandler;
+import org.carl.infrastructure.workflow.handlers.TaskGroupContract;
 import org.carl.infrastructure.workflow.handlers.TaskGroupHandler;
 import org.carl.infrastructure.workflow.handlers.TimerTaskHandler;
 import org.carl.infrastructure.workflow.handlers.UserTaskHandler;
@@ -34,6 +35,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * Pure orchestration engine: interprets a {@link WorkflowDefinition} with the registered {@link
@@ -290,23 +292,97 @@ final class WorkflowInterpreter {
         return deliver(handler, config, event, node);
     }
 
+    /**
+     * Drive a taskGroup. The interpreter owns the join policy: it parses children, fans them out via
+     * {@link RuntimeOps#fanOut} (the adapter's concurrency primitive), then loops — recording each
+     * completed child and asking the taskGroup handler ({@code onEvent} via {@link #deliver}) whether
+     * the group is done. A non-WAITING aggregate short-circuits: the still-pending children are
+     * cancelled and their (CANCELLED) results drained for caller inspection.
+     */
     private NodeResult driveTaskGroup(
             NodeHandler<Object> handler,
             Object config,
             Map<String, Object> payload,
             NodeDefinition node,
-            String qualifier) {
-        // Concurrency primitive lives in the adapter (Stage 19a). Re-enter the interpreter via
-        // callbacks: childExecutor runs each child node; joiner folds one completed child into the
-        // taskGroup handler's aggregate decision.
-        RuntimeOps.TaskGroupJoiner joiner =
-                () ->
+            String parentQualifier) {
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> children =
+                (List<Map<String, Object>>) payload.get(RuntimeIntents.CHILDREN);
+        if (children == null || children.isEmpty()) {
+            return deliver(
+                    handler,
+                    config,
+                    new WorkflowEvent(TaskGroupHandler.CHILD_COMPLETED_EVENT, null),
+                    node);
+        }
+
+        int n = children.size();
+        List<String> childQualifiers = new ArrayList<>(n);
+        List<Supplier<NodeResult>> tasks = new ArrayList<>(n);
+        for (Map<String, Object> childSpec : children) {
+            String childId = (String) childSpec.get("id");
+            String childType = (String) childSpec.get("type");
+            String childLabel = (String) childSpec.get("label");
+            Object rawConfig = childSpec.get("config");
+            JsonNode childConfig = rawConfig == null ? null : mapper.valueToTree(rawConfig);
+            NodeDefinition childNode =
+                    new NodeDefinition(childId, childLabel, childType, null, childConfig);
+            String childQualifier = TaskGroupContract.childKey(parentQualifier, childId);
+            childQualifiers.add(childQualifier);
+            tasks.add(() -> executeChild(childNode, childQualifier));
+        }
+
+        RuntimeOps.TaskGroupScope scope = ops.fanOut(tasks);
+        boolean[] consumed = new boolean[n];
+        NodeResult aggregated = NodeResult.waiting();
+        int remaining = n;
+        while (remaining > 0) {
+            boolean anyPending = false;
+            for (int i = 0; i < n; i++) {
+                if (!consumed[i]) {
+                    anyPending = true;
+                    break;
+                }
+            }
+            if (!anyPending) {
+                break;
+            }
+
+            scope.awaitAny();
+
+            for (int i = 0; i < n; i++) {
+                if (consumed[i] || !scope.isChildCompleted(i)) {
+                    continue;
+                }
+                ctx.recordResult(childQualifiers.get(i), scope.result(i));
+                consumed[i] = true;
+                remaining--;
+
+                ctx.setCurrentNodeId(parentQualifier);
+                aggregated =
                         deliver(
                                 handler,
                                 config,
                                 new WorkflowEvent(TaskGroupHandler.CHILD_COMPLETED_EVENT, null),
                                 node);
-        return ops.runTaskGroup(payload, node, qualifier, this::executeChild, joiner);
+                if (aggregated.status() != NodeStatus.WAITING) {
+                    scope.cancelAll(
+                            "taskGroup '"
+                                    + parentQualifier
+                                    + "' short-circuited with outcome "
+                                    + aggregated.outcome());
+                    for (int j = 0; j < n; j++) {
+                        if (consumed[j]) {
+                            continue;
+                        }
+                        ctx.recordResult(childQualifiers.get(j), scope.result(j));
+                        consumed[j] = true;
+                    }
+                    return aggregated;
+                }
+            }
+        }
+        return aggregated;
     }
 
     // ── Event delivery ───────────────────────────────────────────────────────────────────────

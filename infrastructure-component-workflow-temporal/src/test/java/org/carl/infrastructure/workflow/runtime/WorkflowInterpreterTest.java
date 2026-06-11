@@ -1,5 +1,8 @@
 package org.carl.infrastructure.workflow.runtime;
 
+import static org.carl.infrastructure.workflow.dsl.Dsl.all;
+import static org.carl.infrastructure.workflow.dsl.Dsl.any;
+import static org.carl.infrastructure.workflow.dsl.Dsl.node;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -13,6 +16,7 @@ import org.carl.infrastructure.workflow.definition.WorkflowDefinition;
 import org.carl.infrastructure.workflow.dsl.BuiltInNodes;
 import org.carl.infrastructure.workflow.dsl.Flow;
 import org.carl.infrastructure.workflow.dsl.FlowDef;
+import org.carl.infrastructure.workflow.dsl.JoinSpec;
 import org.carl.infrastructure.workflow.engine.NodeConfigCodec;
 import org.carl.infrastructure.workflow.graph.WorkflowGraph;
 import org.carl.infrastructure.workflow.handlers.BuiltInHandlers;
@@ -159,5 +163,64 @@ class WorkflowInterpreterTest {
         WorkflowResult result = interp.run(null);
 
         assertEquals("big", result.finalNodeId());
+    }
+
+    // ── taskGroup join policy (the interpreter owns the loop; 19b) ────────────────────────────
+
+    private static com.fasterxml.jackson.databind.node.ObjectNode decisionTask(
+            String decision, String taskId) {
+        return JsonNodeFactory.instance.objectNode().put("decision", decision).put("taskId", taskId);
+    }
+
+    /** requestLeave → approvals (taskGroup ALL/ANY of hr+mgr) → done / rejected. */
+    private static WorkflowDefinition coSignFlow(boolean anyJoin) {
+        FlowDef flow = Flow.define("interp-tg", "会签");
+        flow.start("requestLeave");
+        flow.node("requestLeave", BuiltInNodes.service("createLeave"));
+        flow.node("done", b -> b.type(NodeTypes.END_TASK));
+        flow.node("rejected", b -> b.type(NodeTypes.END_TASK));
+        flow.from("requestLeave").on(Outcomes.SUCCESS).to("approvals");
+        JoinSpec join =
+                anyJoin
+                        ? any(
+                                node("hr", BuiltInNodes.approval("hr")),
+                                node("mgr", BuiltInNodes.approval("mgr")))
+                        : all(
+                                node("hr", BuiltInNodes.approval("hr")),
+                                node("mgr", BuiltInNodes.approval("mgr")));
+        flow.from("approvals")
+                .join(join)
+                .on(Outcomes.APPROVED)
+                .to("done")
+                .on(Outcomes.REJECTED)
+                .to("rejected");
+        return flow.build();
+    }
+
+    @Test
+    void taskGroupAll_bothApproved_reachesDone() {
+        FakeRuntimeOps ops =
+                new FakeRuntimeOps()
+                        .offerEvent(new WorkflowEvent("approval", decisionTask("approved", "hr")))
+                        .offerEvent(new WorkflowEvent("approval", decisionTask("approved", "mgr")));
+        assertEquals("done", run(coSignFlow(false), ops).finalNodeId());
+    }
+
+    @Test
+    void taskGroupAll_oneRejected_reachesRejected() {
+        FakeRuntimeOps ops =
+                new FakeRuntimeOps()
+                        .offerEvent(new WorkflowEvent("approval", decisionTask("rejected", "hr")))
+                        .offerEvent(new WorkflowEvent("approval", decisionTask("approved", "mgr")));
+        assertEquals("rejected", run(coSignFlow(false), ops).finalNodeId());
+    }
+
+    @Test
+    void taskGroupAny_firstApproved_reachesDone() {
+        FakeRuntimeOps ops =
+                new FakeRuntimeOps()
+                        .offerEvent(new WorkflowEvent("approval", decisionTask("approved", "hr")))
+                        .offerEvent(new WorkflowEvent("approval", decisionTask("approved", "mgr")));
+        assertEquals("done", run(coSignFlow(true), ops).finalNodeId());
     }
 }

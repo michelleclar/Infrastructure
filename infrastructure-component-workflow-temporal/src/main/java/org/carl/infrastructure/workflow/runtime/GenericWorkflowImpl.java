@@ -1,6 +1,5 @@
 package org.carl.infrastructure.workflow.runtime;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.temporal.activity.ActivityOptions;
@@ -13,15 +12,11 @@ import io.temporal.workflow.Promise;
 import io.temporal.workflow.Workflow;
 
 import org.carl.infrastructure.workflow.archive.ArchiveActivities;
-import org.carl.infrastructure.workflow.definition.NodeDefinition;
 import org.carl.infrastructure.workflow.definition.NodeResult;
-import org.carl.infrastructure.workflow.definition.NodeStatus;
 import org.carl.infrastructure.workflow.definition.WorkflowDefinition;
 import org.carl.infrastructure.workflow.engine.NodeConfigCodec;
 import org.carl.infrastructure.workflow.graph.GraphValidator;
 import org.carl.infrastructure.workflow.graph.WorkflowGraph;
-import org.carl.infrastructure.workflow.handlers.RuntimeIntents;
-import org.carl.infrastructure.workflow.handlers.TaskGroupContract;
 import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 
@@ -35,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * Temporal adapter for the workflow engine.
@@ -186,105 +182,58 @@ public final class GenericWorkflowImpl implements GenericWorkflow, RuntimeOps {
     }
 
     @Override
-    public NodeResult runTaskGroup(
-            Map<String, Object> intentPayload,
-            NodeDefinition parentNode,
-            String parentQualifier,
-            TaskGroupChildExecutor childExecutor,
-            TaskGroupJoiner joiner) {
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> children =
-                (List<Map<String, Object>>) intentPayload.get(RuntimeIntents.CHILDREN);
-        if (children == null || children.isEmpty()) {
-            return joiner.onChildCompleted();
-        }
-
-        ObjectMapper mapper = ObjectMapperHolder.mapper();
-
-        // Fan-out: each child runs in its own coroutine so they can independently consume signals.
-        // Wrapped in a CancellationScope for short-circuit (ANY: first APPROVED wins; ALL: first
-        // REJECTED loses).
-        List<Promise<NodeResult>> promises = new ArrayList<>(children.size());
-        List<String> childIds = new ArrayList<>(children.size());
-        boolean[] consumed = new boolean[children.size()];
-        for (Map<String, Object> childSpec : children) {
-            childIds.add((String) childSpec.get("id"));
-        }
-        CancellationScope scope =
+    public TaskGroupScope fanOut(List<Supplier<NodeResult>> childTasks) {
+        // Each child runs in its own coroutine (so it can independently consume signals), wrapped in
+        // a CancellationScope so the interpreter can short-circuit the group. The join policy lives
+        // in the interpreter; this only exposes the concurrency primitive.
+        List<Promise<NodeResult>> promises = new ArrayList<>(childTasks.size());
+        CancellationScope cancellationScope =
                 Workflow.newCancellationScope(
                         () -> {
-                            for (int i = 0; i < children.size(); i++) {
-                                Map<String, Object> childSpec = children.get(i);
-                                String childId = childIds.get(i);
-                                String childType = (String) childSpec.get("type");
-                                String childLabel = (String) childSpec.get("label");
-                                Object rawConfig = childSpec.get("config");
-                                JsonNode childConfig =
-                                        rawConfig == null ? null : mapper.valueToTree(rawConfig);
-                                NodeDefinition childNode =
-                                        new NodeDefinition(
-                                                childId, childLabel, childType, null, childConfig);
-                                String qualifier =
-                                        TaskGroupContract.childKey(parentQualifier, childId);
-                                promises.add(
-                                        Async.function(
-                                                () ->
-                                                        executeChildSafely(
-                                                                childNode, qualifier, childExecutor)));
+                            for (Supplier<NodeResult> task : childTasks) {
+                                promises.add(Async.function(() -> safeRun(task)));
                             }
                         });
-        scope.run();
+        cancellationScope.run();
 
-        // Join loop: wait for any pending child, record its result, let the interpreter fold it into
-        // the taskGroup aggregate; on short-circuit cancel the scope and drain the rest.
-        NodeResult aggregated = NodeResult.waiting();
-        int remaining = children.size();
-        while (remaining > 0) {
-            List<Promise<NodeResult>> pending = new ArrayList<>();
-            for (int i = 0; i < promises.size(); i++) {
-                if (!consumed[i]) {
-                    pending.add(promises.get(i));
-                }
+        return new TaskGroupScope() {
+            @Override
+            public int size() {
+                return promises.size();
             }
-            if (pending.isEmpty()) {
-                break;
+
+            @Override
+            public boolean isChildCompleted(int index) {
+                return promises.get(index).isCompleted();
             }
-            Promise.anyOf(pending).get();
 
-            for (int i = 0; i < promises.size(); i++) {
-                if (consumed[i]) continue;
-                Promise<NodeResult> p = promises.get(i);
-                if (!p.isCompleted()) continue;
-                NodeResult r = p.get();
-                ctx.recordResult(TaskGroupContract.childKey(parentQualifier, childIds.get(i)), r);
-                consumed[i] = true;
-                remaining--;
-
-                ctx.setCurrentNodeId(parentQualifier);
-                aggregated = joiner.onChildCompleted();
-                if (aggregated.status() != NodeStatus.WAITING) {
-                    scope.cancel(
-                            "taskGroup '"
-                                    + parentQualifier
-                                    + "' short-circuited with outcome "
-                                    + aggregated.outcome());
-                    for (int j = 0; j < promises.size(); j++) {
-                        if (consumed[j]) continue;
-                        NodeResult late;
-                        try {
-                            late = promises.get(j).get();
-                        } catch (CanceledFailure cf) {
-                            late = NodeResult.cancelled();
-                        }
-                        ctx.recordResult(
-                                TaskGroupContract.childKey(parentQualifier, childIds.get(j)), late);
-                        consumed[j] = true;
+            @Override
+            public void awaitAny() {
+                List<Promise<NodeResult>> pending = new ArrayList<>();
+                for (Promise<NodeResult> p : promises) {
+                    if (!p.isCompleted()) {
+                        pending.add(p);
                     }
-                    return aggregated;
+                }
+                if (!pending.isEmpty()) {
+                    Promise.anyOf(pending).get();
                 }
             }
-        }
-        return aggregated;
+
+            @Override
+            public NodeResult result(int index) {
+                try {
+                    return promises.get(index).get();
+                } catch (CanceledFailure cf) {
+                    return NodeResult.cancelled();
+                }
+            }
+
+            @Override
+            public void cancelAll(String reason) {
+                cancellationScope.cancel(reason);
+            }
+        };
     }
 
     @Override
@@ -363,21 +312,15 @@ public final class GenericWorkflowImpl implements GenericWorkflow, RuntimeOps {
         return null;
     }
 
-    /** Run a taskGroup child via the interpreter callback, mapping Temporal cancellation. */
-    private NodeResult executeChildSafely(
-            NodeDefinition childNode, String qualifier, TaskGroupChildExecutor childExecutor) {
+    /** Run one fanned-out child task, mapping Temporal cancellation / business throws to results. */
+    private static NodeResult safeRun(Supplier<NodeResult> task) {
         try {
-            return childExecutor.execute(childNode, qualifier);
+            return task.get();
         } catch (CanceledFailure cf) {
             return NodeResult.cancelled();
         } catch (RuntimeException re) {
             return NodeResult.failed(
-                    "child '"
-                            + qualifier
-                            + "' threw: "
-                            + re.getClass().getSimpleName()
-                            + ": "
-                            + re.getMessage());
+                    "child threw: " + re.getClass().getSimpleName() + ": " + re.getMessage());
         }
     }
 }
