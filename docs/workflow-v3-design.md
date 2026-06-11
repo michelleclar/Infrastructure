@@ -44,8 +44,10 @@ infrastructure-component-workflow-core   （纯 Java，0 Temporal 依赖）
   interceptor/  Hook SPI（WorkflowInterceptor / DeterministicInterceptor / AsyncInterceptor / InterceptorContext / WorkflowInterceptorRegistry）
 
 infrastructure-component-workflow-temporal   （依赖 workflow-core + temporal-sdk + 可选 jOOQ）
-  runtime/      GenericWorkflow / GenericWorkflowImpl / GenericActivity / GenericActivityImpl
-                BusinessActivityRegistry / HandlerHolder / ObjectMapperHolder / WorkerSetup
+  runtime/      WorkflowEngine / WorkflowHandle / EngineConfig（业务门面，0 io.temporal）
+                WorkflowInterpreter / RuntimeOps（编排核心 + 副作用端口）
+                GenericWorkflow / GenericWorkflowImpl（Temporal adapter）/ GenericActivity / GenericActivityImpl
+                BusinessActivityRegistry / HandlerHolder / ObjectMapperHolder / InterceptorHolder / WorkerSetup
                 WorkflowInput / WorkflowResult / WorkflowState / WorkflowInstanceSnapshot / ExecutionContext / ActivityCall / ActivityResult
   archive/      ArchiveActivities / DatabaseArchiveActivities（可选，按 WorkflowInput.archive 启用）
   example/      QuickStartExample（main 入口）
@@ -880,6 +882,7 @@ assert result.nodeResults().get("approvals").outcome().equals(Outcomes.APPROVED)
 | 阶段 18：编排决策下沉到 core（渐进第一步）。把 `GenericWorkflowImpl` 中 0-Temporal 的纯决策逻辑搬到新 core `engine` 包：`EdgeRouter`（resolveStartNode + pickNextEdge + matchesCondition）、`NodeConfigCodec`（normalizeDefinition + normalizeConfig + decode）。adapter 删 160 行（1023→863），不再依赖 `EdgeMatch`/`ConditionEvaluator`；这些编排决策现在脱离 Temporal 在 core 单测。`buildResult`/事件匹配/编排骨架仍在 adapter（依赖 Temporal 类型或 drive 链），留待后续 `WorkflowInterpreter` 全量抽取 | ✅ core 292 通过（+14 engine）+ 远端 `TEMPORAL_TARGET` 全模块 31 通过 / 0 失败（零行为改动） |
 | 阶段 19a：全量 `WorkflowInterpreter`（Ports & Adapters）。整个编排循环（主循环 / 节点 WAITING 分派 / 路由 / saga 补偿 / deterministic hook / 事件匹配）抽到 `WorkflowInterpreter`，所有副作用走 `RuntimeOps` 端口（runActivity/sleep/awaitEvent/runSubProcess/runTaskGroup/emitAsyncHook/awaitAsyncHooks/archive/warn）。`GenericWorkflowImpl` 退化为 `implements GenericWorkflow, RuntimeOps`（Temporal API 实现 + signalQueue/eventId 去重 + getInfo 注入），863→383 行。interpreter 0 直接 `Workflow.*` 调用，与 adapter 共享 `ExecutionContext`；taskGroup 并发仍在 adapter（`runTaskGroup` 回调 interpreter 跑 child）留 19b 最终化。务实选型：interpreter 物理在 temporal 模块（churn 小、不搬类型），纯度靠 `RuntimeOps` 接口 + `FakeRuntimeOps` 单测证明 | ✅ 新增 `WorkflowInterpreterTest`（FakeRuntimeOps，纯 JVM 0 Temporal）5 通过：审批 approved/rejected/timeout + saga 补偿 + 条件路由；远端 `TEMPORAL_TARGET` 全模块 36 通过 / 0 失败（含 taskGroup 嵌套+短路，零行为改动） |
 | 阶段 19b：taskGroup join 判定下沉 interpreter。`RuntimeOps.runTaskGroup`（回调式）换成 `fanOut(List<Supplier<NodeResult>>) → TaskGroupScope`（仅暴露 `Async`/`CancellationScope` 并发原语：size/isChildCompleted/awaitAny/result/cancelAll）；children 解析 + join loop + 短路决策搬进 `WorkflowInterpreter.driveTaskGroup`，judgment 经 `deliver`(_childCompleted) → `TaskGroupHandler.onEvent`。adapter 383→326 行 | ✅ interpreter 单测 +3（ALL approved/ALL rejected/ANY 短路，taskGroup join 脱离 Temporal 可测，共 8 通过）；远端全模块 39 通过 / 0 失败（端到端 taskGroup 嵌套+短路走新 `fanOut`，零行为改动） |
+| 阶段 20：`WorkflowEngine` 业务门面。`WorkflowEngine.connect(EngineConfig).withWorker(handlers, activities[, archive][, interceptors])` 封装 service stubs/client/worker factory/WorkerSetup；`start(def, businessData) → WorkflowHandle`；`WorkflowHandle.signal/query/awaitResult`。业务代码 **0 import io.temporal.\***——Temporal 全藏在门面 + `GenericWorkflowImpl` 后。`EngineConfig(target, namespace, taskQueue)` 用纯 String 配置 | ✅ 新增 `WorkflowEngineRemoteTest`（业务侧文件 grep `io.temporal` = 0）远端跑通审批流程：connect → withWorker → start → signal → awaitResult，1 通过 |
 
 ---
 

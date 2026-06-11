@@ -42,7 +42,39 @@ dependencies {
 
 ---
 
-## 最小可工作示例
+## 推荐入口：`WorkflowEngine` 门面（业务代码 0 import `io.temporal`）
+
+如果你只想「跑起来」，用 `WorkflowEngine` 门面 —— 它把 service stubs / client / worker / typed stub 全封进去，业务代码不碰任何 `io.temporal.*`：
+
+```java
+// 只 import 引擎的 runtime 包 + core，0 import io.temporal.*
+NodeHandlerRegistry handlers = new NodeHandlerRegistry();
+BuiltInHandlers.registerAll(handlers);
+BusinessActivityRegistry activities = new BusinessActivityRegistry();
+activities.register("createLeaveRequest", in -> Map.<String,Object>of("requestId", "REQ-1"));
+activities.register("notifyManager", in -> Map.<String,Object>of("notified", true));
+
+try (WorkflowEngine engine =
+        WorkflowEngine.connect(EngineConfig.of("localhost:7233", "MY_QUEUE"))
+                .withWorker(handlers, activities)) {           // 起 worker
+
+    WorkflowHandle h = engine.start(definition, Map.of("employee", "alice"));  // 发起
+    h.signal("approval", approvedPayload);                     // 发审批 signal（payload 是 Jackson JsonNode）
+    WorkflowResult result = h.awaitResult();                  // 等结果
+    System.out.println(result.finalStatus() + " @ " + result.finalNodeId());
+}
+```
+
+- `EngineConfig(target, namespace, taskQueue)` 用纯 String 配置；`EngineConfig.of(target, queue)` 用 `default` namespace。
+- `withWorker(handlers, activities[, archive][, interceptors])` 注册并启动 worker。
+- `WorkflowHandle`：`signal(name, payload[, eventId])` / `query()` / `awaitResult()`；`engine.attach(workflowId)` 可附着到已运行的实例。
+- `WorkflowEngine` 是 `AutoCloseable`，try-with-resources 自动关 worker + 连接。
+
+> Temporal 仍是**运行时依赖**（jar 在 classpath、server 要起）；门面只是隐藏 API 表面，让业务代码编译期 0 碰 `io.temporal.*`。下面的「手动」写法展示门面底层做了什么。
+
+---
+
+## 最小可工作示例（手动 worker/client，底层写法）
 
 业务：员工请假，主管审批，通过则通知。
 
