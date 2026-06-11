@@ -71,16 +71,25 @@ public final class ServiceTaskHandler implements NodeHandler<ServiceTaskConfig> 
             return NodeResult.waiting();
         }
         JsonNode payload = event.payload();
-        String status = payload == null ? null : payload.path("status").asText(null);
+        if (payload == null) {
+            // No payload means the runtime delivered the result event without status detail;
+            // equivalent to a missing status field, which is treated as failure below.
+            return NodeResult.failed("activity failed");
+        }
+        String status = payload.path("status").asText(null);
         if ("success".equalsIgnoreCase(status)) {
-            JsonNode outputNode = payload == null ? null : payload.get("output");
+            JsonNode outputNode = payload.get("output");
+            // Propagate the activity's output into the NodeResult payload so downstream nodes
+            // can read it via ${results['nodeId'].output} in condition expressions.
             if (outputNode != null && !outputNode.isNull()) {
                 return NodeResult.completed(Outcomes.SUCCESS, Map.of("output", outputNode));
             }
             return NodeResult.completed(Outcomes.SUCCESS);
         }
-        String message = payload == null ? null : payload.path("message").asText("activity failed");
-        if (message == null || message.isEmpty()) {
+        // Any non-success status (or missing status field) is treated as failure. The runtime
+        // message takes priority over the generic fallback to preserve the root-cause detail.
+        String message = payload.path("message").asText("activity failed");
+        if (message.isEmpty()) {
             message = "activity failed";
         }
         return NodeResult.failed(message);

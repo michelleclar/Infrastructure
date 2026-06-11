@@ -91,17 +91,22 @@ public final class ConditionEvaluator {
         if ("false".equalsIgnoreCase(trimmed)) {
             return false;
         }
+        // Anything that isn't wrapped in ${...} is not a recognized expression form and is
+        // rejected rather than treated as a truthy string, preventing silent misconfiguration.
         if (!trimmed.startsWith("${") || !trimmed.endsWith("}")) {
             return false;
         }
 
         // Backward-compat short-circuit: bare ${identifier} reads from variables map.
-        // This must be handled before delegating to EL because such identifiers are not
-        // registered as EL top-level variables.
+        // This must run before the EL engine because the EL context only registers the four
+        // aggregate names (variables/businessData/results/ctx); a plain ${myVar} would be an
+        // unresolvable EL variable and would silently evaluate to null -> false.
         var bareMatch = BARE_IDENT.matcher(trimmed);
         if (bareMatch.matches()) {
             String name = bareMatch.group(1);
-            // Reject reserved EL top-level names to avoid surprises.
+            // Reserved names are the EL top-level variables themselves; falling through to the EL
+            // engine for these lets expressions like ${variables} (unusual but not illegal) work
+            // correctly rather than triggering a map lookup on "variables" as a key.
             if (!"variables".equals(name)
                     && !"businessData".equals(name)
                     && !"results".equals(name)
@@ -144,6 +149,15 @@ public final class ConditionEvaluator {
         }
     }
 
+    /**
+     * Loosely converts an EL evaluation result to a boolean.
+     *
+     * <p>Rules: {@code null} → false; {@code Boolean} → exact value; {@link Number} → non-zero;
+     * {@link String} → case-insensitive {@code "true"}. Everything else → false. The Number branch
+     * exists because EL arithmetic expressions (e.g. {@code ${ctx.score gt 5}}) produce numeric
+     * results in some EL implementations, and treating non-zero as truthy matches standard
+     * JavaScript / EL coercion semantics.
+     */
     private static boolean toBoolean(Object v) {
         if (v == null) {
             return false;

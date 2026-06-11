@@ -101,7 +101,7 @@ final class WorkflowInterpreter {
             NodeDefinition node = graph.node(currentNodeId);
             @SuppressWarnings("unchecked")
             NodeHandler<Object> handler = (NodeHandler<Object>) registry.lookup(node.type());
-            Object config = NodeConfigCodec.decode(mapper, handler, node.type(), node.config());
+            Object config = NodeConfigCodec.decode(mapper, handler, node.config());
 
             fireHook(HookPhases.NODE_ENTER, node, null, null, null);
 
@@ -135,7 +135,8 @@ final class WorkflowInterpreter {
         }
     }
 
-    private WorkflowResult terminate(String currentNodeId, NodeResult lastResult, NodeDefinition node) {
+    private WorkflowResult terminate(
+            String currentNodeId, NodeResult lastResult, NodeDefinition node) {
         this.finished = true;
         WorkflowResult result = buildResult(currentNodeId, lastResult);
         ops.archive(result);
@@ -172,7 +173,7 @@ final class WorkflowInterpreter {
     private NodeResult executeChild(NodeDefinition childNode, String qualifier) {
         @SuppressWarnings("unchecked")
         NodeHandler<Object> handler = (NodeHandler<Object>) registry.lookup(childNode.type());
-        Object config = NodeConfigCodec.decode(mapper, handler, childNode.type(), childNode.config());
+        Object config = NodeConfigCodec.decode(mapper, handler, childNode.config());
         return executeNode(childNode, qualifier, handler, config);
     }
 
@@ -204,10 +205,14 @@ final class WorkflowInterpreter {
     }
 
     private NodeResult driveActivity(
-            NodeHandler<Object> handler, Object config, Map<String, Object> payload, NodeDefinition node) {
+            NodeHandler<Object> handler,
+            Object config,
+            Map<String, Object> payload,
+            NodeDefinition node) {
         String activityName = String.valueOf(payload.get(RuntimeIntents.ACTIVITY));
         @SuppressWarnings("unchecked")
-        Map<String, Object> input = (Map<String, Object>) payload.get(RuntimeIntents.ACTIVITY_INPUT);
+        Map<String, Object> input =
+                (Map<String, Object>) payload.get(RuntimeIntents.ACTIVITY_INPUT);
 
         ActivityResult result = ops.runActivity(activityName, input);
 
@@ -220,19 +225,27 @@ final class WorkflowInterpreter {
             eventPayload.put("output", result.output());
         }
         JsonNode eventJson = mapper.valueToTree(eventPayload);
-        WorkflowEvent event = new WorkflowEvent(ServiceTaskHandler.ACTIVITY_RESULT_EVENT, eventJson);
+        WorkflowEvent event =
+                new WorkflowEvent(ServiceTaskHandler.ACTIVITY_RESULT_EVENT, eventJson);
         return deliver(handler, config, event, node);
     }
 
     private NodeResult driveTimer(
-            NodeHandler<Object> handler, Object config, Map<String, Object> payload, NodeDefinition node) {
+            NodeHandler<Object> handler,
+            Object config,
+            Map<String, Object> payload,
+            NodeDefinition node) {
         Duration duration = parseDurationOrThrow(payload.get(RuntimeIntents.DURATION));
         ops.sleep(duration);
-        return deliver(handler, config, new WorkflowEvent(TimerTaskHandler.FIRED_EVENT, null), node);
+        return deliver(
+                handler, config, new WorkflowEvent(TimerTaskHandler.FIRED_EVENT, null), node);
     }
 
     private NodeResult driveAwait(
-            NodeHandler<Object> handler, Object config, Map<String, Object> payload, NodeDefinition node) {
+            NodeHandler<Object> handler,
+            Object config,
+            Map<String, Object> payload,
+            NodeDefinition node) {
         Object awaitObj = payload.get(RuntimeIntents.AWAIT_EVENT);
         if (awaitObj == null) {
             return NodeResult.failed("await intent missing event name");
@@ -253,13 +266,19 @@ final class WorkflowInterpreter {
         if (outcome.timedOut()) {
             ctx.setCurrentNodeId(capturedNodeId);
             return deliver(
-                    handler, config, new WorkflowEvent(resolveTimeoutEventName(handler), null), node);
+                    handler,
+                    config,
+                    new WorkflowEvent(resolveTimeoutEventName(handler), null),
+                    node);
         }
         return NodeResult.waiting();
     }
 
     private NodeResult driveSubProcess(
-            NodeHandler<Object> handler, Object config, Map<String, Object> payload, NodeDefinition node) {
+            NodeHandler<Object> handler,
+            Object config,
+            Map<String, Object> payload,
+            NodeDefinition node) {
         String subWorkflowId = String.valueOf(payload.get(RuntimeIntents.SUB_WORKFLOW_ID));
         String childDefJsonString = (String) payload.get(RuntimeIntents.SUB_DEFINITION_JSON);
         if (childDefJsonString == null || childDefJsonString.isBlank()) {
@@ -274,7 +293,8 @@ final class WorkflowInterpreter {
         }
 
         @SuppressWarnings("unchecked")
-        Map<String, Object> rawSubInput = (Map<String, Object>) payload.get(RuntimeIntents.SUB_INPUT);
+        Map<String, Object> rawSubInput =
+                (Map<String, Object>) payload.get(RuntimeIntents.SUB_INPUT);
 
         String idHint = ctx.currentNodeId() + "/" + ctx.nextVisitCount(ctx.currentNodeId());
         WorkflowResult childResult = ops.runSubProcess(childDefinition, rawSubInput, idHint);
@@ -293,11 +313,11 @@ final class WorkflowInterpreter {
     }
 
     /**
-     * Drive a taskGroup. The interpreter owns the join policy: it parses children, fans them out via
-     * {@link RuntimeOps#fanOut} (the adapter's concurrency primitive), then loops — recording each
-     * completed child and asking the taskGroup handler ({@code onEvent} via {@link #deliver}) whether
-     * the group is done. A non-WAITING aggregate short-circuits: the still-pending children are
-     * cancelled and their (CANCELLED) results drained for caller inspection.
+     * Drive a taskGroup. The interpreter owns the join policy: it parses children, fans them out
+     * via {@link RuntimeOps#fanOut} (the adapter's concurrency primitive), then loops — recording
+     * each completed child and asking the taskGroup handler ({@code onEvent} via {@link #deliver})
+     * whether the group is done. A non-WAITING aggregate short-circuits: the still-pending children
+     * are cancelled and their (CANCELLED) results drained for caller inspection.
      */
     private NodeResult driveTaskGroup(
             NodeHandler<Object> handler,
@@ -439,7 +459,10 @@ final class WorkflowInterpreter {
         if (!interceptors.deterministic().isEmpty()) {
             InterceptorContext ictx =
                     new SimpleInterceptorContext(
-                            ctx.workflowId(), ctx.instanceId(), ctx.definitionId(), ctx.businessData());
+                            ctx.workflowId(),
+                            ctx.instanceId(),
+                            ctx.definitionId(),
+                            ctx.businessData());
             for (DeterministicInterceptor di : interceptors.deterministic()) {
                 try {
                     switch (phase) {

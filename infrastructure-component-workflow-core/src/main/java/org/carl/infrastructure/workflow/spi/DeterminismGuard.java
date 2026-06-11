@@ -25,7 +25,7 @@ import java.util.Set;
  * </ul>
  *
  * <p>It also has false positives: a handler that contains the string literal {@code
- * "java/lang/System"} or whose constant pool happens to mention a forbidden type for benign reasons
+ * "java/util/Random"} or whose constant pool happens to mention a forbidden type for benign reasons
  * (e.g. a {@code Class} reference used only in a comment-equivalent constant) will be flagged.
  * {@code DeterminismGuard} is intended to complement — not replace — code review.
  *
@@ -40,12 +40,23 @@ import java.util.Set;
  */
 public final class DeterminismGuard {
 
-    /** Forbidden JDK types whose presence in a handler's constant pool is highly suspicious. */
+    /**
+     * Forbidden JDK types whose presence in a handler's constant pool is highly suspicious.
+     *
+     * <p>The set targets sources of non-determinism relevant to workflow replay: wall-clock time
+     * ({@code Date}, {@code Clock}), randomness ({@code UUID}, {@code Random},
+     * {@code SecureRandom}), network I/O ({@code HttpClient}), and blocking filesystem/database
+     * access ({@code File*}, {@code Connection}, {@code DriverManager}). All side-effectful
+     * operations must instead be delegated through {@code RuntimeIntents.ACTIVITY}.
+     *
+     * <p>{@code java.lang.System} is deliberately absent: a type-level hit would also flag benign
+     * uses such as {@code System.arraycopy} or identity hash codes. Its unsafe members
+     * ({@code currentTimeMillis}/{@code nanoTime}) are covered by {@link #FORBIDDEN_METHODS}.
+     */
     public static final Set<String> FORBIDDEN_TYPES =
             Set.of(
                     "java.util.Date",
                     "java.time.Clock",
-                    "java.lang.System",
                     "java.util.UUID",
                     "java.util.Random",
                     "java.security.SecureRandom",
@@ -57,8 +68,13 @@ public final class DeterminismGuard {
                     "java.sql.DriverManager");
 
     /**
-     * Forbidden methods in the form {@code fully.qualified.Type#method}. Listed for documentation
-     * and finer-grained diagnostics when a forbidden type alone is too coarse.
+     * Forbidden methods in the form {@code fully.qualified.Type#method}.
+     *
+     * <p>Checked at a finer granularity than {@link #FORBIDDEN_TYPES} for cases where the type
+     * itself is not universally suspicious (e.g. {@code java.lang.System} is also used for
+     * identity hash codes, which are benign) but specific methods on it are not safe in a
+     * deterministic replay. {@code Thread#sleep} is listed because spinning/blocking inside a
+     * handler breaks Temporal's event-loop threading model.
      */
     public static final Set<String> FORBIDDEN_METHODS =
             Set.of(
@@ -101,12 +117,15 @@ public final class DeterminismGuard {
         Set<String> referencedMethods = pool.referencedMethods();
 
         for (String forbidden : FORBIDDEN_TYPES) {
+            // The constant pool stores class names in internal (slash-separated) form.
             String internal = forbidden.replace('.', '/');
             if (referencedClasses.contains(internal)) {
                 violations.add("references forbidden type " + forbidden);
             }
         }
         for (String forbidden : FORBIDDEN_METHODS) {
+            // Reconstruct the "owner#methodName" key that referencedMethods() emits, converting
+            // the dot-separated class name to internal slash form to match the bytecode.
             int hash = forbidden.indexOf('#');
             String owner = forbidden.substring(0, hash).replace('.', '/');
             String name = forbidden.substring(hash + 1);
@@ -194,6 +213,7 @@ public final class DeterminismGuard {
                 }
                 in.readUnsignedShort(); // minor
                 in.readUnsignedShort(); // major
+                // cpCount is one greater than the actual number of entries; index 0 is reserved.
                 int cpCount = in.readUnsignedShort();
                 ConstantPool pool = new ConstantPool(cpCount);
                 int i = 1;
@@ -212,7 +232,9 @@ public final class DeterminismGuard {
                         case CONSTANT_Integer, CONSTANT_Float -> in.readInt();
                         case CONSTANT_Long, CONSTANT_Double -> {
                             in.readLong();
-                            i++; // longs/doubles take two slots
+                            // Long/Double constants occupy two consecutive constant-pool slots.
+                            // The JVM spec §4.4.5 explicitly requires incrementing the index twice.
+                            i++;
                         }
                         case CONSTANT_Class -> pool.classNameIndex[i] = in.readUnsignedShort();
                         case CONSTANT_String -> in.readUnsignedShort();
@@ -264,10 +286,13 @@ public final class DeterminismGuard {
             for (int i = 1; i < methodClassIndex.length; i++) {
                 int classRef = methodClassIndex[i];
                 int natRef = methodNameAndType[i];
+                // Skip slots that were not populated as Methodref/InterfaceMethodref entries.
                 if (classRef <= 0 || natRef <= 0) continue;
                 if (classRef >= classNameIndex.length || natRef >= nameAndTypeNameIndex.length) {
                     continue;
                 }
+                // Two-level indirection: Methodref → Class → Utf8 for the owner name,
+                // and Methodref → NameAndType → Utf8 for the method name.
                 int ownerNameIdx = classNameIndex[classRef];
                 int methodNameIdx = nameAndTypeNameIndex[natRef];
                 if (ownerNameIdx <= 0 || methodNameIdx <= 0) continue;

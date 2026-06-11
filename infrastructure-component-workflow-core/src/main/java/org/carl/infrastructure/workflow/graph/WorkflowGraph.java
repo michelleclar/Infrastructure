@@ -111,6 +111,12 @@ public final class WorkflowGraph {
 
     // ----- routing -----
 
+    /**
+     * Returns outgoing edges from {@code currentNodeId} that satisfy {@code match}.
+     *
+     * <p>Does not evaluate {@link EdgeDefinition#when()} guards — callers must filter the returned
+     * list with their own execution context if guard expressions are relevant.
+     */
     @SuppressWarnings("deprecation")
     public List<EdgeDefinition> nextCandidates(String currentNodeId, EdgeMatch match) {
         Objects.requireNonNull(match, "match");
@@ -140,6 +146,11 @@ public final class WorkflowGraph {
         throw new IllegalStateException("Unsupported EdgeMatch: " + match);
     }
 
+    /**
+     * Returns {@code true} if at least one outgoing edge from {@code currentNodeId} matches the
+     * event name. This is a graph-layer check only — it does not invoke any handler's
+     * {@link org.carl.infrastructure.workflow.spi.NodeHandler#canAccept canAccept} method.
+     */
     public boolean canAccept(String currentNodeId, WorkflowEvent event) {
         Objects.requireNonNull(event, "event");
         return !nextCandidates(currentNodeId, EdgeMatch.byEvent(event.name())).isEmpty();
@@ -250,6 +261,8 @@ public final class WorkflowGraph {
                     continue;
                 }
                 if (!state.indexOf.containsKey(w)) {
+                    // First time we see this target: assign DFS metadata and descend by pushing a
+                    // new frame instead of making a recursive call.
                     state.indexOf.put(w, state.index);
                     state.lowlink.put(w, state.index);
                     state.index++;
@@ -257,6 +270,8 @@ public final class WorkflowGraph {
                     state.onStack.add(w);
                     stack.push(new Frame(w, iteratorOf(w)));
                 } else if (state.onStack.contains(w)) {
+                    // Back-edge to an active node: propagate the target's discovery index into the
+                    // current frame's lowlink value.
                     state.lowlink.put(
                             frame.nodeId,
                             Math.min(state.lowlink.get(frame.nodeId), state.indexOf.get(w)));
@@ -264,6 +279,8 @@ public final class WorkflowGraph {
             } else {
                 stack.pop();
                 if (state.lowlink.get(frame.nodeId).equals(state.indexOf.get(frame.nodeId))) {
+                    // A root node closes one strongly-connected component. Pop the Tarjan stack
+                    // until the root is removed; the popped nodes form one SCC.
                     List<String> scc = new ArrayList<>();
                     String w;
                     do {
@@ -274,6 +291,7 @@ public final class WorkflowGraph {
                     state.sccs.add(scc);
                 }
                 if (!stack.isEmpty()) {
+                    // We have finished a child frame; merge its lowlink into the parent frame.
                     String parent = stack.peek().nodeId;
                     state.lowlink.put(
                             parent,
@@ -313,6 +331,12 @@ public final class WorkflowGraph {
 
     // ----- start / end -----
 
+    /**
+     * Returns all nodes that have no <em>external</em> incoming edges (self-loops are excluded from
+     * the "incoming" count). A non-empty set is not guaranteed to contain exactly one element; if
+     * the workflow has multiple independent entry points the caller must disambiguate via an explicit
+     * {@link WorkflowDefinition#startNodeId()}.
+     */
     public Set<String> startNodes() {
         Set<String> starts = new LinkedHashSet<>();
         for (String id : nodesById.keySet()) {
@@ -362,6 +386,12 @@ public final class WorkflowGraph {
                         + " topological start node(s); set startNodeId");
     }
 
+    /**
+     * Returns all nodes considered terminal: either their type is {@code endTask}, or they have no
+     * outgoing edges. Both criteria are included because a node can be declared as {@code endTask}
+     * but still carry edges (unusual but valid), and a leaf node in any other type should also be
+     * treated as a workflow boundary.
+     */
     public Set<String> endNodes() {
         Set<String> ends = new LinkedHashSet<>();
         for (Map.Entry<String, NodeDefinition> entry : nodesById.entrySet()) {

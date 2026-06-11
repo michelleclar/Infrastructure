@@ -78,6 +78,8 @@ public final class UserTaskHandler implements NodeHandler<UserTaskConfig> {
         if (event == null) {
             return false;
         }
+        // Timeout is accepted before the awaitEvent check — mirrors ApprovalTaskHandler to ensure
+        // _timeout is never silently dropped even if the awaitEvent name changed.
         if (TIMEOUT_EVENT.equals(event.name())) {
             return true;
         }
@@ -127,6 +129,7 @@ public final class UserTaskHandler implements NodeHandler<UserTaskConfig> {
         if (decision == null) {
             return NodeResult.failed("user task event missing 'decision' field");
         }
+        // Normalise to lower-case so clients can send "Completed", "CANCELLED", etc.
         switch (decision.trim().toLowerCase()) {
             case "completed":
                 return NodeResult.completed(Outcomes.COMPLETED);

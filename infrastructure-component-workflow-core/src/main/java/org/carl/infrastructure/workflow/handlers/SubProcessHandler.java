@@ -14,7 +14,15 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-/** Built-in handler for {@code subProcess} nodes. */
+/**
+ * Built-in handler for {@code subProcess} nodes.
+ *
+ * <p>Delegates execution to a nested workflow (identified by {@link SubProcessConfig#subWorkflowId}
+ * or an inline JSON definition). The parent workflow suspends until the runtime delivers {@value
+ * #COMPLETED_EVENT} carrying a {@code subOutcome} field. The outcome can be remapped via {@link
+ * SubProcessConfig#outcomeMapping()} so child-workflow-specific outcomes are translated into
+ * parent-workflow outcomes without coupling the two definitions.
+ */
 public final class SubProcessHandler implements NodeHandler<SubProcessConfig> {
 
     /** Internal completion event delivered by the runtime when the sub-workflow finishes. */
@@ -67,6 +75,9 @@ public final class SubProcessHandler implements NodeHandler<SubProcessConfig> {
         if (subOutcome == null || subOutcome.isBlank()) {
             return NodeResult.failed("subProcess completion missing 'subOutcome'");
         }
+        // Start with the sub-process's own outcome; remap only when a non-blank override exists.
+        // Absent or blank mapping entries leave the sub-process outcome unchanged, so partial
+        // mapping tables work without having to enumerate every possible child outcome.
         String mapped = subOutcome;
         if (cfg != null && cfg.outcomeMapping() != null) {
             String override = cfg.outcomeMapping().get(subOutcome);

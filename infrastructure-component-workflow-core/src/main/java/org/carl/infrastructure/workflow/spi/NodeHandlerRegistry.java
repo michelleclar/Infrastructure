@@ -72,6 +72,11 @@ public final class NodeHandlerRegistry {
         putHandler(type, handler);
     }
 
+    /**
+     * Returns the handler for {@code type}.
+     *
+     * @throws IllegalArgumentException if no handler is registered for the given type
+     */
     public NodeHandler<?> lookup(String type) {
         Objects.requireNonNull(type, "type");
         NodeHandler<?> handler = handlers.get(type);
@@ -81,6 +86,7 @@ public final class NodeHandlerRegistry {
         return handler;
     }
 
+    /** Returns the handler for {@code type}, or {@link Optional#empty()} if absent. */
     public Optional<NodeHandler<?>> find(String type) {
         if (type == null) {
             return Optional.empty();
@@ -88,6 +94,7 @@ public final class NodeHandlerRegistry {
         return Optional.ofNullable(handlers.get(type));
     }
 
+    /** Returns an unmodifiable snapshot of all currently registered type strings. */
     public Set<String> registeredTypes() {
         return Collections.unmodifiableSet(handlers.keySet());
     }

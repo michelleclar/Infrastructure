@@ -12,7 +12,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-/** Built-in handler for {@code eventTask} nodes. */
+/**
+ * Built-in handler for {@code eventTask} nodes.
+ *
+ * <p>Suspends execution until the runtime delivers the named event (or a {@value #TIMEOUT_EVENT}).
+ * Unlike {@code approvalTask}, this handler carries no {@code decision} field — the sole outcome
+ * on a successful signal is {@link org.carl.infrastructure.workflow.spi.Outcomes#RECEIVED}.
+ */
 public final class EventTaskHandler implements NodeHandler<EventTaskConfig> {
 
     /** Internal timeout event delivered by the runtime. */
@@ -53,6 +59,7 @@ public final class EventTaskHandler implements NodeHandler<EventTaskConfig> {
         if (event == null) {
             return false;
         }
+        // Timeout is checked first — same priority rule as approval/user task handlers.
         if (TIMEOUT_EVENT.equals(event.name())) {
             return true;
         }

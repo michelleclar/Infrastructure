@@ -1,10 +1,6 @@
 package org.carl.infrastructure.workflow.engine;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotSame;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,7 +16,7 @@ import java.util.List;
 
 /**
  * Pure-Java unit tests for {@link NodeConfigCodec} — <strong>no Temporal runtime involved</strong>.
- * Covers DSL-shape normalisation (taskGroup join object → bare string) and typed config decoding,
+ * Covers DSL-shape normalization (taskGroup join object → bare string) and typed config decoding,
  * logic that used to live inside the Temporal adapter.
  */
 class NodeConfigCodecTest {
@@ -70,7 +66,7 @@ class NodeConfigCodecTest {
                         List.of());
         WorkflowDefinition out = NodeConfigCodec.normalizeDefinition(def);
         assertNotSame(def, out);
-        assertEquals("any", out.nodes().get(0).config().get("join").asText());
+        assertEquals("any", out.nodes().getFirst().config().get("join").asText());
     }
 
     // ---- decode -------------------------------------------------------------
@@ -80,8 +76,8 @@ class NodeConfigCodecTest {
         JsonNode cfg = MAPPER.readTree("{\"activity\":\"createLeave\"}");
         Object decoded =
                 NodeConfigCodec.decode(
-                        MAPPER, new ServiceTaskHandler(), NodeTypes.SERVICE_TASK, cfg);
-        assertTrue(decoded instanceof ServiceTaskConfig);
+                        MAPPER, new ServiceTaskHandler(), cfg);
+        assertInstanceOf(ServiceTaskConfig.class, decoded);
         assertEquals("createLeave", ((ServiceTaskConfig) decoded).activity());
     }
 
@@ -91,8 +87,8 @@ class NodeConfigCodecTest {
         // rather than throwing.
         Object decoded =
                 NodeConfigCodec.decode(
-                        MAPPER, new ServiceTaskHandler(), NodeTypes.SERVICE_TASK, null);
-        assertTrue(decoded instanceof ServiceTaskConfig);
+                        MAPPER, new ServiceTaskHandler(), null);
+        assertInstanceOf(ServiceTaskConfig.class, decoded);
         assertNull(((ServiceTaskConfig) decoded).activity());
     }
 }

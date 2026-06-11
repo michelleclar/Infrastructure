@@ -67,7 +67,9 @@ class DeterminismGuardTest {
         // sanity: make sure constants weren't accidentally cleared.
         assertFalse(DeterminismGuard.FORBIDDEN_TYPES.isEmpty());
         assertFalse(DeterminismGuard.FORBIDDEN_METHODS.isEmpty());
-        assertTrue(DeterminismGuard.FORBIDDEN_TYPES.contains("java.lang.System"));
+        // java.lang.System is deliberately NOT type-level forbidden (System.arraycopy etc. are
+        // benign); its unsafe members are covered at method granularity instead.
+        assertFalse(DeterminismGuard.FORBIDDEN_TYPES.contains("java.lang.System"));
         assertTrue(
                 DeterminismGuard.FORBIDDEN_METHODS.contains("java.lang.System#currentTimeMillis"));
     }

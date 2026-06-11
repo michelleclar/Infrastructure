@@ -40,6 +40,7 @@ public final class GatewayHandler implements NodeHandler<GatewayConfig> {
         if (config != null && config.branches() != null) {
             for (GatewayConfig.Branch branch : config.branches()) {
                 if (branch == null) continue;
+                // First-match wins: branches are evaluated in declaration order.
                 if (ConditionEvaluator.evaluate(branch.when(), ctx)) {
                     if (branch.outcome() == null || branch.outcome().isBlank()) {
                         return NodeResult.failed("matched branch has blank outcome");
@@ -48,6 +49,8 @@ public final class GatewayHandler implements NodeHandler<GatewayConfig> {
                 }
             }
         }
+        // Default outcome is a catch-all rather than an explicit branch so it doesn't have a
+        // condition; it fires when no condition-based branch matched.
         if (config != null
                 && config.defaultOutcome() != null
                 && !config.defaultOutcome().isBlank()) {

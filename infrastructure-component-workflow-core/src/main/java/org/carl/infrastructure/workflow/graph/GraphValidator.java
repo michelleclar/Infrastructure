@@ -53,8 +53,8 @@ public final class GraphValidator {
 
         // 1. id and name. The record constructor already enforces non-null/non-blank, so this
         // is technically belt-and-braces; we still include the check so that a caller passing
-        // a partially constructed definition via reflection or json edge case gets a clean
-        // error message.
+        // a partially-constructed or deserialized definition that bypassed the canonical
+        // constructor gets a clean, actionable error instead of a later NPE.
         if (definition.id() == null || definition.id().isBlank()) {
             errors.add("workflow id must not be blank");
         }
@@ -96,6 +96,10 @@ public final class GraphValidator {
             }
             if (edge.from().equals(edge.to()) && validNodeIds.contains(edge.from())) {
                 NodeDefinition node = findNode(definition, edge.from());
+                // timerTask uses a self-loop as its canonical "wait for fire" pattern — it is
+                // not a design error. All other node types having a self-loop are unusual enough
+                // to deserve a warning, but we don't block deployment because back-edges on
+                // retry/escalation flows are sometimes intentional.
                 if (node == null || !NodeTypes.TIMER_TASK.equals(node.type())) {
                     warnings.add("self-loop edge on node: " + edge.from());
                 }
@@ -118,8 +122,8 @@ public final class GraphValidator {
                                     + ") has no handler registered");
                     continue;
                 }
-                List<String> configErrors = validateNodeConfig(node, registry);
-                errors.addAll(configErrors);
+                // Reuse the handler we just looked up instead of re-querying the registry.
+                errors.addAll(validateConfigBinding(node, handler.get()));
             }
         }
 
@@ -138,10 +142,10 @@ public final class GraphValidator {
         // 8. start node resolution
         //    - explicit definition.startNodeId() takes precedence; if set it must reference an
         //      existing node. The "zero incoming" constraint is dropped so back-edges to the
-        //      start are legal.
+        //      start (e.g. rejection loops that re-enter the first step) are legal.
         //    - otherwise we fall back to topology: at least one node with no incoming edges must
         //      exist. Multiple potential starts -> warning (the runtime will refuse to pick
-        //      without an explicit hint). Zero potential starts -> error.
+        //      without an explicit hint). Zero potential starts -> error (all-cycle graph).
         String explicitStart = definition.startNodeId();
         Set<String> topologicalStarts = graph.startNodes();
         Set<String> reachabilityRoots;
@@ -166,7 +170,9 @@ public final class GraphValidator {
         }
         if (definition.edges().isEmpty() && definition.nodes().size() > 1) {
             // Multiple nodes but zero edges -> every node is a "start" and an "end" and
-            // is isolated. Single-node workflows are legitimate (handler-only flows).
+            // is isolated. Single-node workflows are legitimate (handler-only flows). With
+            // more than one node and no edges, control flow can never leave the start node,
+            // making all other nodes permanently unreachable.
             errors.add("workflow has multiple isolated nodes (no edges); flow is unreachable");
         }
 
@@ -176,8 +182,10 @@ public final class GraphValidator {
                     "workflow must contain at least one end node (no outgoing edges or type=endTask)");
         }
 
-        // 10. unreachable nodes -> warning. Use the explicit start as the sole root when set;
-        // otherwise the union of all topology-derived starts.
+        // 10. unreachable nodes -> warning only (not an error), because unreachable nodes may be
+        // intentional dead branches kept for documentation or staged rollout. The runtime will
+        // simply never visit them. Use the explicit start as the sole root when set; otherwise
+        // take the union of all topology-derived starts as BFS roots.
         if (!reachabilityRoots.isEmpty()) {
             Set<String> reachable = new HashSet<>();
             for (String start : reachabilityRoots) {
@@ -190,7 +198,9 @@ public final class GraphValidator {
             }
         }
 
-        // 11. cycles -> warning
+        // 11. cycles -> warning only. Cycles are legal in workflows that implement retry, escalation,
+        // or recurring timer patterns. Flagging them helps reviewers spot unintentional back-edges
+        // without blocking valid definitions.
         for (List<String> cycle : graph.detectCycles()) {
             warnings.add("cycle detected: " + String.join(" -> ", cycle));
         }
@@ -214,16 +224,21 @@ public final class GraphValidator {
             return List.of(
                     "node " + node.id() + " (" + node.type() + ") has no handler registered");
         }
-        NodeHandler<?> handler = handlerOpt.get();
+        return validateConfigBinding(node, handlerOpt.get());
+    }
+
+    /** Config-binding check against an already-resolved handler (no registry lookup). */
+    private static List<String> validateConfigBinding(NodeDefinition node, NodeHandler<?> handler) {
         Class<?> configType = handler.configType();
         if (configType == null || configType == Void.class) {
             return List.of();
         }
         JsonNode configNode = node.config();
         if (configNode == null || configNode.isNull() || configNode.isMissingNode()) {
-            // A handler that asks for a real config type, but the definition gives no config,
-            // should not silently pass. We still attempt the conversion below to let Jackson
-            // produce its own diagnostic (some types accept the empty input).
+            // A handler that declares a real config type but receives no config should not
+            // silently pass. Substitute an empty object so Jackson's deserialization runs and
+            // produces its own diagnostic (e.g. missing required fields). Some config records
+            // have all-optional fields and will succeed on an empty object, which is fine.
             configNode = MAPPER.createObjectNode();
         }
         try {

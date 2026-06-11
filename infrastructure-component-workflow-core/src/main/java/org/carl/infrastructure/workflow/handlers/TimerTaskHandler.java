@@ -12,7 +12,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-/** Built-in handler for {@code timerTask} nodes. */
+/**
+ * Built-in handler for {@code timerTask} nodes.
+ *
+ * <p>Suspends execution until the runtime fires the timer (via {@value #FIRED_EVENT}) or an
+ * explicit cancellation arrives (via {@value #CANCEL_EVENT}). The duration is communicated to the
+ * runtime through {@link RuntimeIntents#DURATION} in the {@code run} result payload; the handler
+ * itself never starts a timer — that is the runtime's responsibility.
+ */
 public final class TimerTaskHandler implements NodeHandler<TimerTaskConfig> {
 
     /** Internal event delivered when the timer fires. */

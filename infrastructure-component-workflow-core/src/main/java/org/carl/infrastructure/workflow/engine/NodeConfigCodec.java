@@ -16,8 +16,8 @@ import java.util.List;
  * Platform-independent normalisation and decoding of node {@code config} JSON.
  *
  * <p>Extracted from the Temporal adapter ({@code GenericWorkflowImpl}) so config handling can be
- * unit-tested without a Temporal runtime. All methods are pure functions over Jackson trees and
- * the {@link NodeHandler} contract; they perform no I/O and call no Temporal API.
+ * unit-tested without a Temporal runtime. All methods are pure functions over Jackson trees and the
+ * {@link NodeHandler} contract; they perform no I/O and call no Temporal API.
  */
 public final class NodeConfigCodec {
 
@@ -94,13 +94,12 @@ public final class NodeConfigCodec {
      * @param mapper the Jackson mapper to bind with (passed in rather than held statically so this
      *     stays a pure function and carries no Temporal/runtime dependency)
      */
-    public static Object decode(
-            ObjectMapper mapper, NodeHandler<?> handler, String nodeType, JsonNode rawConfig) {
+    public static Object decode(ObjectMapper mapper, NodeHandler<?> handler, JsonNode rawConfig) {
         Class<?> configType = handler.configType();
         if (configType == null || configType == Void.class) {
             return null;
         }
-        JsonNode normalized = normalizeConfig(nodeType, rawConfig);
+        JsonNode normalized = normalizeConfig(handler.type(), rawConfig);
         if (normalized == null || normalized.isNull() || normalized.isMissingNode()) {
             normalized = mapper.createObjectNode();
         }
@@ -108,7 +107,11 @@ public final class NodeConfigCodec {
             return mapper.treeToValue(normalized, configType);
         } catch (Exception e) {
             throw new IllegalStateException(
-                    "Failed to decode config for node type " + nodeType + ": " + e.getMessage(), e);
+                    "Failed to decode config for node type "
+                            + handler.type()
+                            + ": "
+                            + e.getMessage(),
+                    e);
         }
     }
 }

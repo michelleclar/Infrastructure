@@ -23,14 +23,24 @@ import java.util.Objects;
  */
 public sealed interface EdgeMatch {
 
+    /**
+     * Matches outgoing edges whose {@link org.carl.infrastructure.workflow.definition.EdgeDefinition#event()}
+     * equals {@code eventName}. This is the primary routing strategy used by the event-driven
+     * runtime; outcome-based routing is handled at the runtime layer before reaching the graph.
+     */
     static EdgeMatch byEvent(String eventName) {
         return new ByEvent(eventName);
     }
 
+    /**
+     * Matches outgoing edges whose {@link org.carl.infrastructure.workflow.definition.EdgeDefinition#outcome()}
+     * equals {@code outcome}. See {@link ByOutcome} for the deprecation note.
+     */
     static EdgeMatch byOutcome(String outcome) {
         return new ByOutcome(outcome);
     }
 
+    /** Matches all outgoing edges unconditionally; used for reachability traversal. */
     static EdgeMatch any() {
         return Any.INSTANCE;
     }

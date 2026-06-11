@@ -160,7 +160,13 @@ public final class FlowDef {
         joinSpecs.put(nodeName, spec);
     }
 
-    /** Called by {@link FlowFrom#join} to ensure the node appears in nodeConfigs. */
+    /**
+     * Called by {@link FlowFrom#join} to ensure the node appears in nodeConfigs.
+     *
+     * <p>Uses {@code putIfAbsent} rather than unconditional put because the caller may have already
+     * declared the node via {@link #node(String, NodeConfig)} before invoking {@code .join()}; in
+     * that case the explicit config wins and the placeholder is ignored.
+     */
     void ensureNode(String name, NodeConfig config) {
         nodeConfigs.putIfAbsent(name, config);
     }
@@ -217,7 +223,9 @@ public final class FlowDef {
         // nodes).
         // They do NOT need a top-level NodeDefinition — keep this comment for clarity.
 
-        // Add implicit nodes from edge targets.
+        // Scan edges to discover any node that was mentioned only as a routing target and never
+        // explicitly declared. Both from() and to() are added so a node used solely as an edge
+        // source (but omitted from node()) is also captured.
         for (EdgeDefinition edge : edges) {
             allNames.add(edge.from());
             allNames.add(edge.to());
@@ -230,7 +238,9 @@ public final class FlowDef {
             String label = labels.getOrDefault(name, name);
 
             if (joinSpecs.containsKey(name)) {
-                // This node is a taskGroup with a registered join spec — compile to full JSON.
+                // This node carries a registered JoinSpec: it must be compiled into the full
+                // taskGroup JSON config rather than the flat props map, because the runtime reads
+                // join.type and tasks[] from the config field.
                 nd =
                         new NodeDefinition(
                                 name,
@@ -245,6 +255,8 @@ public final class FlowDef {
                                 name, label, cfg.type(), null, MAPPER.valueToTree(cfg.props()));
             } else {
                 // Implicit node (only appeared in an edge target) — auto-type as endTask.
+                // This covers the common pattern of writing .to("完成") without a matching
+                // flow.node("完成", endTask()).
                 nd =
                         new NodeDefinition(
                                 name, label, NodeTypes.END_TASK, null, MAPPER.createObjectNode());
@@ -293,9 +305,11 @@ public final class FlowDef {
         for (ChildNodeSpec child : spec.children()) {
             ObjectNode task = tasks.addObject();
             task.put("id", child.name());
+            // label defaults to name; the DSL currently offers no separate label for child tasks.
             task.put("label", child.name());
             if (child.nestedJoin() != null) {
-                // Recursive case: this child is itself a taskGroup.
+                // Recursive case: this child is itself a taskGroup (nested join). The runtime
+                // reads the same JSON shape recursively, so we delegate back to this method.
                 task.put("type", NodeTypes.TASK_GROUP);
                 task.set("config", buildTaskGroupConfig(child.nestedJoin()));
             } else {

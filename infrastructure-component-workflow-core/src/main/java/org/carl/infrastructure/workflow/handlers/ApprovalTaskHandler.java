@@ -86,6 +86,8 @@ public final class ApprovalTaskHandler implements NodeHandler<ApprovalTaskConfig
         if (event == null) {
             return false;
         }
+        // Timeout is accepted before the awaitEvent check: the runtime may fire _timeout even
+        // when the awaitEvent name differs (e.g. after config hot-swap), and we must not miss it.
         if (TIMEOUT_EVENT.equals(event.name())) {
             return true;
         }
@@ -137,6 +139,7 @@ public final class ApprovalTaskHandler implements NodeHandler<ApprovalTaskConfig
         if (decision == null) {
             return NodeResult.failed("approval event missing 'decision' field");
         }
+        // Normalise to lower-case so clients can send "Approved", "APPROVED", etc.
         switch (decision.trim().toLowerCase()) {
             case "approved":
                 return NodeResult.completed(Outcomes.APPROVED);

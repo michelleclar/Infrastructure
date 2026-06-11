@@ -98,7 +98,8 @@ public final class TaskGroupHandler implements NodeHandler<TaskGroupConfig> {
                 continue;
             }
             NodeResult r = null;
-            if (parent != null && ctx != null) {
+            // parent != null already implies ctx != null (parent is derived from ctx above).
+            if (parent != null) {
                 r = ctx.resultOf(TaskGroupContract.childKey(parent, child.id()));
             }
             childResults.add(r);
@@ -115,20 +116,26 @@ public final class TaskGroupHandler implements NodeHandler<TaskGroupConfig> {
             return NodeResult.completed(Outcomes.APPROVED);
         }
         if (rule == JoinRule.ALL) {
-            // Any rejection or sendback short-circuits.
+            // Under ALL, a single REJECTED child immediately fails the group — there is no
+            // point waiting for the remaining children because they cannot change the outcome.
+            // REJECTED is checked before SENDBACK so that a mix of reject+sendback resolves to
+            // the stricter result (rejection), matching typical approval-process semantics.
             for (NodeResult r : children) {
                 if (r == null) continue;
                 if (r.status() == NodeStatus.COMPLETED && Outcomes.REJECTED.equals(r.outcome())) {
                     return NodeResult.completed(Outcomes.REJECTED);
                 }
             }
+            // SENDBACK short-circuits after REJECTED: one reviewer asking to revise supersedes
+            // all pending approvals and causes the whole group to send back.
             for (NodeResult r : children) {
                 if (r == null) continue;
                 if (r.status() == NodeStatus.COMPLETED && Outcomes.SENDBACK.equals(r.outcome())) {
                     return NodeResult.completed(Outcomes.SENDBACK);
                 }
             }
-            // Otherwise require all finished and approved-ish.
+            // No early-exit outcome: require every child to be complete and approved.
+            // A null entry means the runtime has not yet delivered a result for that child.
             for (NodeResult r : children) {
                 if (r == null) {
                     return NodeResult.waiting();
@@ -143,6 +150,8 @@ public final class TaskGroupHandler implements NodeHandler<TaskGroupConfig> {
         boolean sawWaiting = false;
         for (NodeResult r : children) {
             if (r == null) {
+                // Null means the runtime has not recorded this child yet. Under ANY, an unfinished
+                // child keeps the group waiting unless another child already approved.
                 sawWaiting = true;
                 continue;
             }
@@ -151,12 +160,22 @@ public final class TaskGroupHandler implements NodeHandler<TaskGroupConfig> {
             }
         }
         if (sawWaiting) {
+            // At least one child is still running and none approved yet — keep waiting.
             return NodeResult.waiting();
         }
-        // All children finished and none approved.
+        // All children have finished and none produced an approved-like outcome: the group
+        // is collectively rejected (every child either rejected or sent back).
         return NodeResult.completed(Outcomes.REJECTED);
     }
 
+    /**
+     * Returns {@code true} for outcomes that count as "positive" for join purposes.
+     *
+     * <p>The three aliases reflect the fact that different built-in task types use different outcome
+     * names for their happy path ({@code approved} for approval tasks, {@code success} for service
+     * tasks, {@code completed} for user tasks). Treating all three as equivalent lets a mixed-type
+     * taskGroup evaluate correctly without special-casing each child type.
+     */
     private static boolean isApprovedLike(String outcome) {
         return Outcomes.APPROVED.equals(outcome)
                 || Outcomes.SUCCESS.equals(outcome)
