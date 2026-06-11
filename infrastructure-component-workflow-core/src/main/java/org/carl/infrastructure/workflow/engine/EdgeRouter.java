@@ -2,12 +2,10 @@ package org.carl.infrastructure.workflow.engine;
 
 import org.carl.infrastructure.workflow.definition.EdgeDefinition;
 import org.carl.infrastructure.workflow.definition.WorkflowDefinition;
-import org.carl.infrastructure.workflow.graph.EdgeMatch;
 import org.carl.infrastructure.workflow.graph.WorkflowGraph;
 import org.carl.infrastructure.workflow.spi.ConditionEvaluator;
 import org.carl.infrastructure.workflow.spi.NodeExecutionContext;
 
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -67,33 +65,37 @@ public final class EdgeRouter {
      *   <li>If none match, returns {@code null} → the workflow terminates with the current node as
      *       the final node.
      * </ol>
+     *
+     * <p>Implemented as a single pass over the current node's outgoing edges (fetched in O(1) from
+     * the graph's per-node index): a byEvent edge returns immediately on its first {@code when}-true
+     * match (highest priority, order-preserving), while the first matching byOutcome edge and the
+     * first unconditional default edge are recorded and used only as fallbacks.
      */
     public static EdgeDefinition pickNextEdge(
             WorkflowGraph graph, String currentNodeId, String outcome, NodeExecutionContext ctx) {
-        if (outcome != null) {
-            // G2: DSL .on(name) writes the outcome name into the event field.
-            for (EdgeDefinition candidate :
-                    graph.nextCandidates(currentNodeId, EdgeMatch.byEvent(outcome))) {
-                if (matchesCondition(candidate.when(), ctx)) {
-                    return candidate;
-                }
-            }
-            // Legacy: hand-constructed EdgeDefinition objects may still set the outcome field.
-            @SuppressWarnings("deprecation")
-            List<EdgeDefinition> legacyOutcomeCandidates =
-                    graph.nextCandidates(currentNodeId, EdgeMatch.byOutcome(outcome));
-            for (EdgeDefinition candidate : legacyOutcomeCandidates) {
-                if (matchesCondition(candidate.when(), ctx)) {
-                    return candidate;
-                }
-            }
-        }
+        EdgeDefinition legacyMatch = null; // first when-true byOutcome edge (legacy fallback)
+        EdgeDefinition defaultEdge = null; // first edge with no event/outcome/when
         for (EdgeDefinition e : graph.outgoing(currentNodeId)) {
-            if (e.event() == null && e.outcome() == null && e.when() == null) {
+            // 1. byEvent (post-G2 primary): highest priority, first when-true wins.
+            if (outcome != null && outcome.equals(e.event()) && matchesCondition(e.when(), ctx)) {
                 return e;
             }
+            // 2. byOutcome (legacy hand-constructed definitions): remember the first when-true edge.
+            if (legacyMatch == null
+                    && outcome != null
+                    && outcome.equals(e.outcome())
+                    && matchesCondition(e.when(), ctx)) {
+                legacyMatch = e;
+            }
+            // 3. default: remember the first unconditional edge.
+            if (defaultEdge == null
+                    && e.event() == null
+                    && e.outcome() == null
+                    && e.when() == null) {
+                defaultEdge = e;
+            }
         }
-        return null;
+        return legacyMatch != null ? legacyMatch : defaultEdge;
     }
 
     /**
