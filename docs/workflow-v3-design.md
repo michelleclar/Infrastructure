@@ -40,6 +40,7 @@ infrastructure-component-workflow-core   （纯 Java，0 Temporal 依赖）
   handlers/     9 个内置 NodeHandler + 配置 record + RuntimeIntents
   dsl/          Java DSL（Flow / FlowDef / FlowFrom / FlowJoin / NodeBuilder / BuiltInNodes / Dsl / NodeConfig / ChildNodeSpec / JoinSpec）
   graph/        定义校验 + 可达性 + 边匹配（WorkflowGraph / GraphValidator / EdgeMatch / ValidationReport）
+  engine/       平台无关的编排决策（EdgeRouter：起点/路由；NodeConfigCodec：DSL 形状规范化 + 配置解码）——从 Temporal adapter 下沉，可脱离 Temporal 单测
   interceptor/  Hook SPI（WorkflowInterceptor / DeterministicInterceptor / AsyncInterceptor / InterceptorContext / WorkflowInterceptorRegistry）
 
 infrastructure-component-workflow-temporal   （依赖 workflow-core + temporal-sdk + 可选 jOOQ）
@@ -876,6 +877,7 @@ assert result.nodeResults().get("approvals").outcome().equals(Outcomes.APPROVED)
 | 阶段 15：TaskGroup 递归 nestedJoin（G：`FlowDef.buildTaskGroupConfig` 递归子 taskGroup；runtime 零改动） | ✅ workflow-core 278 通过 + workflow-temporal 27 通过；2 层端到端 + 3 层 JSON 验证 |
 | 阶段 16：归档去全局静态 + fire-and-forget（`WorkflowInput.archive` 5 号字段 → per-execution；`GenericWorkflowImpl` 删 `static archivalEnabled` / `enableArchival` / `isArchivalEnabled`；`archiveIfNeeded` 改 `Async.procedure` 入 `asyncHookPromises` 由 `awaitAsyncHooks` 吞错；删死代码 `WorkflowArchiverWorkflow(Impl)` / `InMemoryArchiveActivities` 及 `WorkerSetup` 中的注册） | ✅ 远端 `TEMPORAL_TARGET` 全模块 28 通过 / 0 失败（修复 27 failed 全局污染问题） |
 | 阶段 17：Signal 事件幂等（`WorkflowEvent` 3 分量 + `eventId` 可空幂等键；保留 2 参兼容构造器 + `@JsonInclude(NON_NULL)` 向后兼容；`GenericWorkflowImpl` 加 `processedEventIds: Set<String>`，`signal()` 入队前去重；null/blank eventId 不参与去重；确定性 replay 安全；堵住客户端重发 + 回环误消费两类 gap） | ✅ |
+| 阶段 18：编排决策下沉到 core（渐进第一步）。把 `GenericWorkflowImpl` 中 0-Temporal 的纯决策逻辑搬到新 core `engine` 包：`EdgeRouter`（resolveStartNode + pickNextEdge + matchesCondition）、`NodeConfigCodec`（normalizeDefinition + normalizeConfig + decode）。adapter 删 160 行（1023→863），不再依赖 `EdgeMatch`/`ConditionEvaluator`；这些编排决策现在脱离 Temporal 在 core 单测。`buildResult`/事件匹配/编排骨架仍在 adapter（依赖 Temporal 类型或 drive 链），留待后续 `WorkflowInterpreter` 全量抽取 | ✅ core 292 通过（+14 engine）+ 远端 `TEMPORAL_TARGET` 全模块 31 通过 / 0 失败（零行为改动） |
 
 ---
 

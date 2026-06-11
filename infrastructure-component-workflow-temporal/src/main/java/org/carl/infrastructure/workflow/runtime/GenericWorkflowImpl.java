@@ -22,7 +22,8 @@ import org.carl.infrastructure.workflow.definition.NodeDefinition;
 import org.carl.infrastructure.workflow.definition.NodeResult;
 import org.carl.infrastructure.workflow.definition.NodeStatus;
 import org.carl.infrastructure.workflow.definition.WorkflowDefinition;
-import org.carl.infrastructure.workflow.graph.EdgeMatch;
+import org.carl.infrastructure.workflow.engine.EdgeRouter;
+import org.carl.infrastructure.workflow.engine.NodeConfigCodec;
 import org.carl.infrastructure.workflow.graph.GraphValidator;
 import org.carl.infrastructure.workflow.graph.WorkflowGraph;
 import org.carl.infrastructure.workflow.handlers.ApprovalTaskHandler;
@@ -33,7 +34,6 @@ import org.carl.infrastructure.workflow.handlers.SubProcessHandler;
 import org.carl.infrastructure.workflow.handlers.TaskGroupContract;
 import org.carl.infrastructure.workflow.handlers.TimerTaskHandler;
 import org.carl.infrastructure.workflow.handlers.UserTaskHandler;
-import org.carl.infrastructure.workflow.spi.ConditionEvaluator;
 import org.carl.infrastructure.workflow.spi.NodeExecutionContext;
 import org.carl.infrastructure.workflow.spi.NodeHandler;
 import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
@@ -150,7 +150,8 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
 
         // Normalise DSL-emitted shapes (e.g. taskGroup's nested {"join":{"type":"all"}}) into the
         // wire form expected by the handler config records.
-        WorkflowDefinition definition = normalizeDefinition(input.workflowDefinition());
+        WorkflowDefinition definition =
+                NodeConfigCodec.normalizeDefinition(input.workflowDefinition());
 
         GraphValidator.validate(definition, registry).throwIfInvalid();
         WorkflowGraph graph = new WorkflowGraph(definition);
@@ -170,14 +171,14 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
         // ── WORKFLOW_START hook ──────────────────────────────────────────────────────────────
         fireHook(HookPhases.WORKFLOW_START, null, null, null, null);
 
-        String startNodeId = resolveStartNode(input.startNodeId(), definition, graph);
+        String startNodeId = EdgeRouter.resolveStartNode(input.startNodeId(), definition, graph);
         String currentNodeId = startNodeId;
 
         while (true) {
             NodeDefinition node = graph.node(currentNodeId);
             @SuppressWarnings("unchecked")
             NodeHandler<Object> handler = (NodeHandler<Object>) registry.lookup(node.type());
-            Object config = decodeConfig(handler, node.type(), node.config());
+            Object config = NodeConfigCodec.decode(mapper, handler, node.type(), node.config());
 
             // ── NODE_ENTER hook ──────────────────────────────────────────────────────────────
             fireHook(HookPhases.NODE_ENTER, node, null, null, null);
@@ -220,7 +221,8 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
                 awaitAsyncHooks();
                 return result;
             }
-            EdgeDefinition nextEdge = pickNextEdge(graph, currentNodeId, lastResult.outcome(), ctx);
+            EdgeDefinition nextEdge =
+                    EdgeRouter.pickNextEdge(graph, currentNodeId, lastResult.outcome(), ctx);
             if (nextEdge == null) {
                 // No outgoing edge — treat as terminal.
                 this.finished = true;
@@ -628,7 +630,8 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
         try {
             @SuppressWarnings("unchecked")
             NodeHandler<Object> handler = (NodeHandler<Object>) registry.lookup(childNode.type());
-            Object config = decodeConfig(handler, childNode.type(), childNode.config());
+            Object config =
+                    NodeConfigCodec.decode(mapper, handler, childNode.type(), childNode.config());
             return executeNode(childNode, qualifier, handler, config);
         } catch (CanceledFailure cf) {
             return NodeResult.cancelled();
@@ -711,166 +714,6 @@ public final class GenericWorkflowImpl implements GenericWorkflow {
         }
     }
 
-    /**
-     * Resolve the entry node, in order of precedence:
-     *
-     * <ol>
-     *   <li>{@link WorkflowInput#startNodeId()} (per-invocation override).
-     *   <li>{@link WorkflowDefinition#startNodeId()} (workflow-level explicit start).
-     *   <li>{@link WorkflowGraph#startNodes()} if topology yields exactly one zero-incoming node.
-     *   <li>Otherwise throws {@link IllegalStateException}.
-     * </ol>
-     */
-    private static String resolveStartNode(
-            String requested, WorkflowDefinition definition, WorkflowGraph graph) {
-        if (requested != null && !requested.isBlank()) {
-            return requested;
-        }
-        if (definition.startNodeId() != null && !definition.startNodeId().isBlank()) {
-            return definition.startNodeId();
-        }
-        Set<String> starts = graph.startNodes();
-        if (starts.size() != 1) {
-            throw new IllegalStateException(
-                    "Workflow has " + starts.size() + " start nodes; specify startNodeId");
-        }
-        return starts.iterator().next();
-    }
-
-    /**
-     * Pick the edge to follow after a node completes. Matching strategy:
-     *
-     * <ol>
-     *   <li>Outgoing edges whose {@link EdgeDefinition#event()} equals {@code outcome} are
-     *       evaluated first — this is the post-G2 path where the DSL {@code .on(name)} writes the
-     *       node's outcome into the {@code event} field. The first edge whose {@link
-     *       EdgeDefinition#when()} guard expression evaluates to {@code true} (or is {@code
-     *       null}/blank) wins.
-     *   <li>Legacy fallback: edges whose {@link EdgeDefinition#outcome()} equals {@code outcome}
-     *       are evaluated next (for hand-constructed definitions still using the {@code outcome}
-     *       field directly).
-     *   <li>Otherwise the first outgoing edge with no event/outcome/when wins.
-     *   <li>If none match, returns {@code null} → the workflow terminates with the current node as
-     *       the final node.
-     * </ol>
-     */
-    private static EdgeDefinition pickNextEdge(
-            WorkflowGraph graph, String currentNodeId, String outcome, NodeExecutionContext ctx) {
-        if (outcome != null) {
-            // G2: DSL .on(name) writes the outcome name into the event field.
-            for (EdgeDefinition candidate :
-                    graph.nextCandidates(currentNodeId, EdgeMatch.byEvent(outcome))) {
-                if (matchesCondition(candidate.when(), ctx)) {
-                    return candidate;
-                }
-            }
-            // Legacy: hand-constructed EdgeDefinition objects may still set the outcome field.
-            @SuppressWarnings("deprecation")
-            List<EdgeDefinition> legacyOutcomeCandidates =
-                    graph.nextCandidates(currentNodeId, EdgeMatch.byOutcome(outcome));
-            for (EdgeDefinition candidate : legacyOutcomeCandidates) {
-                if (matchesCondition(candidate.when(), ctx)) {
-                    return candidate;
-                }
-            }
-        }
-        for (EdgeDefinition e : graph.outgoing(currentNodeId)) {
-            if (e.event() == null && e.outcome() == null && e.when() == null) {
-                return e;
-            }
-        }
-        return null;
-    }
-
-    private static boolean matchesCondition(String expression, NodeExecutionContext ctx) {
-        try {
-            return ConditionEvaluator.evaluateOrTrue(expression, ctx);
-        } catch (RuntimeException e) {
-            Workflow.getLogger(GenericWorkflowImpl.class)
-                    .warn(
-                            "condition '{}' threw; treating edge as non-matching: {}",
-                            expression,
-                            e.getMessage());
-            return false;
-        }
-    }
-
-    private Object decodeConfig(NodeHandler<?> handler, String nodeType, JsonNode rawConfig) {
-        Class<?> configType = handler.configType();
-        if (configType == null || configType == Void.class) {
-            return null;
-        }
-        JsonNode normalized = normalizeConfig(nodeType, rawConfig);
-        if (normalized == null || normalized.isNull() || normalized.isMissingNode()) {
-            normalized = mapper.createObjectNode();
-        }
-        try {
-            return mapper.treeToValue(normalized, configType);
-        } catch (Exception e) {
-            throw new IllegalStateException(
-                    "Failed to decode config for node type " + nodeType + ": " + e.getMessage(), e);
-        }
-    }
-
-    /**
-     * Return a copy of {@code definition} with every node's {@code config} normalised via {@link
-     * #normalizeConfig(String, JsonNode)}. Used once at workflow entry so the {@link
-     * GraphValidator} sees the same wire shape the per-node executor will later decode.
-     */
-    private WorkflowDefinition normalizeDefinition(WorkflowDefinition definition) {
-        List<NodeDefinition> rewritten = new ArrayList<>(definition.nodes().size());
-        boolean anyChanged = false;
-        for (NodeDefinition node : definition.nodes()) {
-            JsonNode normalised = normalizeConfig(node.type(), node.config());
-            if (normalised == node.config()) {
-                rewritten.add(node);
-            } else {
-                rewritten.add(
-                        new NodeDefinition(
-                                node.id(),
-                                node.label(),
-                                node.type(),
-                                node.templateId(),
-                                normalised));
-                anyChanged = true;
-            }
-        }
-        if (!anyChanged) {
-            return definition;
-        }
-        return new WorkflowDefinition(
-                definition.id(),
-                definition.name(),
-                rewritten,
-                definition.edges(),
-                definition.startNodeId());
-    }
-
-    /**
-     * Normalises DSL-emitted shapes into the wire form expected by the handler config records.
-     * Currently only {@code taskGroup} needs adjustment: the DSL writes {@code
-     * "join":{"type":"all"}} while {@code TaskGroupConfig.JoinRule} deserialises from the bare
-     * string {@code "all"}.
-     */
-    private JsonNode normalizeConfig(String nodeType, JsonNode rawConfig) {
-        if (rawConfig == null || !NodeTypes.TASK_GROUP.equals(nodeType)) {
-            return rawConfig;
-        }
-        if (!rawConfig.isObject()) {
-            return rawConfig;
-        }
-        JsonNode join = rawConfig.get("join");
-        if (join == null || !join.isObject()) {
-            return rawConfig;
-        }
-        JsonNode typeNode = join.get("type");
-        if (typeNode == null || !typeNode.isTextual()) {
-            return rawConfig;
-        }
-        ObjectNode normalized = rawConfig.deepCopy();
-        normalized.put("join", typeNode.asText());
-        return normalized;
-    }
 
     private WorkflowResult buildResult(String currentNodeId, NodeResult lastResult) {
         return new WorkflowResult(
