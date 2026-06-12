@@ -25,11 +25,7 @@ class WorkflowGraphTest {
     }
 
     private static EdgeDefinition event(String from, String to, String event) {
-        return new EdgeDefinition(from, to, event, null, null);
-    }
-
-    private static EdgeDefinition outcome(String from, String to, String outcome) {
-        return new EdgeDefinition(from, to, null, outcome, null);
+        return new EdgeDefinition(from, to, event, null);
     }
 
     @Test
@@ -61,7 +57,7 @@ class WorkflowGraphTest {
     }
 
     @Test
-    void taskGroupFlowSupportsByOutcomeRouting() {
+    void nextCandidatesByEventAndAny() {
         WorkflowDefinition def =
                 WorkflowDefinition.of(
                         "leave",
@@ -72,19 +68,14 @@ class WorkflowGraphTest {
                                 node("end", NodeTypes.END_TASK)),
                         List.of(
                                 event("A", "tg", "submit"),
-                                outcome("tg", "end", Outcomes.APPROVED),
-                                outcome("tg", "A", Outcomes.REJECTED)));
+                                event("tg", "end", Outcomes.APPROVED),
+                                event("tg", "A", Outcomes.REJECTED)));
         WorkflowGraph graph = new WorkflowGraph(def);
 
         List<EdgeDefinition> approved =
-                graph.nextCandidates("tg", EdgeMatch.byOutcome(Outcomes.APPROVED));
+                graph.nextCandidates("tg", EdgeMatch.byEvent(Outcomes.APPROVED));
         assertEquals(1, approved.size());
         assertEquals("end", approved.get(0).to());
-
-        List<EdgeDefinition> rejected =
-                graph.nextCandidates("tg", EdgeMatch.byOutcome(Outcomes.REJECTED));
-        assertEquals(1, rejected.size());
-        assertEquals("A", rejected.get(0).to());
 
         // EdgeMatch.any() returns every outgoing edge in original order
         List<EdgeDefinition> all = graph.nextCandidates("tg", EdgeMatch.any());
@@ -327,8 +318,8 @@ class WorkflowGraphTest {
                                 node("done", NodeTypes.END_TASK)),
                         List.of(
                                 event("requestLeave", "approval", "submit"),
-                                outcome("approval", "done", Outcomes.APPROVED),
-                                outcome("approval", "requestLeave", Outcomes.REJECTED)),
+                                event("approval", "done", Outcomes.APPROVED),
+                                event("approval", "requestLeave", Outcomes.REJECTED)),
                         "requestLeave");
         WorkflowGraph graph = new WorkflowGraph(def);
         assertEquals("requestLeave", graph.effectiveStartNode());

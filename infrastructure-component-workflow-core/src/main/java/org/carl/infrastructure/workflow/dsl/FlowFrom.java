@@ -81,12 +81,12 @@ public final class FlowFrom {
 
     /** Registers an edge (no guard) on the parent {@link FlowDef}. Called by {@link FlowTo#to}. */
     void registerEdge(String event, String dest) {
-        flowDef.registerEdge(new EdgeDefinition(fromNodeName, dest, event, null, null));
+        flowDef.registerEdge(new EdgeDefinition(fromNodeName, dest, event, null));
     }
 
     /** Registers a guarded edge on the parent {@link FlowDef}. Called by {@link WhenFlowTo#to}. */
     void registerEdge(String event, String dest, String when) {
-        flowDef.registerEdge(new EdgeDefinition(fromNodeName, dest, event, null, when));
+        flowDef.registerEdge(new EdgeDefinition(fromNodeName, dest, event, when));
     }
 
     /**

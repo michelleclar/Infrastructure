@@ -33,11 +33,11 @@ class EdgeRouterTest {
     }
 
     private static EdgeDefinition on(String from, String to, String event) {
-        return new EdgeDefinition(from, to, event, null, null);
+        return new EdgeDefinition(from, to, event, null);
     }
 
     private static EdgeDefinition onWhen(String from, String to, String event, String when) {
-        return new EdgeDefinition(from, to, event, null, when);
+        return new EdgeDefinition(from, to, event, when);
     }
 
     // ---- resolveStartNode ---------------------------------------------------

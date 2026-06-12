@@ -34,7 +34,7 @@ class GraphValidatorTest {
     }
 
     private static EdgeDefinition event(String from, String to, String event) {
-        return new EdgeDefinition(from, to, event, null, null);
+        return new EdgeDefinition(from, to, event, null);
     }
 
     @Test

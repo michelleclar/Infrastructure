@@ -117,7 +117,6 @@ public final class WorkflowGraph {
      * <p>Does not evaluate {@link EdgeDefinition#when()} guards — callers must filter the returned
      * list with their own execution context if guard expressions are relevant.
      */
-    @SuppressWarnings("deprecation")
     public List<EdgeDefinition> nextCandidates(String currentNodeId, EdgeMatch match) {
         Objects.requireNonNull(match, "match");
         List<EdgeDefinition> all = outgoing(currentNodeId);
@@ -128,15 +127,6 @@ public final class WorkflowGraph {
             List<EdgeDefinition> picked = new ArrayList<>();
             for (EdgeDefinition edge : all) {
                 if (be.eventName().equals(edge.event())) {
-                    picked.add(edge);
-                }
-            }
-            return List.copyOf(picked);
-        }
-        if (match instanceof EdgeMatch.ByOutcome bo) {
-            List<EdgeDefinition> picked = new ArrayList<>();
-            for (EdgeDefinition edge : all) {
-                if (bo.outcome().equals(edge.outcome())) {
                     picked.add(edge);
                 }
             }

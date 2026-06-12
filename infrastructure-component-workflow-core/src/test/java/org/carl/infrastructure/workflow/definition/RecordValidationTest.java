@@ -62,36 +62,35 @@ class RecordValidationTest {
     @Test
     void edgeDefinitionRejectsNullFrom() {
         assertThrows(
-                NullPointerException.class, () -> new EdgeDefinition(null, "b", null, null, null));
+                NullPointerException.class, () -> new EdgeDefinition(null, "b", null, null));
     }
 
     @Test
     void edgeDefinitionRejectsBlankFrom() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new EdgeDefinition("", "b", null, null, null));
+                () -> new EdgeDefinition("", "b", null, null));
     }
 
     @Test
     void edgeDefinitionRejectsNullTo() {
         assertThrows(
-                NullPointerException.class, () -> new EdgeDefinition("a", null, null, null, null));
+                NullPointerException.class, () -> new EdgeDefinition("a", null, null, null));
     }
 
     @Test
     void edgeDefinitionRejectsBlankTo() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new EdgeDefinition("a", "  ", null, null, null));
+                () -> new EdgeDefinition("a", "  ", null, null));
     }
 
     @Test
     void edgeDefinitionAllowsNullOptionalFields() {
-        EdgeDefinition e = new EdgeDefinition("a", "b", null, null, null);
+        EdgeDefinition e = new EdgeDefinition("a", "b", null, null);
         assertEquals("a", e.from());
         assertEquals("b", e.to());
         assertNull(e.event());
-        assertNull(e.outcome());
         assertNull(e.when());
     }
 
@@ -185,7 +184,7 @@ class RecordValidationTest {
         List<NodeDefinition> nodes = new ArrayList<>();
         nodes.add(new NodeDefinition("n1", null, "serviceTask", null, null));
         List<EdgeDefinition> edges = new ArrayList<>();
-        edges.add(new EdgeDefinition("n1", "n2", null, null, null));
+        edges.add(new EdgeDefinition("n1", "n2", null, null));
 
         WorkflowDefinition def = new WorkflowDefinition("w", "N", nodes, edges, null);
 
@@ -201,7 +200,7 @@ class RecordValidationTest {
                 () -> def.nodes().add(new NodeDefinition("x", null, "serviceTask", null, null)));
         assertThrows(
                 UnsupportedOperationException.class,
-                () -> def.edges().add(new EdgeDefinition("a", "b", null, null, null)));
+                () -> def.edges().add(new EdgeDefinition("a", "b", null, null)));
     }
 
     // ---------- NodeResult ----------

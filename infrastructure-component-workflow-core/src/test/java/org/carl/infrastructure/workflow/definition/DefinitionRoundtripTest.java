@@ -74,7 +74,6 @@ class DefinitionRoundtripTest {
         assertEquals("requestLeave", submitEdge.from());
         assertEquals("leaveApproval", submitEdge.to());
         assertEquals("提交", submitEdge.event());
-        assertNull(submitEdge.outcome());
         assertNull(submitEdge.when());
     }
 

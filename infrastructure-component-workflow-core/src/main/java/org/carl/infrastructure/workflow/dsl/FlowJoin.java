@@ -43,7 +43,7 @@ public final class FlowJoin {
 
     /** Registers an edge on the parent {@link FlowDef}. Called by {@link FlowJoinTo#to}. */
     void registerEdge(String event, String dest) {
-        flowDef.registerEdge(new EdgeDefinition(fromNodeName, dest, event, null, null));
+        flowDef.registerEdge(new EdgeDefinition(fromNodeName, dest, event, null));
     }
 
     /** Intermediate builder that captures the event and waits for the destination. */

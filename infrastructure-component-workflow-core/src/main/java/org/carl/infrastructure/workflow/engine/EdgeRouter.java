@@ -53,49 +53,34 @@ public final class EdgeRouter {
      * Pick the edge to follow after a node completes. Matching strategy:
      *
      * <ol>
-     *   <li>Outgoing edges whose {@link EdgeDefinition#event()} equals {@code outcome} are
-     *       evaluated first — this is the post-G2 path where the DSL {@code .on(name)} writes the
-     *       node's outcome into the {@code event} field. The first edge whose {@link
-     *       EdgeDefinition#when()} guard expression evaluates to {@code true} (or is {@code
-     *       null}/blank) wins.
-     *   <li>Legacy fallback: edges whose {@link EdgeDefinition#outcome()} equals {@code outcome}
-     *       are evaluated next (for hand-constructed definitions still using the {@code outcome}
-     *       field directly).
-     *   <li>Otherwise the first outgoing edge with no event/outcome/when wins.
+     *   <li>Outgoing edges whose {@link EdgeDefinition#event()} equals {@code outcome} are matched —
+     *       the DSL {@code .on(name)} writes the node's outcome name into the {@code event} field.
+     *       The first such edge whose {@link EdgeDefinition#when()} guard evaluates to {@code true}
+     *       (or is {@code null}/blank) wins.
+     *   <li>Otherwise the first outgoing edge with no event/when wins (the default edge).
      *   <li>If none match, returns {@code null} → the workflow terminates with the current node as
      *       the final node.
      * </ol>
      *
-     * <p>Implemented as a single pass over the current node's outgoing edges (fetched in O(1) from
-     * the graph's per-node index): a byEvent edge returns immediately on its first {@code when}-true
-     * match (highest priority, order-preserving), while the first matching byOutcome edge and the
-     * first unconditional default edge are recorded and used only as fallbacks.
+     * <p>Single pass over the current node's outgoing edges (fetched in O(1) from the graph's
+     * per-node index): a byEvent edge returns immediately on its first {@code when}-true match
+     * (highest priority, order-preserving); the first unconditional default edge is recorded and
+     * used only if no byEvent edge matched.
      */
     public static EdgeDefinition pickNextEdge(
             WorkflowGraph graph, String currentNodeId, String outcome, NodeExecutionContext ctx) {
-        EdgeDefinition legacyMatch = null; // first when-true byOutcome edge (legacy fallback)
-        EdgeDefinition defaultEdge = null; // first edge with no event/outcome/when
+        EdgeDefinition defaultEdge = null; // first edge with no event/when
         for (EdgeDefinition e : graph.outgoing(currentNodeId)) {
-            // 1. byEvent (post-G2 primary): highest priority, first when-true wins.
+            // byEvent (post-G2 primary): highest priority, first when-true wins.
             if (outcome != null && outcome.equals(e.event()) && matchesCondition(e.when(), ctx)) {
                 return e;
             }
-            // 2. byOutcome (legacy hand-constructed definitions): remember the first when-true edge.
-            if (legacyMatch == null
-                    && outcome != null
-                    && outcome.equals(e.outcome())
-                    && matchesCondition(e.when(), ctx)) {
-                legacyMatch = e;
-            }
-            // 3. default: remember the first unconditional edge.
-            if (defaultEdge == null
-                    && e.event() == null
-                    && e.outcome() == null
-                    && e.when() == null) {
+            // default: remember the first unconditional edge.
+            if (defaultEdge == null && e.event() == null && e.when() == null) {
                 defaultEdge = e;
             }
         }
-        return legacyMatch != null ? legacyMatch : defaultEdge;
+        return defaultEdge;
     }
 
     /**

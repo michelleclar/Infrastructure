@@ -1,5 +1,6 @@
 package org.carl.infrastructure.workflow.definition;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import java.util.Objects;
@@ -12,13 +13,17 @@ import java.util.Objects;
  * <ul>
  *   <li>{@code from}: required, source node id.
  *   <li>{@code to}: required, target node id.
- *   <li>{@code event}: optional external event name that activates this edge.
- *   <li>{@code outcome}: optional outcome string from the source node.
+ *   <li>{@code event}: optional routing key — the source node's outcome name (the DSL {@code
+ *       .on(name)} writes here) or an external event name that activates this edge.
  *   <li>{@code when}: optional EL guard expression (e.g. "${ctx.amount > 10000}").
  * </ul>
+ *
+ * <p>{@code ignoreUnknown} is set so legacy definitions that still carry the removed {@code
+ * outcome} field deserialise cleanly (the field is dropped on read).
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record EdgeDefinition(String from, String to, String event, String outcome, String when) {
+@JsonIgnoreProperties(ignoreUnknown = true)
+public record EdgeDefinition(String from, String to, String event, String when) {
 
     public EdgeDefinition {
         Objects.requireNonNull(from, "from");
@@ -29,6 +34,6 @@ public record EdgeDefinition(String from, String to, String event, String outcom
         if (to.isBlank()) {
             throw new IllegalArgumentException("to must not be blank");
         }
-        // event, outcome, when remain optional / nullable.
+        // event, when remain optional / nullable.
     }
 }

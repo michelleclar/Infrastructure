@@ -38,7 +38,6 @@ class EventEdgeTest {
         assertEquals("X", edge.from());
         assertEquals("Y", edge.to());
         assertEquals("提交", edge.event());
-        assertNull(edge.outcome());
         assertNull(edge.when());
     }
 
@@ -66,15 +65,11 @@ class EventEdgeTest {
         EdgeDefinition approved =
                 fromJoin.stream().filter(e -> "审批通过".equals(e.event())).findFirst().orElseThrow();
         assertEquals("休假", approved.to());
-        assertNull(approved.outcome());
 
         EdgeDefinition rejected =
                 fromJoin.stream().filter(e -> "审批拒绝".equals(e.event())).findFirst().orElseThrow();
         assertEquals("发起", rejected.to());
-        assertNull(rejected.outcome());
 
-        // sanity: no edge from the join node carries a non-null outcome anymore
-        assertTrue(fromJoin.stream().allMatch(e -> e.outcome() == null));
     }
 
     // E8 validation tests -----------------------------------------------------------------------
@@ -141,6 +136,5 @@ class EventEdgeTest {
 
         assertEquals("提交", edge.event());
         assertEquals("${ctx.variables.flag == true}", edge.when());
-        assertNull(edge.outcome());
     }
 }
