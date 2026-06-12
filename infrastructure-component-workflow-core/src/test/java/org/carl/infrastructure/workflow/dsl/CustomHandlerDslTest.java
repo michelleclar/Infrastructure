@@ -56,4 +56,21 @@ class CustomHandlerDslTest {
         assertEquals("AI 审核", triage.label());
         assertEquals("claude-opus-4-7", triage.config().path("model").asText());
     }
+
+    @Test
+    void duplicateNodeIdIsRejected() {
+        FlowDef flow = Flow.define("aiFlow", "AI 流程");
+        flow.node("triage", b -> b.type("aiReview").set("model", "claude-opus-4-7"));
+
+        // Re-declaring the same id (typo / copy-paste) fails fast instead of silently overwriting
+        // the earlier config — consistent with the wire-level GraphValidator duplicate-id check.
+        IllegalStateException ex =
+                assertThrows(
+                        IllegalStateException.class,
+                        () ->
+                                flow.node(
+                                        "triage",
+                                        b -> b.type("aiReview").set("model", "claude-sonnet")));
+        assertTrue(ex.getMessage().contains("triage"));
+    }
 }

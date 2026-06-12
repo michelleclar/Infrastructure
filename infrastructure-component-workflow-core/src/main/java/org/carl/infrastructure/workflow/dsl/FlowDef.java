@@ -93,13 +93,16 @@ public final class FlowDef {
     /**
      * Registers a named node with its {@link NodeConfig}.
      *
-     * <p>If the node was already registered (e.g. as a placeholder by {@link FlowFrom#join}), the
-     * config is overwritten only when the incoming config is not a bare {@code taskGroup}
-     * placeholder — join specs take precedence.
+     * @throws IllegalStateException if a node with the same {@code name} was already declared. Node
+     *     ids must be unique — this mirrors the wire-level {@code GraphValidator} duplicate-id check
+     *     so a typo'd duplicate fails fast here instead of silently overwriting the earlier config.
+     *     (Join placeholders go through {@link #ensureNode}, not this method, so {@code .join()} is
+     *     unaffected.)
      */
     public FlowDef node(String name, NodeConfig config) {
         Objects.requireNonNull(name, "name");
         Objects.requireNonNull(config, "config");
+        requireFreshId(name);
         nodeConfigs.put(name, config);
         return this;
     }
@@ -123,6 +126,7 @@ public final class FlowDef {
         NodeBuilder b = new NodeBuilder();
         configurer.accept(b);
         NodeConfig cfg = b.buildConfig();
+        requireFreshId(id);
         nodeConfigs.put(id, cfg);
         if (b.getLabel() != null) {
             labels.put(id, b.getLabel());
@@ -271,6 +275,16 @@ public final class FlowDef {
     // -------------------------------------------------------------------------
     // Private helpers
     // -------------------------------------------------------------------------
+
+    /**
+     * Enforces unique node ids across explicit {@link #node} declarations. Join placeholders use
+     * {@link #ensureNode} ({@code putIfAbsent}) instead, so they are unaffected.
+     */
+    private void requireFreshId(String id) {
+        if (nodeConfigs.containsKey(id)) {
+            throw new IllegalStateException("node '" + id + "' is already defined");
+        }
+    }
 
     /**
      * Builds the JSON config for a {@code taskGroup} node from its {@link JoinSpec}.
