@@ -30,6 +30,7 @@ import org.carl.infrastructure.workflow.runtime.GenericWorkflow;
 import org.carl.infrastructure.workflow.runtime.WorkerSetup;
 import org.carl.infrastructure.workflow.runtime.WorkflowInput;
 import org.carl.infrastructure.workflow.runtime.WorkflowResult;
+import org.carl.infrastructure.workflow.spi.BuiltInNodeType;
 import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
 import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
@@ -222,8 +223,8 @@ class LeaveFlowDslDemoTest {
                 .to(N_REJECTED);
 
         // End nodes.
-        flow.node(N_APPROVED, BuiltInNodes.endTask());
-        flow.node(N_REJECTED, BuiltInNodes.endTask());
+        flow.node(N_APPROVED, b -> b.type(BuiltInNodeType.END_TASK));
+        flow.node(N_REJECTED, b -> b.type(BuiltInNodeType.END_TASK));
 
         return flow.build();
     }

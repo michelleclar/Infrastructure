@@ -1,7 +1,6 @@
 package org.carl.infrastructure.workflow.dsl;
 
 import static org.carl.infrastructure.workflow.dsl.BuiltInNodes.approval;
-import static org.carl.infrastructure.workflow.dsl.BuiltInNodes.endTask;
 import static org.carl.infrastructure.workflow.dsl.BuiltInNodes.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -10,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.carl.infrastructure.workflow.definition.EdgeDefinition;
 import org.carl.infrastructure.workflow.definition.WorkflowDefinition;
+import org.carl.infrastructure.workflow.spi.BuiltInNodeType;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -29,7 +29,7 @@ class EventEdgeTest {
         FlowDef flow = Flow.define("w", "W");
         flow.start("X");
         flow.node("X", service("doX"));
-        flow.node("Y", endTask());
+        flow.node("Y", b -> b.type(BuiltInNodeType.END_TASK));
         flow.from("X").on("提交").to("Y");
 
         WorkflowDefinition def = flow.build();
@@ -46,7 +46,7 @@ class EventEdgeTest {
         FlowDef flow = Flow.define("w", "W");
         flow.start("发起");
         flow.node("发起", service("createReq"));
-        flow.node("休假", endTask());
+        flow.node("休假", b -> b.type(BuiltInNodeType.END_TASK));
 
         flow.from("发起").on("提交").to("审批");
         flow.from("审批")
@@ -96,7 +96,7 @@ class EventEdgeTest {
         FlowDef flow = Flow.define("w", "W");
         flow.start("start");
         flow.node("start", service("init"));
-        flow.node("done", endTask());
+        flow.node("done", b -> b.type(BuiltInNodeType.END_TASK));
         flow.from("start").on("submit").to("X");
         flow.from("X")
                 .join(Dsl.all(Dsl.node("child1", approval("hr"))))
@@ -112,8 +112,8 @@ class EventEdgeTest {
     void joinOnExistingTaskGroupNode_allowed() {
         // X was previously registered explicitly as taskGroup → join() is allowed (overwrite spec)
         FlowDef flow = Flow.define("w", "W");
-        flow.node("X", BuiltInNodes.taskGroup());
-        flow.node("done", endTask());
+        flow.node("X", b -> b.type(BuiltInNodeType.TASK_GROUP));
+        flow.node("done", b -> b.type(BuiltInNodeType.END_TASK));
         flow.from("X")
                 .join(Dsl.all(Dsl.node("child1", approval("hr"))))
                 .on("APPROVED")
@@ -128,7 +128,7 @@ class EventEdgeTest {
         FlowDef flow = Flow.define("w", "W");
         flow.start("X");
         flow.node("X", service("doX"));
-        flow.node("Y", endTask());
+        flow.node("Y", b -> b.type(BuiltInNodeType.END_TASK));
         flow.from("X").on("提交").when("${ctx.variables.flag == true}").to("Y");
 
         WorkflowDefinition def = flow.build();

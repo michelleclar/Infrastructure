@@ -76,16 +76,4 @@ public final class Dsl {
     public static JoinSpec any(ChildNodeSpec... nodes) {
         return new JoinSpec("any", Arrays.asList(nodes));
     }
-
-    /**
-     * Creates a placeholder {@code taskGroup} {@link NodeConfig}. The actual join spec is supplied
-     * via {@link FlowFrom#join(JoinSpec)} and overrides this placeholder at {@link FlowDef#build()}
-     * time.
-     *
-     * <p>Package-private: only used internally by {@link FlowFrom#join}.
-     */
-    static NodeConfig taskGroup() {
-        return new NodeConfig(
-                org.carl.infrastructure.workflow.spi.NodeTypes.TASK_GROUP, java.util.Map.of());
-    }
 }

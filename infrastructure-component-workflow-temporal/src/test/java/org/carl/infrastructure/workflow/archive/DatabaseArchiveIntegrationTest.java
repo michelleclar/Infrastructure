@@ -19,6 +19,7 @@ import org.carl.infrastructure.workflow.runtime.BusinessActivityRegistry;
 import org.carl.infrastructure.workflow.runtime.GenericWorkflow;
 import org.carl.infrastructure.workflow.runtime.WorkflowInput;
 import org.carl.infrastructure.workflow.runtime.WorkflowResult;
+import org.carl.infrastructure.workflow.spi.BuiltInNodeType;
 import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
 import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
@@ -268,8 +269,8 @@ class DatabaseArchiveIntegrationTest {
                 BuiltInNodes.service("createLeaveRequest")
                         .andThen(b -> b.set("activityInput", Map.of("employeeId", "alice"))));
         flow.node("leaveApproval", BuiltInNodes.approval("manager"));
-        flow.node("completed", BuiltInNodes.endTask());
-        flow.node("rejected", BuiltInNodes.endTask());
+        flow.node("completed", b -> b.type(BuiltInNodeType.END_TASK));
+        flow.node("rejected", b -> b.type(BuiltInNodeType.END_TASK));
 
         flow.from("requestLeave").on(Outcomes.SUCCESS).to("leaveApproval");
         flow.from("leaveApproval").on(Outcomes.APPROVED).to("completed");

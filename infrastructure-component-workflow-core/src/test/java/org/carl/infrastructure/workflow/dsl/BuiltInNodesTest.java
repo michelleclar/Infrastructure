@@ -65,22 +65,4 @@ class BuiltInNodesTest {
         assertEquals(NodeTypes.TIMER_TASK, sugar.type());
         assertEquals("PT10M", sugar.props().get("duration"));
     }
-
-    @Test
-    void gatewayMatchesManualBuilder() {
-        NodeConfig sugar = apply(BuiltInNodes.gateway());
-        NodeConfig manual = apply(b -> b.type(NodeTypes.GATEWAY));
-        assertEquals(manual, sugar);
-        assertEquals(NodeTypes.GATEWAY, sugar.type());
-        assertEquals(0, sugar.props().size());
-    }
-
-    @Test
-    void endTaskMatchesManualBuilder() {
-        NodeConfig sugar = apply(BuiltInNodes.endTask());
-        NodeConfig manual = apply(b -> b.type(NodeTypes.END_TASK));
-        assertEquals(manual, sugar);
-        assertEquals(NodeTypes.END_TASK, sugar.type());
-        assertEquals(0, sugar.props().size());
-    }
 }

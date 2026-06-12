@@ -73,29 +73,8 @@ public final class BuiltInNodes {
         return b -> b.type(NodeTypes.TIMER_TASK).set("duration", iso8601Duration);
     }
 
-    /**
-     * {@link NodeTypes#GATEWAY} configurer without further properties; callers may chain additional
-     * {@code set(...)} calls.
-     */
-    public static Consumer<NodeBuilder> gateway() {
-        return b -> b.type(NodeTypes.GATEWAY);
-    }
-
     /** {@link NodeTypes#SUB_PROCESS} configurer that pins the {@code subWorkflowId} property. */
     public static Consumer<NodeBuilder> subProcess(String subWorkflowId) {
         return b -> b.type(NodeTypes.SUB_PROCESS).set("subWorkflowId", subWorkflowId);
-    }
-
-    /** {@link NodeTypes#END_TASK} configurer. */
-    public static Consumer<NodeBuilder> endTask() {
-        return b -> b.type(NodeTypes.END_TASK);
-    }
-
-    /**
-     * {@link NodeTypes#TASK_GROUP} configurer (used together with a subsequent {@code
-     * from(...).join(...)} call to populate the join spec).
-     */
-    public static Consumer<NodeBuilder> taskGroup() {
-        return b -> b.type(NodeTypes.TASK_GROUP);
     }
 }

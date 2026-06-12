@@ -34,7 +34,7 @@ import java.util.function.Consumer;
  * flow.start("发起请假");
  *
  * flow.node("发起请假", service("createLeaveRequest"));
- * flow.node("休假", endTask());
+ * flow.node("休假", b -&gt; b.type(BuiltInNodeType.END_TASK));
  *
  * flow.from("发起请假").on("success").to("发起请假审批");
  *
@@ -260,7 +260,7 @@ public final class FlowDef {
             } else {
                 // Implicit node (only appeared in an edge target) — auto-type as endTask.
                 // This covers the common pattern of writing .to("完成") without a matching
-                // flow.node("完成", endTask()).
+                // flow.node("完成", b -> b.type(BuiltInNodeType.END_TASK)).
                 nd =
                         new NodeDefinition(
                                 name, label, NodeTypes.END_TASK, null, MAPPER.createObjectNode());
