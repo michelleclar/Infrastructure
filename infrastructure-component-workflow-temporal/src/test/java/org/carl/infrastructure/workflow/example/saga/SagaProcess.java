@@ -7,7 +7,6 @@ import org.carl.infrastructure.workflow.dsl.BuiltInNodes;
 import org.carl.infrastructure.workflow.dsl.Flow;
 import org.carl.infrastructure.workflow.dsl.FlowDef;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 
 /** Static {@link WorkflowDefinition}s used by the saga compensation tests. */
 final class SagaProcess {
@@ -41,9 +40,9 @@ final class SagaProcess {
         flow.node("sendNotification", BuiltInNodes.service("sendNotification"));
         flow.node("completed", b -> b.type(NodeTypes.END_TASK).label("已完成"));
 
-        flow.from("createOrder").on(Outcomes.SUCCESS).to("reserveBudget");
-        flow.from("reserveBudget").on(Outcomes.SUCCESS).to("sendNotification");
-        flow.from("sendNotification").on(Outcomes.SUCCESS).to("completed");
+        flow.from("createOrder").on("SUCCESS").to("reserveBudget");
+        flow.from("reserveBudget").on("SUCCESS").to("sendNotification");
+        flow.from("sendNotification").on("SUCCESS").to("completed");
 
         return flow.build();
     }

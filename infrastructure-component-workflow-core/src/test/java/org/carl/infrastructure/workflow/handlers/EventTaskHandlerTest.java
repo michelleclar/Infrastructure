@@ -7,12 +7,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.carl.infrastructure.workflow.definition.NodeResult;
 import org.carl.infrastructure.workflow.definition.NodeStatus;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
-import java.util.Set;
 
 class EventTaskHandlerTest {
 
@@ -22,7 +20,6 @@ class EventTaskHandlerTest {
     void metadataMatchesSpec() {
         assertEquals(NodeTypes.EVENT_TASK, handler.type());
         assertEquals(EventTaskConfig.class, handler.configType());
-        assertEquals(Set.of(Outcomes.RECEIVED, Outcomes.TIMEOUT), handler.outcomes());
     }
 
     @Test
@@ -50,10 +47,10 @@ class EventTaskHandlerTest {
         EventTaskConfig cfg = new EventTaskConfig("paid", null);
         TestContext ctx = new TestContext();
         assertEquals(
-                Outcomes.RECEIVED,
+                "RECEIVED",
                 handler.onEvent(ctx, new WorkflowEvent("paid", null), cfg).outcome());
         assertEquals(
-                Outcomes.TIMEOUT,
+                "TIMEOUT",
                 handler.onEvent(ctx, new WorkflowEvent("_timeout", null), cfg).outcome());
         assertEquals(
                 NodeStatus.WAITING,

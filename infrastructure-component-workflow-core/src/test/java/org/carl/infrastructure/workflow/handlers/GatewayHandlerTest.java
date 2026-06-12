@@ -18,8 +18,6 @@ class GatewayHandlerTest {
     void metadataMatchesSpec() {
         assertEquals(NodeTypes.GATEWAY, handler.type());
         assertEquals(GatewayConfig.class, handler.configType());
-        // dynamic outcomes — declared empty.
-        assertTrue(handler.outcomes().isEmpty());
     }
 
     @Test

@@ -18,7 +18,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record TaskGroupConfig(JoinRule join, List<TaskGroupChild> tasks) {
 
-    /** Aggregation strategy applied to child outcomes. */
+    /** Aggregation strategy applied to child result values. */
     public enum JoinRule {
         ALL("all"),
         ANY("any");

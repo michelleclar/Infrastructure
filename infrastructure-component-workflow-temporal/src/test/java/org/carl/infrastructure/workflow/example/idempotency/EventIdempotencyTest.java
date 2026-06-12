@@ -28,7 +28,6 @@ import org.carl.infrastructure.workflow.runtime.WorkflowResult;
 import org.carl.infrastructure.workflow.runtime.WorkflowState;
 import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -243,10 +242,10 @@ class EventIdempotencyTest {
         flow.node("completed", b -> b.type(NodeTypes.END_TASK).label("完成"));
         flow.node("rejected", b -> b.type(NodeTypes.END_TASK).label("已拒绝"));
 
-        flow.from("requestLeave").on(Outcomes.SUCCESS).to("leaveApproval");
-        flow.from("leaveApproval").on(Outcomes.APPROVED).to("onLeave");
-        flow.from("leaveApproval").on(Outcomes.REJECTED).to("rejected");
-        flow.from("onLeave").on(Outcomes.SUCCESS).to("completed");
+        flow.from("requestLeave").on("SUCCESS").to("leaveApproval");
+        flow.from("leaveApproval").on("APPROVED").to("onLeave");
+        flow.from("leaveApproval").on("REJECTED").to("rejected");
+        flow.from("onLeave").on("SUCCESS").to("completed");
 
         return flow.build();
     }
@@ -274,9 +273,9 @@ class EventIdempotencyTest {
                         .andThen(b -> b.set("awaitEvent", "approval")));
         flow.node("done", b -> b.type(NodeTypes.END_TASK).label("已完成"));
 
-        flow.from("requestLeave").on(Outcomes.SUCCESS).to("leaveApproval");
-        flow.from("leaveApproval").on(Outcomes.APPROVED).to("done");
-        flow.from("leaveApproval").on(Outcomes.REJECTED).to("requestLeave");
+        flow.from("requestLeave").on("SUCCESS").to("leaveApproval");
+        flow.from("leaveApproval").on("APPROVED").to("done");
+        flow.from("leaveApproval").on("REJECTED").to("requestLeave");
 
         return flow.build();
     }

@@ -23,7 +23,6 @@ import org.carl.infrastructure.workflow.spi.NodeExecutionContext;
 import org.carl.infrastructure.workflow.spi.NodeHandler;
 import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -132,7 +131,7 @@ class GraphValidatorTest {
     }
 
     @Test
-    void registryRejectsEdgeEventNotDeclaredByHandlerOutcomes() {
+    void registryDoesNotValidateEdgeEventAgainstHandlerResultValues() {
         WorkflowDefinition def =
                 WorkflowDefinition.of(
                         "w",
@@ -145,11 +144,7 @@ class GraphValidatorTest {
 
         ValidationReport report = GraphValidator.validate(def, registry);
 
-        assertFalse(report.ok());
-        assertTrue(
-                report.errors().stream()
-                        .anyMatch(s -> s.contains("sucess") && s.contains("handler outcomes")),
-                () -> "expected handler-outcomes error: " + report.errors());
+        assertTrue(report.ok(), () -> "edge event is a routing key, not handler metadata: " + report.errors());
     }
 
     @Test
@@ -159,7 +154,7 @@ class GraphValidatorTest {
         flow.node("done", b -> b.type(BuiltInNodeType.END_TASK));
         flow.from("approvals")
                 .join(Dsl.all(Dsl.node("hr", BuiltInNodes.approval("hr"))))
-                .on(Outcomes.APPROVED)
+                .on("APPROVED")
                 .to("done");
         NodeHandlerRegistry registry = new NodeHandlerRegistry();
         BuiltInHandlers.registerAll(registry);
@@ -416,13 +411,8 @@ class GraphValidatorTest {
         }
 
         @Override
-        public Set<String> outcomes() {
-            return Set.of(Outcomes.SUCCESS, Outcomes.FAILED);
-        }
-
-        @Override
         public NodeResult run(NodeExecutionContext ctx, ServiceConfig config) {
-            return NodeResult.completed(Outcomes.SUCCESS);
+            return NodeResult.completed("SUCCESS");
         }
     }
 
@@ -438,13 +428,8 @@ class GraphValidatorTest {
         }
 
         @Override
-        public Set<String> outcomes() {
-            return Set.of(Outcomes.COMPLETED);
-        }
-
-        @Override
         public NodeResult run(NodeExecutionContext ctx, Void config) {
-            return NodeResult.completed(Outcomes.COMPLETED);
+            return NodeResult.completed("COMPLETED");
         }
     }
 }

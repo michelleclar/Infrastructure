@@ -27,7 +27,6 @@ import org.carl.infrastructure.workflow.spi.NodeExecutionContext;
 import org.carl.infrastructure.workflow.spi.NodeHandler;
 import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 
 import java.time.Duration;
@@ -331,7 +330,7 @@ final class WorkflowInterpreter {
                         ? childResult.finalOutcome()
                         : (childResult.finalStatus() != null
                                 ? childResult.finalStatus().name()
-                                : Outcomes.COMPLETED);
+                                : "COMPLETED");
         Map<String, Object> eventPayload = new LinkedHashMap<>();
         eventPayload.put("subOutcome", subOutcome);
         JsonNode eventJson = mapper.valueToTree(eventPayload);

@@ -94,11 +94,6 @@ class NodeHandlerRegistryTest {
                     }
 
                     @Override
-                    public Set<String> outcomes() {
-                        return Set.of(Outcomes.APPROVED, Outcomes.REJECTED);
-                    }
-
-                    @Override
                     public NodeResult run(NodeExecutionContext ctx, Void config) {
                         return NodeResult.waiting();
                     }
@@ -140,14 +135,9 @@ class NodeHandlerRegistryTest {
         }
 
         @Override
-        public Set<String> outcomes() {
-            return Set.of(Outcomes.SUCCESS);
-        }
-
-        @Override
         public NodeResult run(NodeExecutionContext ctx, Void config) {
             String id = UUID.randomUUID().toString();
-            return NodeResult.completed(id == null ? Outcomes.FAILED : Outcomes.SUCCESS);
+            return NodeResult.completed(id == null ? "FAILED" : "SUCCESS");
         }
     }
 
@@ -164,13 +154,8 @@ class NodeHandlerRegistryTest {
             }
 
             @Override
-            public Set<String> outcomes() {
-                return Set.of(Outcomes.SUCCESS, Outcomes.FAILED);
-            }
-
-            @Override
             public NodeResult run(NodeExecutionContext ctx, Void config) {
-                return NodeResult.completed(Outcomes.SUCCESS);
+                return NodeResult.completed("SUCCESS");
             }
         };
     }

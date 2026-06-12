@@ -10,12 +10,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.carl.infrastructure.workflow.definition.NodeResult;
 import org.carl.infrastructure.workflow.definition.NodeStatus;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
-import java.util.Set;
 
 class ServiceTaskHandlerTest {
 
@@ -26,7 +24,6 @@ class ServiceTaskHandlerTest {
     void metadataMatchesSpec() {
         assertEquals(NodeTypes.SERVICE_TASK, handler.type());
         assertEquals(ServiceTaskConfig.class, handler.configType());
-        assertEquals(Set.of(Outcomes.SUCCESS, Outcomes.FAILED), handler.outcomes());
         assertTrue(handler.compensable());
     }
 
@@ -57,7 +54,7 @@ class ServiceTaskHandlerTest {
                 new WorkflowEvent("_activityResult", mapper.readTree("{\"status\":\"success\"}"));
         NodeResult r = handler.onEvent(new TestContext(), event, cfg);
         assertEquals(NodeStatus.COMPLETED, r.status());
-        assertEquals(Outcomes.SUCCESS, r.outcome());
+        assertEquals("SUCCESS", r.outcome());
     }
 
     @Test
@@ -70,7 +67,7 @@ class ServiceTaskHandlerTest {
                                 "{\"status\":\"success\",\"output\":{\"orderId\":\"ORD-42\",\"total\":99.9}}"));
         NodeResult r = handler.onEvent(new TestContext(), event, cfg);
         assertEquals(NodeStatus.COMPLETED, r.status());
-        assertEquals(Outcomes.SUCCESS, r.outcome());
+        assertEquals("SUCCESS", r.outcome());
         assertNotNull(r.payload().get("output"), "output must be present in NodeResult payload");
     }
 

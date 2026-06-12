@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import org.carl.infrastructure.workflow.definition.NodeDefinition;
 import org.carl.infrastructure.workflow.definition.NodeResult;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 import org.junit.jupiter.api.Test;
 
@@ -18,7 +17,7 @@ class InterceptorContractTest {
         DeterministicInterceptor det = new DeterministicInterceptor() {};
         InterceptorContext ctx = stubContext();
         NodeDefinition node = stubNode();
-        NodeResult result = NodeResult.completed(Outcomes.SUCCESS);
+        NodeResult result = NodeResult.completed("SUCCESS");
         WorkflowEvent event = new WorkflowEvent("anyEvent", null);
 
         assertDoesNotThrow(() -> det.onWorkflowStart(ctx));
@@ -35,7 +34,7 @@ class InterceptorContractTest {
         AsyncInterceptor async = new AsyncInterceptor() {};
         InterceptorContext ctx = stubContext();
         NodeDefinition node = stubNode();
-        NodeResult result = NodeResult.completed(Outcomes.SUCCESS);
+        NodeResult result = NodeResult.completed("SUCCESS");
         WorkflowEvent event = new WorkflowEvent("anyEvent", null);
 
         assertDoesNotThrow(() -> async.onWorkflowStart(ctx));

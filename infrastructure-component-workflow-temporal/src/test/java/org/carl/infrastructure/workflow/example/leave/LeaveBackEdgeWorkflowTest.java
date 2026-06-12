@@ -26,7 +26,6 @@ import org.carl.infrastructure.workflow.runtime.WorkerSetup;
 import org.carl.infrastructure.workflow.runtime.WorkflowInput;
 import org.carl.infrastructure.workflow.runtime.WorkflowResult;
 import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -135,7 +134,7 @@ class LeaveBackEdgeWorkflowTest {
         NodeResult approval = result.nodeResults().get("leaveApproval");
         assertNotNull(approval, "leaveApproval result should be recorded");
         assertEquals(
-                Outcomes.APPROVED,
+                "APPROVED",
                 approval.outcome(),
                 "final leaveApproval outcome should be APPROVED (last write wins)");
     }

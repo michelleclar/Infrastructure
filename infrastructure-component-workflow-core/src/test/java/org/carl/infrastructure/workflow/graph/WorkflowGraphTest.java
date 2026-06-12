@@ -10,7 +10,6 @@ import org.carl.infrastructure.workflow.definition.EdgeDefinition;
 import org.carl.infrastructure.workflow.definition.NodeDefinition;
 import org.carl.infrastructure.workflow.definition.WorkflowDefinition;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 import org.junit.jupiter.api.Test;
 
@@ -68,12 +67,12 @@ class WorkflowGraphTest {
                                 node("end", NodeTypes.END_TASK)),
                         List.of(
                                 event("A", "tg", "submit"),
-                                event("tg", "end", Outcomes.APPROVED),
-                                event("tg", "A", Outcomes.REJECTED)));
+                                event("tg", "end", "APPROVED"),
+                                event("tg", "A", "REJECTED")));
         WorkflowGraph graph = new WorkflowGraph(def);
 
         List<EdgeDefinition> approved =
-                graph.nextCandidates("tg", EdgeMatch.byEvent(Outcomes.APPROVED));
+                graph.nextCandidates("tg", EdgeMatch.byEvent("APPROVED"));
         assertEquals(1, approved.size());
         assertEquals("end", approved.get(0).to());
 
@@ -318,8 +317,8 @@ class WorkflowGraphTest {
                                 node("done", NodeTypes.END_TASK)),
                         List.of(
                                 event("requestLeave", "approval", "submit"),
-                                event("approval", "done", Outcomes.APPROVED),
-                                event("approval", "requestLeave", Outcomes.REJECTED)),
+                                event("approval", "done", "APPROVED"),
+                                event("approval", "requestLeave", "REJECTED")),
                         "requestLeave");
         WorkflowGraph graph = new WorkflowGraph(def);
         assertEquals("requestLeave", graph.effectiveStartNode());

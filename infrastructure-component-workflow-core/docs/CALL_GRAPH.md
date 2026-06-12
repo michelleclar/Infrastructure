@@ -29,7 +29,7 @@ flowchart LR
 核心数据流：
 
 1. DSL 构造 `WorkflowDefinition`。
-2. `GraphValidator` 校验定义结构、handler config 反序列化、edge event 是否属于 handler outcomes。
+2. `GraphValidator` 校验定义结构、handler 注册和 handler config 反序列化。
 3. runtime 通过 `NodeConfigCodec.decode` 得到 typed config。
 4. runtime 通过 `NodeConfigCodec.decodeState` 从 `businessData` 得到 handler 请求的 typed state。
 5. runtime 调用 `NodeHandler.run(ctx, config, state)`；等待事件时先用三参 `canAccept` 过滤，再用 `decodeEventPayload` 得到 typed event payload。
@@ -191,10 +191,6 @@ flowchart TD
     H --> I["NodeConfigCodec.decode(MAPPER, handler, node.config)"]
     I --> I1["normalize taskGroup DSL shape"]
     I --> I2["mapper.treeToValue(normalized, handler.configType())"]
-    G --> J["handlersByNodeId.put(node.id, handler)"]
-    J --> K["for each edge: source handler outcomes()"]
-    K --> L["edge.event nonblank and outcomes nonempty"]
-    L --> M["outcomes contains edge.event ? ok : error"]
     E --> N["new WorkflowGraph(definition)"]
     N --> O["resolve explicit/topological starts"]
     N --> P["graph.endNodes()"]
@@ -208,7 +204,7 @@ flowchart TD
     S --> U["ValidationReport.throwIfInvalid()"]
 ```
 
-`GraphValidator.validate(definition, registry)` 的 registry 分支会缓存每个节点的 handler，再用同一个 handler 校验该节点的出边 event。`handler.outcomes()` 为空时表示动态 outcome（例如 gateway），不会做固定 outcome 集合校验。
+`GraphValidator.validate(definition, registry)` 的 registry 分支只校验节点 type 是否能找到 handler，以及节点 config 是否能绑定到 `handler.configType()`。边上的 `event` 是 `.on(...)` 写入的路由 key，不再要求 handler 预声明 outcome 集合。
 
 `WorkflowGraph` 方法关系：
 
@@ -355,7 +351,6 @@ classDiagram
         +Class~CONFIG~ configType()
         +Class~STATE~ stateType()
         +Class~EVENT~ eventType()
-        +Set~String~ outcomes()
         +NodeResult run(ctx, CONFIG)
         +NodeResult run(ctx, CONFIG, STATE)
         +boolean canAccept(ctx, event, CONFIG)
@@ -569,7 +564,7 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-    A["run(ctx, EndTaskConfig)"] --> B["NodeResult.completed(Outcomes.COMPLETED)"]
+    A["run(ctx, EndTaskConfig)"] --> B["NodeResult.completed(COMPLETED)"]
 ```
 
 ## interceptor

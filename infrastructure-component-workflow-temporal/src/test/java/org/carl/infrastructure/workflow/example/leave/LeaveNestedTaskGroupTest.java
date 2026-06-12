@@ -25,7 +25,6 @@ import org.carl.infrastructure.workflow.runtime.WorkerSetup;
 import org.carl.infrastructure.workflow.runtime.WorkflowInput;
 import org.carl.infrastructure.workflow.runtime.WorkflowResult;
 import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -128,22 +127,22 @@ class LeaveNestedTaskGroupTest {
         // Outer taskGroup must have recorded APPROVED.
         NodeResult approvals = result.nodeResults().get("approvals");
         assertNotNull(approvals, "outer approvals result must be recorded");
-        assertEquals(Outcomes.APPROVED, approvals.outcome());
+        assertEquals("APPROVED", approvals.outcome());
 
         // HR child must be recorded.
         NodeResult hr = result.nodeResults().get(HR_KEY);
         assertNotNull(hr, "HR result must be recorded at " + HR_KEY);
-        assertEquals(Outcomes.APPROVED, hr.outcome());
+        assertEquals("APPROVED", hr.outcome());
 
         // Management-layer (nested taskGroup) result must be recorded.
         NodeResult mgmt = result.nodeResults().get(MGMT_KEY);
         assertNotNull(mgmt, "management-layer result must be recorded at " + MGMT_KEY);
-        assertEquals(Outcomes.APPROVED, mgmt.outcome());
+        assertEquals("APPROVED", mgmt.outcome());
 
         // Manager leaf must be recorded.
         NodeResult manager = result.nodeResults().get(MANAGER_KEY);
         assertNotNull(manager, "manager result must be recorded at " + MANAGER_KEY);
-        assertEquals(Outcomes.APPROVED, manager.outcome());
+        assertEquals("APPROVED", manager.outcome());
     }
 
     /**
@@ -175,12 +174,12 @@ class LeaveNestedTaskGroupTest {
         // Outer taskGroup must have recorded REJECTED (because inner ANY is REJECTED).
         NodeResult approvals = result.nodeResults().get("approvals");
         assertNotNull(approvals, "outer approvals result must be recorded");
-        assertEquals(Outcomes.REJECTED, approvals.outcome());
+        assertEquals("REJECTED", approvals.outcome());
 
         // Management-layer must be REJECTED.
         NodeResult mgmt = result.nodeResults().get(MGMT_KEY);
         assertNotNull(mgmt, "management-layer result must be recorded at " + MGMT_KEY);
-        assertEquals(Outcomes.REJECTED, mgmt.outcome());
+        assertEquals("REJECTED", mgmt.outcome());
     }
 
     // ── helpers ──────────────────────────────────────────────────────────────────────────────────

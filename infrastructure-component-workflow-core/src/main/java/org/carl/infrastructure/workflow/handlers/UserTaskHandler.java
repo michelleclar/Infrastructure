@@ -7,20 +7,17 @@ import org.carl.infrastructure.workflow.definition.NodeStatus;
 import org.carl.infrastructure.workflow.spi.NodeExecutionContext;
 import org.carl.infrastructure.workflow.spi.NodeHandler;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Built-in handler for generic {@code userTask} nodes.
  *
- * <p>Mirrors the {@link ApprovalTaskHandler} shape but emits the generic {@link
- * Outcomes#COMPLETED}/{@link Outcomes#CANCELLED}/{@link Outcomes#TIMEOUT} outcome set. The {@code
- * decision} field on the await event maps to {@code completed}, {@code cancelled} (case
- * insensitive).
+ * <p>Mirrors the {@link ApprovalTaskHandler} shape but emits generic routing values such as {@code
+ * "COMPLETED"}, {@code "CANCELLED"}, or {@code "TIMEOUT"}. The {@code decision} field on the await
+ * event maps to {@code completed}, {@code cancelled} (case insensitive).
  *
  * <p>Like {@link ApprovalTaskHandler}, supports an optional {@value #PAYLOAD_TASK_ID} field in the
  * event payload to disambiguate sibling user tasks that share an {@code awaitEvent} name. See
@@ -49,11 +46,6 @@ public final class UserTaskHandler implements NodeHandler<UserTaskConfig, Object
     @Override
     public Class<UserTaskConfig> configType() {
         return UserTaskConfig.class;
-    }
-
-    @Override
-    public Set<String> outcomes() {
-        return Set.of(Outcomes.COMPLETED, Outcomes.CANCELLED, Outcomes.TIMEOUT);
     }
 
     @Override
@@ -119,7 +111,7 @@ public final class UserTaskHandler implements NodeHandler<UserTaskConfig, Object
             return NodeResult.waiting();
         }
         if (TIMEOUT_EVENT.equals(event.name())) {
-            return NodeResult.completed(Outcomes.TIMEOUT);
+            return NodeResult.completed("TIMEOUT");
         }
         if (!awaitEventName(cfg).equals(event.name())) {
             return NodeResult.waiting();
@@ -132,9 +124,9 @@ public final class UserTaskHandler implements NodeHandler<UserTaskConfig, Object
         // Normalise to lower-case so clients can send "Completed", "CANCELLED", etc.
         switch (decision.trim().toLowerCase()) {
             case "completed":
-                return NodeResult.completed(Outcomes.COMPLETED);
+                return NodeResult.completed("COMPLETED");
             case "cancelled":
-                return NodeResult.completed(Outcomes.CANCELLED);
+                return NodeResult.completed("CANCELLED");
             default:
                 return NodeResult.failed("unknown user task decision: " + decision);
         }

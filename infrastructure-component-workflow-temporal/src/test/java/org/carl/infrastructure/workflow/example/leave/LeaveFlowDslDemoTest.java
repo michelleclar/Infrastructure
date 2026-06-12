@@ -32,7 +32,6 @@ import org.carl.infrastructure.workflow.runtime.WorkflowInput;
 import org.carl.infrastructure.workflow.runtime.WorkflowResult;
 import org.carl.infrastructure.workflow.spi.BuiltInNodeType;
 import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -137,20 +136,20 @@ class LeaveFlowDslDemoTest {
         // Verify taskGroup group result.
         NodeResult approvals = result.nodeResults().get(N_APPROVAL);
         assertNotNull(approvals, "taskGroup result '" + N_APPROVAL + "' should be recorded");
-        assertEquals(Outcomes.APPROVED, approvals.outcome());
+        assertEquals("APPROVED", approvals.outcome());
 
         // Verify individual child results.
         NodeResult hr = result.nodeResults().get(HR_KEY);
         NodeResult mgr = result.nodeResults().get(MANAGER_KEY);
         assertNotNull(hr, "HR child result should be recorded under " + HR_KEY);
         assertNotNull(mgr, "Manager child result should be recorded under " + MANAGER_KEY);
-        assertEquals(Outcomes.APPROVED, hr.outcome());
-        assertEquals(Outcomes.APPROVED, mgr.outcome());
+        assertEquals("APPROVED", hr.outcome());
+        assertEquals("APPROVED", mgr.outcome());
 
         // Verify the service node completed successfully.
         NodeResult request = result.nodeResults().get(N_REQUEST);
         assertNotNull(request, "service node '" + N_REQUEST + "' result should be recorded");
-        assertEquals(Outcomes.SUCCESS, request.outcome());
+        assertEquals("SUCCESS", request.outcome());
     }
 
     /**
@@ -180,12 +179,12 @@ class LeaveFlowDslDemoTest {
         // Verify taskGroup group result.
         NodeResult approvals = result.nodeResults().get(N_APPROVAL);
         assertNotNull(approvals, "taskGroup result '" + N_APPROVAL + "' should be recorded");
-        assertEquals(Outcomes.REJECTED, approvals.outcome());
+        assertEquals("REJECTED", approvals.outcome());
 
         // The manager's rejection is recorded.
         NodeResult mgr = result.nodeResults().get(MANAGER_KEY);
         assertNotNull(mgr, "Manager child result should be recorded under " + MANAGER_KEY);
-        assertEquals(Outcomes.REJECTED, mgr.outcome());
+        assertEquals("REJECTED", mgr.outcome());
     }
 
     // ---- flow definition ----------------------------------------------------
@@ -209,7 +208,7 @@ class LeaveFlowDslDemoTest {
                         .andThen(b -> b.set("activityInput", Map.of("employeeId", "alice"))));
 
         // Route from the service node to the approval group on success.
-        flow.from(N_REQUEST).on(Outcomes.SUCCESS).to(N_APPROVAL);
+        flow.from(N_REQUEST).on("SUCCESS").to(N_APPROVAL);
 
         // Declare the co-sign taskGroup via .join(all(...)).
         flow.from(N_APPROVAL)
@@ -217,9 +216,9 @@ class LeaveFlowDslDemoTest {
                         all(
                                 node(N_HR, BuiltInNodes.approval("hr")),
                                 node(N_MANAGER, BuiltInNodes.approval("manager"))))
-                .on(Outcomes.APPROVED)
+                .on("APPROVED")
                 .to(N_APPROVED)
-                .on(Outcomes.REJECTED)
+                .on("REJECTED")
                 .to(N_REJECTED);
 
         // End nodes.

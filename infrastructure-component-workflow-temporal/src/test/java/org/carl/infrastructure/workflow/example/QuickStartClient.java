@@ -12,7 +12,6 @@ import org.carl.infrastructure.workflow.runtime.GenericWorkflow;
 import org.carl.infrastructure.workflow.runtime.WorkflowInput;
 import org.carl.infrastructure.workflow.definition.NodeStatus;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 
 import java.util.Map;
@@ -104,13 +103,13 @@ public class QuickStartClient {
         flow.node("completed", b -> b.type(NodeTypes.END_TASK).label("已完成"));
         flow.node("rejected", b -> b.type(NodeTypes.END_TASK).label("已拒绝"));
 
-        // 路由：event 名必须用 Outcomes 常量（大写敏感）；用字面 "success"/"approved"
-        // 会和 ServiceTask/ApprovalTask 返回的 Outcomes.SUCCESS/APPROVED 匹配不上，
+        // 路由：event 名必须使用大写路由值；用字面 "success"/"approved"
+        // 会和 ServiceTask/ApprovalTask 返回的 "SUCCESS"/APPROVED 匹配不上，
         // pickNextEdge 返回 null → workflow 在当前节点直接终止。
-        flow.from("requestLeave").on(Outcomes.SUCCESS).to("managerApproval");
-        flow.from("managerApproval").on(Outcomes.APPROVED).to("notifyManager");
-        flow.from("managerApproval").on(Outcomes.REJECTED).to("rejected");
-        flow.from("notifyManager").on(Outcomes.SUCCESS).to("completed");
+        flow.from("requestLeave").on("SUCCESS").to("managerApproval");
+        flow.from("managerApproval").on("APPROVED").to("notifyManager");
+        flow.from("managerApproval").on("REJECTED").to("rejected");
+        flow.from("notifyManager").on("SUCCESS").to("completed");
 
         return flow.build();
     }

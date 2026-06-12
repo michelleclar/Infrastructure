@@ -11,7 +11,6 @@ import org.carl.infrastructure.workflow.definition.NodeStatus;
 import org.carl.infrastructure.workflow.handlers.TaskGroupConfig.JoinRule;
 import org.carl.infrastructure.workflow.handlers.TaskGroupConfig.TaskGroupChild;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 import org.junit.jupiter.api.Test;
 
@@ -28,11 +27,6 @@ class TaskGroupHandlerTest {
     void metadataMatchesSpec() {
         assertEquals(NodeTypes.TASK_GROUP, handler.type());
         assertEquals(TaskGroupConfig.class, handler.configType());
-        // outcomes is the union of possible child outcomes.
-        assertTrue(handler.outcomes().contains(Outcomes.APPROVED));
-        assertTrue(handler.outcomes().contains(Outcomes.REJECTED));
-        assertTrue(handler.outcomes().contains(Outcomes.SENDBACK));
-        assertTrue(handler.outcomes().contains(Outcomes.TIMEOUT));
     }
 
     @Test
@@ -74,11 +68,11 @@ class TaskGroupHandlerTest {
         TaskGroupConfig cfg = group(JoinRule.ALL, "a", "b");
         TestContext ctx = parentCtx();
         ctx.setResult(
-                TaskGroupContract.childKey("parent", "a"), NodeResult.completed(Outcomes.APPROVED));
+                TaskGroupContract.childKey("parent", "a"), NodeResult.completed("APPROVED"));
         ctx.setResult(
-                TaskGroupContract.childKey("parent", "b"), NodeResult.completed(Outcomes.APPROVED));
+                TaskGroupContract.childKey("parent", "b"), NodeResult.completed("APPROVED"));
         NodeResult r = handler.onEvent(ctx, new WorkflowEvent("_childCompleted", null), cfg);
-        assertEquals(Outcomes.APPROVED, r.outcome());
+        assertEquals("APPROVED", r.outcome());
     }
 
     @Test
@@ -86,11 +80,11 @@ class TaskGroupHandlerTest {
         TaskGroupConfig cfg = group(JoinRule.ALL, "a", "b");
         TestContext ctx = parentCtx();
         ctx.setResult(
-                TaskGroupContract.childKey("parent", "a"), NodeResult.completed(Outcomes.APPROVED));
+                TaskGroupContract.childKey("parent", "a"), NodeResult.completed("APPROVED"));
         ctx.setResult(
-                TaskGroupContract.childKey("parent", "b"), NodeResult.completed(Outcomes.REJECTED));
+                TaskGroupContract.childKey("parent", "b"), NodeResult.completed("REJECTED"));
         NodeResult r = handler.onEvent(ctx, new WorkflowEvent("_childCompleted", null), cfg);
-        assertEquals(Outcomes.REJECTED, r.outcome());
+        assertEquals("REJECTED", r.outcome());
     }
 
     @Test
@@ -98,7 +92,7 @@ class TaskGroupHandlerTest {
         TaskGroupConfig cfg = group(JoinRule.ALL, "a", "b");
         TestContext ctx = parentCtx();
         ctx.setResult(
-                TaskGroupContract.childKey("parent", "a"), NodeResult.completed(Outcomes.APPROVED));
+                TaskGroupContract.childKey("parent", "a"), NodeResult.completed("APPROVED"));
         // child b not yet seeded.
         NodeResult r = handler.onEvent(ctx, new WorkflowEvent("_childCompleted", null), cfg);
         assertEquals(NodeStatus.WAITING, r.status());
@@ -109,13 +103,13 @@ class TaskGroupHandlerTest {
         TaskGroupConfig cfg = group(JoinRule.ALL, "a", "b", "c");
         TestContext ctx = parentCtx();
         ctx.setResult(
-                TaskGroupContract.childKey("parent", "a"), NodeResult.completed(Outcomes.APPROVED));
+                TaskGroupContract.childKey("parent", "a"), NodeResult.completed("APPROVED"));
         ctx.setResult(
-                TaskGroupContract.childKey("parent", "b"), NodeResult.completed(Outcomes.SENDBACK));
+                TaskGroupContract.childKey("parent", "b"), NodeResult.completed("SENDBACK"));
         ctx.setResult(
-                TaskGroupContract.childKey("parent", "c"), NodeResult.completed(Outcomes.APPROVED));
+                TaskGroupContract.childKey("parent", "c"), NodeResult.completed("APPROVED"));
         NodeResult r = handler.onEvent(ctx, new WorkflowEvent("_childCompleted", null), cfg);
-        assertEquals(Outcomes.SENDBACK, r.outcome());
+        assertEquals("SENDBACK", r.outcome());
     }
 
     @Test
@@ -123,10 +117,10 @@ class TaskGroupHandlerTest {
         TaskGroupConfig cfg = group(JoinRule.ANY, "a", "b");
         TestContext ctx = parentCtx();
         ctx.setResult(
-                TaskGroupContract.childKey("parent", "a"), NodeResult.completed(Outcomes.APPROVED));
+                TaskGroupContract.childKey("parent", "a"), NodeResult.completed("APPROVED"));
         // b still pending; ANY should fire immediately on first approval.
         NodeResult r = handler.onEvent(ctx, new WorkflowEvent("_childCompleted", null), cfg);
-        assertEquals(Outcomes.APPROVED, r.outcome());
+        assertEquals("APPROVED", r.outcome());
     }
 
     @Test
@@ -134,11 +128,11 @@ class TaskGroupHandlerTest {
         TaskGroupConfig cfg = group(JoinRule.ANY, "a", "b");
         TestContext ctx = parentCtx();
         ctx.setResult(
-                TaskGroupContract.childKey("parent", "a"), NodeResult.completed(Outcomes.REJECTED));
+                TaskGroupContract.childKey("parent", "a"), NodeResult.completed("REJECTED"));
         ctx.setResult(
-                TaskGroupContract.childKey("parent", "b"), NodeResult.completed(Outcomes.REJECTED));
+                TaskGroupContract.childKey("parent", "b"), NodeResult.completed("REJECTED"));
         NodeResult r = handler.onEvent(ctx, new WorkflowEvent("_childCompleted", null), cfg);
-        assertEquals(Outcomes.REJECTED, r.outcome());
+        assertEquals("REJECTED", r.outcome());
     }
 
     @Test
@@ -146,7 +140,7 @@ class TaskGroupHandlerTest {
         TaskGroupConfig cfg = group(JoinRule.ANY, "a", "b");
         TestContext ctx = parentCtx();
         ctx.setResult(
-                TaskGroupContract.childKey("parent", "a"), NodeResult.completed(Outcomes.REJECTED));
+                TaskGroupContract.childKey("parent", "a"), NodeResult.completed("REJECTED"));
         // b still pending.
         NodeResult r = handler.onEvent(ctx, new WorkflowEvent("_childCompleted", null), cfg);
         assertEquals(NodeStatus.WAITING, r.status());
@@ -159,15 +153,15 @@ class TaskGroupHandlerTest {
                 TaskGroupHandler.aggregate(
                         JoinRule.ALL,
                         Arrays.asList(
-                                NodeResult.completed(Outcomes.SUCCESS),
-                                NodeResult.completed(Outcomes.COMPLETED)));
-        assertEquals(Outcomes.APPROVED, r.outcome());
+                                NodeResult.completed("SUCCESS"),
+                                NodeResult.completed("COMPLETED")));
+        assertEquals("APPROVED", r.outcome());
     }
 
     @Test
     void emptyChildrenListImmediatelyApproved() {
         NodeResult r = TaskGroupHandler.aggregate(JoinRule.ALL, Collections.emptyList());
-        assertEquals(Outcomes.APPROVED, r.outcome());
+        assertEquals("APPROVED", r.outcome());
     }
 
     @Test

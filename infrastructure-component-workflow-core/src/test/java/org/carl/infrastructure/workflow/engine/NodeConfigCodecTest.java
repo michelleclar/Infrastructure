@@ -13,11 +13,9 @@ import org.carl.infrastructure.workflow.handlers.ServiceTaskHandler;
 import org.carl.infrastructure.workflow.spi.NodeExecutionContext;
 import org.carl.infrastructure.workflow.spi.NodeHandler;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * Pure-Java unit tests for {@link NodeConfigCodec} — <strong>no Temporal runtime involved</strong>.
@@ -146,13 +144,8 @@ class NodeConfigCodecTest {
         }
 
         @Override
-        public Set<String> outcomes() {
-            return Set.of(Outcomes.SUCCESS);
-        }
-
-        @Override
         public NodeResult run(NodeExecutionContext ctx, TypedConfig config) {
-            return NodeResult.completed(Outcomes.SUCCESS);
+            return NodeResult.completed("SUCCESS");
         }
     }
 }

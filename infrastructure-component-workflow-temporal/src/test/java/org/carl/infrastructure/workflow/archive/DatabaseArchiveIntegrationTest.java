@@ -21,7 +21,6 @@ import org.carl.infrastructure.workflow.runtime.WorkflowInput;
 import org.carl.infrastructure.workflow.runtime.WorkflowResult;
 import org.carl.infrastructure.workflow.spi.BuiltInNodeType;
 import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 import org.carl.infrastructure.workflow.handlers.BuiltInHandlers;
 import org.carl.infrastructure.workflow.runtime.HandlerHolder;
@@ -272,9 +271,9 @@ class DatabaseArchiveIntegrationTest {
         flow.node("completed", b -> b.type(BuiltInNodeType.END_TASK));
         flow.node("rejected", b -> b.type(BuiltInNodeType.END_TASK));
 
-        flow.from("requestLeave").on(Outcomes.SUCCESS).to("leaveApproval");
-        flow.from("leaveApproval").on(Outcomes.APPROVED).to("completed");
-        flow.from("leaveApproval").on(Outcomes.REJECTED).to("rejected");
+        flow.from("requestLeave").on("SUCCESS").to("leaveApproval");
+        flow.from("leaveApproval").on("APPROVED").to("completed");
+        flow.from("leaveApproval").on("REJECTED").to("rejected");
 
         return flow.build();
     }

@@ -14,7 +14,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.carl.infrastructure.workflow.definition.NodeDefinition;
 import org.carl.infrastructure.workflow.definition.WorkflowDefinition;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -124,12 +123,12 @@ class NestedTaskGroupJsonTest {
         FlowDef flow = Flow.define("threeLayer", "three layer");
         flow.start("start");
         flow.node("start", BuiltInNodes.service("noop"));
-        flow.from("start").on(Outcomes.SUCCESS).to("outerGroup");
+        flow.from("start").on("SUCCESS").to("outerGroup");
         flow.from("outerGroup")
                 .join(all(
                         node("d", approval("d")),
                         node("middleGroup", new NodeConfig(NodeTypes.TASK_GROUP, java.util.Map.of()), middleSpec)))
-                .on(Outcomes.APPROVED).to("done");
+                .on("APPROVED").to("done");
         flow.endNode("done");
 
         WorkflowDefinition def = flow.build();

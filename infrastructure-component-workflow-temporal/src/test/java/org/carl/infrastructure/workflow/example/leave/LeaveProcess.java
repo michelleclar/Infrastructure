@@ -11,7 +11,6 @@ import org.carl.infrastructure.workflow.dsl.BuiltInNodes;
 import org.carl.infrastructure.workflow.dsl.Flow;
 import org.carl.infrastructure.workflow.dsl.FlowDef;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.dsl.NodeConfig;
 import org.carl.infrastructure.workflow.dsl.JoinSpec;
 
@@ -52,11 +51,11 @@ final class LeaveProcess {
         flow.node("rejected", b -> b.type(NodeTypes.END_TASK).label("已拒绝"));
         flow.node("timedOut", b -> b.type(NodeTypes.END_TASK).label("已超时"));
 
-        flow.from("requestLeave").on(Outcomes.SUCCESS).to("leaveApproval");
-        flow.from("leaveApproval").on(Outcomes.APPROVED).to("onLeave");
-        flow.from("leaveApproval").on(Outcomes.REJECTED).to("rejected");
-        flow.from("leaveApproval").on(Outcomes.TIMEOUT).to("timedOut");
-        flow.from("onLeave").on(Outcomes.SUCCESS).to("completed");
+        flow.from("requestLeave").on("SUCCESS").to("leaveApproval");
+        flow.from("leaveApproval").on("APPROVED").to("onLeave");
+        flow.from("leaveApproval").on("REJECTED").to("rejected");
+        flow.from("leaveApproval").on("TIMEOUT").to("timedOut");
+        flow.from("onLeave").on("SUCCESS").to("completed");
 
         return flow.build();
     }
@@ -82,17 +81,17 @@ final class LeaveProcess {
         flow.node("completed", b -> b.type(NodeTypes.END_TASK).label("完成"));
         flow.node("rejected", b -> b.type(NodeTypes.END_TASK).label("已拒绝"));
 
-        flow.from("requestLeave").on(Outcomes.SUCCESS).to("approvals");
+        flow.from("requestLeave").on("SUCCESS").to("approvals");
         flow.from("approvals")
                 .join(
                         all(
                                 node("hrApproval", BuiltInNodes.approval("hr")),
                                 node("managerApproval", BuiltInNodes.approval("manager"))))
-                .on(Outcomes.APPROVED)
+                .on("APPROVED")
                 .to("onLeave")
-                .on(Outcomes.REJECTED)
+                .on("REJECTED")
                 .to("rejected");
-        flow.from("onLeave").on(Outcomes.SUCCESS).to("completed");
+        flow.from("onLeave").on("SUCCESS").to("completed");
 
         return flow.build();
     }
@@ -120,17 +119,17 @@ final class LeaveProcess {
         flow.node("completed", b -> b.type(NodeTypes.END_TASK).label("完成"));
         flow.node("rejected", b -> b.type(NodeTypes.END_TASK).label("已拒绝"));
 
-        flow.from("requestLeave").on(Outcomes.SUCCESS).to("approvals");
+        flow.from("requestLeave").on("SUCCESS").to("approvals");
         flow.from("approvals")
                 .join(
                         any(
                                 node("hrApproval", BuiltInNodes.approval("hr")),
                                 node("managerApproval", BuiltInNodes.approval("manager"))))
-                .on(Outcomes.APPROVED)
+                .on("APPROVED")
                 .to("onLeave")
-                .on(Outcomes.REJECTED)
+                .on("REJECTED")
                 .to("rejected");
-        flow.from("onLeave").on(Outcomes.SUCCESS).to("completed");
+        flow.from("onLeave").on("SUCCESS").to("completed");
 
         return flow.build();
     }
@@ -162,9 +161,9 @@ final class LeaveProcess {
                 BuiltInNodes.approval("manager").andThen(b -> b.set("awaitEvent", "approval")));
         flow.node("done", b -> b.type(NodeTypes.END_TASK).label("已完成"));
 
-        flow.from("requestLeave").on(Outcomes.SUCCESS).to("leaveApproval");
-        flow.from("leaveApproval").on(Outcomes.APPROVED).to("done");
-        flow.from("leaveApproval").on(Outcomes.REJECTED).to("requestLeave");
+        flow.from("requestLeave").on("SUCCESS").to("leaveApproval");
+        flow.from("leaveApproval").on("APPROVED").to("done");
+        flow.from("leaveApproval").on("REJECTED").to("requestLeave");
 
         return flow.build();
     }
@@ -201,16 +200,16 @@ final class LeaveProcess {
                 node("managerApproval", BuiltInNodes.approval("manager")),
                 node("cfoApproval",     BuiltInNodes.approval("cfo")));
 
-        flow.from("requestLeave").on(Outcomes.SUCCESS).to("approvals");
+        flow.from("requestLeave").on("SUCCESS").to("approvals");
         flow.from("approvals")
                 .join(all(
                         node("hrApproval", BuiltInNodes.approval("hr")),
                         node("managementApproval",
                                 new NodeConfig(NodeTypes.TASK_GROUP, Map.of()),
                                 managementLayer)))
-                .on(Outcomes.APPROVED).to("onLeave")
-                .on(Outcomes.REJECTED).to("rejected");
-        flow.from("onLeave").on(Outcomes.SUCCESS).to("completed");
+                .on("APPROVED").to("onLeave")
+                .on("REJECTED").to("rejected");
+        flow.from("onLeave").on("SUCCESS").to("completed");
 
         return flow.build();
     }

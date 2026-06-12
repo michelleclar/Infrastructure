@@ -10,7 +10,7 @@ infrastructure-component-workflow-core         纯 Java，无 Temporal 依赖
   dsl/         Flow.define(...) FlowDef / NodeBuilder / BuiltInNodes / JoinSpec
   handlers/    9 个 BuiltInHandler（serviceTask / approvalTask / userTask / eventTask
                timerTask / taskGroup / gateway / subProcess / endTask）
-  spi/         NodeHandler<C> 接口 / NodeHandlerRegistry / NodeType / NodeTypes / Outcomes
+  spi/         NodeHandler<C> 接口 / NodeHandlerRegistry / NodeType / NodeTypes
   graph/       WorkflowGraph + GraphValidator（可达性 + Tarjan 循环）
   interceptor/ DeterministicInterceptor / AsyncInterceptor / WorkflowInterceptorRegistry
 
@@ -129,10 +129,10 @@ public class MyClient {
         flow.node("completed", b -> b.type(NodeTypes.END_TASK).label("完成"));
         flow.node("rejected", b -> b.type(NodeTypes.END_TASK).label("拒绝"));
 
-        flow.from("requestLeave").on(Outcomes.SUCCESS).to("approval");
-        flow.from("approval").on(Outcomes.APPROVED).to("notify");
-        flow.from("approval").on(Outcomes.REJECTED).to("rejected");
-        flow.from("notify").on(Outcomes.SUCCESS).to("completed");
+        flow.from("requestLeave").on("SUCCESS").to("approval");
+        flow.from("approval").on("APPROVED").to("notify");
+        flow.from("approval").on("REJECTED").to("rejected");
+        flow.from("notify").on("SUCCESS").to("completed");
 
         WorkflowDefinition def = flow.build();
 
@@ -187,21 +187,21 @@ public class MyClient {
 | `SUB_PROCESS` | `BuiltInNodes.subProcess("subFlowId")` | child workflow |
 | `END_TASK` | `BuiltInNodes.endTask()` | 终止节点 |
 
-### 标准 Outcomes（`Outcomes`）
+### 标准路由值
 
 `SUCCESS` / `FAILED` / `APPROVED` / `REJECTED` / `SENDBACK` / `TIMEOUT` / `RECEIVED` / `TRIGGERED` / `CANCELLED` / `COMPLETED`
 
 ### 路由（`flow.from(X)` 链式）
 
 ```java
-flow.from("approval").on(Outcomes.APPROVED).to("notify");
-flow.from("approval").on(Outcomes.REJECTED).to("rejected");
+flow.from("approval").on("APPROVED").to("notify");
+flow.from("approval").on("REJECTED").to("rejected");
 
 // 条件路由：同一 event 多条边，按声明顺序匹配 .when 表达式；最后一条不带 .when
 // 作为 fall-through（默认）。表达式是 Jakarta EL，必须 ${...} 包裹。
-flow.from("requestLeave").on(Outcomes.SUCCESS)
+flow.from("requestLeave").on("SUCCESS")
     .when("${largeAmount}").to("bigApproval");
-flow.from("requestLeave").on(Outcomes.SUCCESS).to("normalApproval");  // 默认分支
+flow.from("requestLeave").on("SUCCESS").to("normalApproval");  // 默认分支
 ```
 
 EL 上下文可读（详见 `ConditionEvaluator`）：
@@ -217,13 +217,13 @@ EL 上下文可读（详见 `ConditionEvaluator`）：
 ```java
 import static org.carl.infrastructure.workflow.dsl.Dsl.*;
 
-flow.from("submit").on(Outcomes.SUCCESS).to("approvals");
+flow.from("submit").on("SUCCESS").to("approvals");
 flow.from("approvals")
     .join(all(                    // 全签：all 全过才 APPROVED；any 用 any(...)
         node("hr", BuiltInNodes.approval("hr")),
         node("manager", BuiltInNodes.approval("manager"))))
-    .on(Outcomes.APPROVED).to("notify")
-    .on(Outcomes.REJECTED).to("rejected");
+    .on("APPROVED").to("notify")
+    .on("REJECTED").to("rejected");
 
 // 嵌套：外层 ALL，内层一组用 ANY
 JoinSpec mgmt = any(
@@ -233,8 +233,8 @@ flow.from("approvals")
     .join(all(
         node("hr", BuiltInNodes.approval("hr")),
         node("mgmt", new NodeConfig(NodeTypes.TASK_GROUP, Map.of()), mgmt)))
-    .on(Outcomes.APPROVED).to("notify")
-    .on(Outcomes.REJECTED).to("rejected");
+    .on("APPROVED").to("notify")
+    .on("REJECTED").to("rejected");
 ```
 
 ### Signal 收发
@@ -289,10 +289,6 @@ public class SmsHandler implements NodeHandler<SmsConfig> {
 
     @Override public Class<SmsConfig> configType() { return SmsConfig.class; }
 
-    @Override public Set<String> outcomes() {
-        return Set.of(Outcomes.SUCCESS, Outcomes.FAILED);
-    }
-
     @Override
     public NodeResult run(NodeExecutionContext ctx, SmsConfig config) {
         // ✅ 返回 WAITING + ACTIVITY intent，让 runtime 调注册过的业务 activity
@@ -313,7 +309,7 @@ public class SmsHandler implements NodeHandler<SmsConfig> {
     @Override
     public NodeResult onEvent(NodeExecutionContext ctx, WorkflowEvent event, SmsConfig config) {
         // runtime 把 activity 结果合成 "_activityResult" 事件回灌
-        return NodeResult.completed(Outcomes.SUCCESS);
+        return NodeResult.completed("SUCCESS");
     }
 }
 
@@ -428,7 +424,7 @@ TEMPORAL_TARGET=180.184.66.147:31733 \
 | `NodeHandlerRegistry not installed` | 没调 `WorkerSetup.setup`；或者在 workflow 代码里直接 `new` 了 Registry |
 | `Activity Type "Archive" is not registered` | Worker 没注册 archive activity，但 `WorkflowInput.archive=true` → 关闭归档或注册 `DatabaseArchiveActivities` |
 | `Activity Type "Execute" is not registered` | Worker 漏了 `WorkerSetup.setup(...)`（它注册 `GenericActivity` 实现，Temporal 把方法名 `execute` 翻成活动类型 `Execute`） |
-| Signal 报 `NOT_FOUND: workflow execution already completed`（且 workflow 在 ApprovalTask 之前就完了） | `.on("approved")` 等 event 名用了**小写字面值**，但 `Outcomes.SUCCESS`/`APPROVED` 都是**大写**，`pickNextEdge` 大小写敏感匹配不上 → 路由失败，workflow 在当前节点终止。统一用 `Outcomes.*` 常量 |
+| Signal 报 `NOT_FOUND: workflow execution already completed`（且 workflow 在 ApprovalTask 之前就完了） | `.on("approved")` 等 event 名用了**小写字面值**，但 `"SUCCESS"`/`"APPROVED"` 都是**大写**，`pickNextEdge` 大小写敏感匹配不上 → 路由失败，workflow 在当前节点终止。统一用 handler 实际返回的大写路由值 |
 | Service Task 跑起来抛 "no activity registered for ..." | `BusinessActivityRegistry` 找不到对应业务 activity 名字 → 检查 `register(name, lambda)` 拼写 |
 | Workflow 卡在 ApprovalTask | Signal 名字不对，默认是 `approval`；可在节点里 `.set("awaitEvent", "yourName")` 改 |
 | `WorkflowDefinition` 校验失败 | `GraphValidator` 报告：节点不可达 / 有环 / start node 无入度等；按提示修拓扑 |

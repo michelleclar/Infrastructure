@@ -9,12 +9,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.carl.infrastructure.workflow.definition.NodeResult;
 import org.carl.infrastructure.workflow.definition.NodeStatus;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
-import java.util.Set;
 
 class UserTaskHandlerTest {
 
@@ -25,9 +23,6 @@ class UserTaskHandlerTest {
     void metadataMatchesSpec() {
         assertEquals(NodeTypes.USER_TASK, handler.type());
         assertEquals(UserTaskConfig.class, handler.configType());
-        assertEquals(
-                Set.of(Outcomes.COMPLETED, Outcomes.CANCELLED, Outcomes.TIMEOUT),
-                handler.outcomes());
     }
 
     @Test
@@ -108,7 +103,7 @@ class UserTaskHandlerTest {
                                 UserTaskHandler.DEFAULT_AWAIT_EVENT,
                                 mapper.readTree("{\"decision\":\"completed\"}")),
                         cfg);
-        assertEquals(Outcomes.COMPLETED, done.outcome());
+        assertEquals("COMPLETED", done.outcome());
 
         NodeResult cancelled =
                 handler.onEvent(
@@ -117,10 +112,10 @@ class UserTaskHandlerTest {
                                 UserTaskHandler.DEFAULT_AWAIT_EVENT,
                                 mapper.readTree("{\"decision\":\"cancelled\"}")),
                         cfg);
-        assertEquals(Outcomes.CANCELLED, cancelled.outcome());
+        assertEquals("CANCELLED", cancelled.outcome());
 
         NodeResult timeout =
                 handler.onEvent(new TestContext(), new WorkflowEvent("_timeout", null), cfg);
-        assertEquals(Outcomes.TIMEOUT, timeout.outcome());
+        assertEquals("TIMEOUT", timeout.outcome());
     }
 }

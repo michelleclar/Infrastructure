@@ -119,13 +119,8 @@ class DeterminismGuardTest {
         }
 
         @Override
-        public Set<String> outcomes() {
-            return Set.of(Outcomes.SUCCESS);
-        }
-
-        @Override
         public NodeResult run(NodeExecutionContext ctx, Void config) {
-            return NodeResult.completed(Outcomes.SUCCESS);
+            return NodeResult.completed("SUCCESS");
         }
     }
 
@@ -142,15 +137,10 @@ class DeterminismGuardTest {
         }
 
         @Override
-        public Set<String> outcomes() {
-            return Set.of(Outcomes.SUCCESS);
-        }
-
-        @Override
         public NodeResult run(NodeExecutionContext ctx, Void config) {
             long now = System.currentTimeMillis();
             if (now > 0) {
-                return NodeResult.completed(Outcomes.SUCCESS);
+                return NodeResult.completed("SUCCESS");
             }
             return NodeResult.waiting();
         }
@@ -169,14 +159,9 @@ class DeterminismGuardTest {
         }
 
         @Override
-        public Set<String> outcomes() {
-            return Set.of(Outcomes.SUCCESS);
-        }
-
-        @Override
         public NodeResult run(NodeExecutionContext ctx, Void config) {
             String id = java.util.UUID.randomUUID().toString();
-            return NodeResult.completed(id == null ? "FAILED" : Outcomes.SUCCESS);
+            return NodeResult.completed(id == null ? "FAILED" : "SUCCESS");
         }
     }
 }

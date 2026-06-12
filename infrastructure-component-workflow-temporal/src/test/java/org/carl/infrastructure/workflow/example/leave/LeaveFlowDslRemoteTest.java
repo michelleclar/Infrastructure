@@ -36,7 +36,6 @@ import org.carl.infrastructure.workflow.runtime.WorkflowInput;
 import org.carl.infrastructure.workflow.runtime.WorkflowResult;
 import org.carl.infrastructure.workflow.spi.BuiltInNodeType;
 import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -123,7 +122,7 @@ class LeaveFlowDslRemoteTest {
         WorkflowResult result = WorkflowStub.fromTyped(workflow).getResult(WorkflowResult.class);
 
         assertEquals(N_APPROVED, result.finalNodeId());
-        assertEquals(Outcomes.APPROVED, result.nodeResults().get(N_APPROVAL).outcome());
+        assertEquals("APPROVED", result.nodeResults().get(N_APPROVAL).outcome());
         assertNotNull(result.executionRecords(), "executionRecords should be present");
     }
 
@@ -138,16 +137,16 @@ class LeaveFlowDslRemoteTest {
                 BuiltInNodes.service("createLeaveRequest")
                         .andThen(b -> b.set("activityInput", Map.of("employeeId", "alice"))));
 
-        flow.from(N_REQUEST).on(Outcomes.SUCCESS).to(N_APPROVAL);
+        flow.from(N_REQUEST).on("SUCCESS").to(N_APPROVAL);
 
         flow.from(N_APPROVAL)
                 .join(
                         all(
                                 node(N_HR, BuiltInNodes.approval("hr")),
                                 node(N_MANAGER, BuiltInNodes.approval("manager"))))
-                .on(Outcomes.APPROVED)
+                .on("APPROVED")
                 .to(N_APPROVED)
-                .on(Outcomes.REJECTED)
+                .on("REJECTED")
                 .to(N_REJECTED);
 
         flow.node(N_APPROVED, b -> b.type(BuiltInNodeType.END_TASK));

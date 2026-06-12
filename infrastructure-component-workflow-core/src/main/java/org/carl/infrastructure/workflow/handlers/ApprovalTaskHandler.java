@@ -7,12 +7,10 @@ import org.carl.infrastructure.workflow.definition.NodeStatus;
 import org.carl.infrastructure.workflow.spi.NodeExecutionContext;
 import org.carl.infrastructure.workflow.spi.NodeHandler;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Built-in handler for {@code approvalTask} nodes.
@@ -21,7 +19,7 @@ import java.util.Set;
  * signal completion with an event whose name is {@link ApprovalTaskConfig#awaitEvent()} (default
  * {@value #DEFAULT_AWAIT_EVENT}) and whose payload carries a {@code "decision"} field ({@code
  * "approved"}/{@code "rejected"}/{@code "sendback"}). A {@value #TIMEOUT_EVENT} event yields {@link
- * Outcomes#TIMEOUT}.
+ * "TIMEOUT"}.
  *
  * <h2>Multi-approver disambiguation (task-group children)</h2>
  *
@@ -56,11 +54,6 @@ public final class ApprovalTaskHandler implements NodeHandler<ApprovalTaskConfig
     @Override
     public Class<ApprovalTaskConfig> configType() {
         return ApprovalTaskConfig.class;
-    }
-
-    @Override
-    public Set<String> outcomes() {
-        return Set.of(Outcomes.APPROVED, Outcomes.REJECTED, Outcomes.SENDBACK, Outcomes.TIMEOUT);
     }
 
     @Override
@@ -129,7 +122,7 @@ public final class ApprovalTaskHandler implements NodeHandler<ApprovalTaskConfig
             return NodeResult.waiting();
         }
         if (TIMEOUT_EVENT.equals(event.name())) {
-            return NodeResult.completed(Outcomes.TIMEOUT);
+            return NodeResult.completed("TIMEOUT");
         }
         if (!awaitEventName(config).equals(event.name())) {
             return NodeResult.waiting();
@@ -142,11 +135,11 @@ public final class ApprovalTaskHandler implements NodeHandler<ApprovalTaskConfig
         // Normalise to lower-case so clients can send "Approved", "APPROVED", etc.
         switch (decision.trim().toLowerCase()) {
             case "approved":
-                return NodeResult.completed(Outcomes.APPROVED);
+                return NodeResult.completed("APPROVED");
             case "rejected":
-                return NodeResult.completed(Outcomes.REJECTED);
+                return NodeResult.completed("REJECTED");
             case "sendback":
-                return NodeResult.completed(Outcomes.SENDBACK);
+                return NodeResult.completed("SENDBACK");
             default:
                 return NodeResult.failed("unknown approval decision: " + decision);
         }

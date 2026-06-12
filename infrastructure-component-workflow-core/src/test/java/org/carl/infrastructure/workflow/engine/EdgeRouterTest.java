@@ -14,7 +14,6 @@ import org.carl.infrastructure.workflow.definition.WorkflowDefinition;
 import org.carl.infrastructure.workflow.graph.WorkflowGraph;
 import org.carl.infrastructure.workflow.spi.NodeExecutionContext;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 import org.junit.jupiter.api.Test;
 
@@ -48,7 +47,7 @@ class EdgeRouterTest {
                 WorkflowDefinition.of(
                         "w", "W",
                         List.of(node("A", NodeTypes.SERVICE_TASK), node("B", NodeTypes.END_TASK)),
-                        List.of(on("A", "B", Outcomes.SUCCESS)));
+                        List.of(on("A", "B", "SUCCESS")));
         assertEquals("A", EdgeRouter.resolveStartNode(null, def, new WorkflowGraph(def)));
     }
 
@@ -58,7 +57,7 @@ class EdgeRouterTest {
                 WorkflowDefinition.of(
                         "w", "W",
                         List.of(node("A", NodeTypes.SERVICE_TASK), node("B", NodeTypes.END_TASK)),
-                        List.of(on("A", "B", Outcomes.SUCCESS)));
+                        List.of(on("A", "B", "SUCCESS")));
         assertEquals("B", EdgeRouter.resolveStartNode("B", def, new WorkflowGraph(def)));
     }
 
@@ -68,7 +67,7 @@ class EdgeRouterTest {
                 new WorkflowDefinition(
                         "w", "W",
                         List.of(node("A", NodeTypes.SERVICE_TASK), node("B", NodeTypes.END_TASK)),
-                        List.of(on("A", "B", Outcomes.SUCCESS)),
+                        List.of(on("A", "B", "SUCCESS")),
                         "A");
         assertEquals("A", EdgeRouter.resolveStartNode(null, def, new WorkflowGraph(def)));
     }
@@ -83,7 +82,7 @@ class EdgeRouterTest {
                                 node("A", NodeTypes.SERVICE_TASK),
                                 node("X", NodeTypes.SERVICE_TASK),
                                 node("B", NodeTypes.END_TASK)),
-                        List.of(on("A", "B", Outcomes.SUCCESS), on("X", "B", Outcomes.SUCCESS)));
+                        List.of(on("A", "B", "SUCCESS"), on("X", "B", "SUCCESS")));
         WorkflowGraph graph = new WorkflowGraph(def);
         assertThrows(
                 IllegalStateException.class, () -> EdgeRouter.resolveStartNode(null, def, graph));
@@ -101,11 +100,11 @@ class EdgeRouterTest {
                                 node("B", NodeTypes.END_TASK),
                                 node("C", NodeTypes.END_TASK)),
                         List.of(
-                                on("A", "B", Outcomes.APPROVED),
-                                on("A", "C", Outcomes.REJECTED)));
+                                on("A", "B", "APPROVED"),
+                                on("A", "C", "REJECTED")));
         WorkflowGraph graph = new WorkflowGraph(def);
         EdgeDefinition e =
-                EdgeRouter.pickNextEdge(graph, "A", Outcomes.APPROVED, new StubCtx(Map.of()));
+                EdgeRouter.pickNextEdge(graph, "A", "APPROVED", new StubCtx(Map.of()));
         assertNotNull(e);
         assertEquals("B", e.to());
     }
@@ -116,9 +115,9 @@ class EdgeRouterTest {
                 WorkflowDefinition.of(
                         "w", "W",
                         List.of(node("A", NodeTypes.APPROVAL_TASK), node("B", NodeTypes.END_TASK)),
-                        List.of(on("A", "B", Outcomes.APPROVED)));
+                        List.of(on("A", "B", "APPROVED")));
         WorkflowGraph graph = new WorkflowGraph(def);
-        assertNull(EdgeRouter.pickNextEdge(graph, "A", Outcomes.REJECTED, new StubCtx(Map.of())));
+        assertNull(EdgeRouter.pickNextEdge(graph, "A", "REJECTED", new StubCtx(Map.of())));
     }
 
     @Test
@@ -132,17 +131,17 @@ class EdgeRouterTest {
                                 node("big", NodeTypes.END_TASK),
                                 node("normal", NodeTypes.END_TASK)),
                         List.of(
-                                onWhen("A", "big", Outcomes.SUCCESS, "${large}"),
-                                on("A", "normal", Outcomes.SUCCESS)));
+                                onWhen("A", "big", "SUCCESS", "${large}"),
+                                on("A", "normal", "SUCCESS")));
         WorkflowGraph graph = new WorkflowGraph(def);
 
         assertEquals(
                 "big",
-                EdgeRouter.pickNextEdge(graph, "A", Outcomes.SUCCESS, new StubCtx(Map.of("large", true)))
+                EdgeRouter.pickNextEdge(graph, "A", "SUCCESS", new StubCtx(Map.of("large", true)))
                         .to());
         assertEquals(
                 "normal",
-                EdgeRouter.pickNextEdge(graph, "A", Outcomes.SUCCESS, new StubCtx(Map.of("large", false)))
+                EdgeRouter.pickNextEdge(graph, "A", "SUCCESS", new StubCtx(Map.of("large", false)))
                         .to());
     }
 

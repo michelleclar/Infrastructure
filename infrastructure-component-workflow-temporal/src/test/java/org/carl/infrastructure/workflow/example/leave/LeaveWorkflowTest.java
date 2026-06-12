@@ -25,7 +25,6 @@ import org.carl.infrastructure.workflow.runtime.WorkerSetup;
 import org.carl.infrastructure.workflow.runtime.WorkflowInput;
 import org.carl.infrastructure.workflow.runtime.WorkflowResult;
 import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -96,11 +95,11 @@ class LeaveWorkflowTest {
 
         NodeResult approval = result.nodeResults().get("leaveApproval");
         assertNotNull(approval, "leaveApproval result should be recorded");
-        assertEquals(Outcomes.APPROVED, approval.outcome());
+        assertEquals("APPROVED", approval.outcome());
 
         NodeResult requestLeave = result.nodeResults().get("requestLeave");
         assertNotNull(requestLeave, "requestLeave result should be recorded");
-        assertEquals(Outcomes.SUCCESS, requestLeave.outcome());
+        assertEquals("SUCCESS", requestLeave.outcome());
     }
 
     @Test
@@ -122,7 +121,7 @@ class LeaveWorkflowTest {
 
         NodeResult approval = result.nodeResults().get("leaveApproval");
         assertNotNull(approval, "leaveApproval result should be recorded");
-        assertEquals(Outcomes.REJECTED, approval.outcome());
+        assertEquals("REJECTED", approval.outcome());
     }
 
     @Test
@@ -144,7 +143,7 @@ class LeaveWorkflowTest {
 
         NodeResult approval = result.nodeResults().get("leaveApproval");
         assertNotNull(approval, "leaveApproval result should be recorded");
-        assertEquals(Outcomes.TIMEOUT, approval.outcome());
+        assertEquals("TIMEOUT", approval.outcome());
     }
 
     // ---- helpers ---------------------------------------------------------------------

@@ -11,10 +11,8 @@ import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -109,7 +107,6 @@ public final class GraphValidator {
         }
 
         // 7. node type must be in registry (if given) + node config deserialises
-        Map<String, NodeHandler<?, ?, ?>> handlersByNodeId = new HashMap<>();
         if (registry != null) {
             for (NodeDefinition node : definition.nodes()) {
                 if (node.type() == null || node.type().isBlank()) {
@@ -127,31 +124,6 @@ public final class GraphValidator {
                 }
                 // Reuse the handler we just looked up instead of re-querying the registry.
                 errors.addAll(validateConfigBinding(node, handler.get()));
-                handlersByNodeId.put(node.id(), handler.get());
-            }
-            for (EdgeDefinition edge : definition.edges()) {
-                NodeHandler<?, ?, ?> handler = handlersByNodeId.get(edge.from());
-                if (handler == null || edge.event() == null || edge.event().isBlank()) {
-                    continue;
-                }
-                Set<String> outcomes = handler.outcomes();
-                if (outcomes == null || outcomes.isEmpty()) {
-                    continue;
-                }
-                if (!outcomes.contains(edge.event())) {
-                    errors.add(
-                            "edge "
-                                    + edge.from()
-                                    + " -> "
-                                    + edge.to()
-                                    + " event '"
-                                    + edge.event()
-                                    + "' is not declared by handler outcomes for node "
-                                    + edge.from()
-                                    + " ("
-                                    + handler.type()
-                                    + ")");
-                }
             }
         }
 

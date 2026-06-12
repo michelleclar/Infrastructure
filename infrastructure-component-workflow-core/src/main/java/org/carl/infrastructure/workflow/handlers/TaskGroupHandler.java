@@ -7,14 +7,12 @@ import org.carl.infrastructure.workflow.handlers.TaskGroupConfig.TaskGroupChild;
 import org.carl.infrastructure.workflow.spi.NodeExecutionContext;
 import org.carl.infrastructure.workflow.spi.NodeHandler;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Built-in handler for {@code taskGroup} nodes.
@@ -38,18 +36,6 @@ public final class TaskGroupHandler implements NodeHandler<TaskGroupConfig, Obje
     @Override
     public Class<TaskGroupConfig> configType() {
         return TaskGroupConfig.class;
-    }
-
-    @Override
-    public Set<String> outcomes() {
-        return Set.of(
-                Outcomes.APPROVED,
-                Outcomes.REJECTED,
-                Outcomes.SENDBACK,
-                Outcomes.COMPLETED,
-                Outcomes.FAILED,
-                Outcomes.TIMEOUT,
-                Outcomes.CANCELLED);
     }
 
     @Override
@@ -88,7 +74,7 @@ public final class TaskGroupHandler implements NodeHandler<TaskGroupConfig, Obje
         }
         if (cfg == null || cfg.tasks() == null || cfg.tasks().isEmpty()) {
             // No declared children: nothing to wait for; treat as immediate APPROVED.
-            return NodeResult.completed(Outcomes.APPROVED);
+            return NodeResult.completed("APPROVED");
         }
         JoinRule rule = effectiveJoinRule(cfg);
         List<NodeResult> childResults = new ArrayList<>();
@@ -113,7 +99,7 @@ public final class TaskGroupHandler implements NodeHandler<TaskGroupConfig, Obje
      */
     static NodeResult aggregate(JoinRule rule, List<NodeResult> children) {
         if (children == null || children.isEmpty()) {
-            return NodeResult.completed(Outcomes.APPROVED);
+            return NodeResult.completed("APPROVED");
         }
         if (rule == JoinRule.ALL) {
             // Under ALL, a single REJECTED child immediately fails the group — there is no
@@ -122,16 +108,16 @@ public final class TaskGroupHandler implements NodeHandler<TaskGroupConfig, Obje
             // the stricter result (rejection), matching typical approval-process semantics.
             for (NodeResult r : children) {
                 if (r == null) continue;
-                if (r.status() == NodeStatus.COMPLETED && Outcomes.REJECTED.equals(r.outcome())) {
-                    return NodeResult.completed(Outcomes.REJECTED);
+                if (r.status() == NodeStatus.COMPLETED && "REJECTED".equals(r.outcome())) {
+                    return NodeResult.completed("REJECTED");
                 }
             }
             // SENDBACK short-circuits after REJECTED: one reviewer asking to revise supersedes
             // all pending approvals and causes the whole group to send back.
             for (NodeResult r : children) {
                 if (r == null) continue;
-                if (r.status() == NodeStatus.COMPLETED && Outcomes.SENDBACK.equals(r.outcome())) {
-                    return NodeResult.completed(Outcomes.SENDBACK);
+                if (r.status() == NodeStatus.COMPLETED && "SENDBACK".equals(r.outcome())) {
+                    return NodeResult.completed("SENDBACK");
                 }
             }
             // No early-exit outcome: require every child to be complete and approved.
@@ -144,7 +130,7 @@ public final class TaskGroupHandler implements NodeHandler<TaskGroupConfig, Obje
                     return NodeResult.waiting();
                 }
             }
-            return NodeResult.completed(Outcomes.APPROVED);
+            return NodeResult.completed("APPROVED");
         }
         // JoinRule.ANY
         boolean sawWaiting = false;
@@ -156,7 +142,7 @@ public final class TaskGroupHandler implements NodeHandler<TaskGroupConfig, Obje
                 continue;
             }
             if (r.status() == NodeStatus.COMPLETED && isApprovedLike(r.outcome())) {
-                return NodeResult.completed(Outcomes.APPROVED);
+                return NodeResult.completed("APPROVED");
             }
         }
         if (sawWaiting) {
@@ -165,11 +151,11 @@ public final class TaskGroupHandler implements NodeHandler<TaskGroupConfig, Obje
         }
         // All children have finished and none produced an approved-like outcome: the group
         // is collectively rejected (every child either rejected or sent back).
-        return NodeResult.completed(Outcomes.REJECTED);
+        return NodeResult.completed("REJECTED");
     }
 
     /**
-     * Returns {@code true} for outcomes that count as "positive" for join purposes.
+     * Returns {@code true} for result values that count as "positive" for join purposes.
      *
      * <p>The three aliases reflect the fact that different built-in task types use different outcome
      * names for their happy path ({@code approved} for approval tasks, {@code success} for service
@@ -177,9 +163,9 @@ public final class TaskGroupHandler implements NodeHandler<TaskGroupConfig, Obje
      * taskGroup evaluate correctly without special-casing each child type.
      */
     private static boolean isApprovedLike(String outcome) {
-        return Outcomes.APPROVED.equals(outcome)
-                || Outcomes.SUCCESS.equals(outcome)
-                || Outcomes.COMPLETED.equals(outcome);
+        return "APPROVED".equals(outcome)
+                || "SUCCESS".equals(outcome)
+                || "COMPLETED".equals(outcome);
     }
 
     private static JoinRule effectiveJoinRule(TaskGroupConfig cfg) {

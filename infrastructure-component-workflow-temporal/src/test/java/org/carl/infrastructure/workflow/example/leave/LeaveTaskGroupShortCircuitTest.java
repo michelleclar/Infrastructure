@@ -27,7 +27,6 @@ import org.carl.infrastructure.workflow.runtime.WorkerSetup;
 import org.carl.infrastructure.workflow.runtime.WorkflowInput;
 import org.carl.infrastructure.workflow.runtime.WorkflowResult;
 import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -118,11 +117,11 @@ class LeaveTaskGroupShortCircuitTest {
 
         NodeResult approvals = result.nodeResults().get("approvals");
         assertNotNull(approvals, "approvals taskGroup result should be recorded");
-        assertEquals(Outcomes.REJECTED, approvals.outcome());
+        assertEquals("REJECTED", approvals.outcome());
 
         NodeResult hr = result.nodeResults().get(HR_KEY);
         assertNotNull(hr, "HR child result should be recorded under " + HR_KEY);
-        assertEquals(Outcomes.REJECTED, hr.outcome());
+        assertEquals("REJECTED", hr.outcome());
 
         NodeResult mgr = result.nodeResults().get(MANAGER_KEY);
         // Manager child was waiting for its signal when the scope was cancelled — its result
@@ -131,7 +130,7 @@ class LeaveTaskGroupShortCircuitTest {
         assertNotNull(
                 mgr, "Manager child result should be recorded (as CANCELLED) under " + MANAGER_KEY);
         assertTrue(
-                mgr.status() == NodeStatus.CANCELLED || Outcomes.CANCELLED.equals(mgr.outcome()),
+                mgr.status() == NodeStatus.CANCELLED || "CANCELLED".equals(mgr.outcome()),
                 "Manager child should be CANCELLED after short-circuit, was: " + mgr);
     }
 
@@ -165,17 +164,17 @@ class LeaveTaskGroupShortCircuitTest {
 
         NodeResult approvals = result.nodeResults().get("approvals");
         assertNotNull(approvals, "approvals taskGroup result should be recorded");
-        assertEquals(Outcomes.APPROVED, approvals.outcome());
+        assertEquals("APPROVED", approvals.outcome());
 
         NodeResult hr = result.nodeResults().get(HR_KEY);
         assertNotNull(hr, "HR child result should be recorded under " + HR_KEY);
-        assertEquals(Outcomes.APPROVED, hr.outcome());
+        assertEquals("APPROVED", hr.outcome());
 
         NodeResult mgr = result.nodeResults().get(MANAGER_KEY);
         assertNotNull(
                 mgr, "Manager child result should be recorded (as CANCELLED) under " + MANAGER_KEY);
         assertTrue(
-                mgr.status() == NodeStatus.CANCELLED || Outcomes.CANCELLED.equals(mgr.outcome()),
+                mgr.status() == NodeStatus.CANCELLED || "CANCELLED".equals(mgr.outcome()),
                 "Manager child should be CANCELLED after short-circuit, was: " + mgr);
     }
 

@@ -30,13 +30,11 @@ import org.carl.infrastructure.workflow.spi.NodeExecutionContext;
 import org.carl.infrastructure.workflow.spi.NodeHandler;
 import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Unit tests for {@link WorkflowInterpreter} driven by {@link FakeRuntimeOps} — the entire
@@ -83,11 +81,11 @@ class WorkflowInterpreterTest {
         flow.node("completed", b -> b.type(NodeTypes.END_TASK).label("完成"));
         flow.node("rejected", b -> b.type(NodeTypes.END_TASK).label("拒绝"));
         flow.node("timedOut", b -> b.type(NodeTypes.END_TASK).label("超时"));
-        flow.from("requestLeave").on(Outcomes.SUCCESS).to("approval");
-        flow.from("approval").on(Outcomes.APPROVED).to("onLeave");
-        flow.from("approval").on(Outcomes.REJECTED).to("rejected");
-        flow.from("approval").on(Outcomes.TIMEOUT).to("timedOut");
-        flow.from("onLeave").on(Outcomes.SUCCESS).to("completed");
+        flow.from("requestLeave").on("SUCCESS").to("approval");
+        flow.from("approval").on("APPROVED").to("onLeave");
+        flow.from("approval").on("REJECTED").to("rejected");
+        flow.from("approval").on("TIMEOUT").to("timedOut");
+        flow.from("onLeave").on("SUCCESS").to("completed");
         return flow.build();
     }
 
@@ -132,8 +130,8 @@ class WorkflowInterpreterTest {
                 BuiltInNodes.service("act1").andThen(b -> b.set("compensateActivity", "undo1")));
         flow.node("svc2", BuiltInNodes.service("act2"));
         flow.node("done", b -> b.type(NodeTypes.END_TASK));
-        flow.from("svc1").on(Outcomes.SUCCESS).to("svc2");
-        flow.from("svc2").on(Outcomes.SUCCESS).to("done");
+        flow.from("svc1").on("SUCCESS").to("svc2");
+        flow.from("svc2").on("SUCCESS").to("done");
 
         FakeRuntimeOps ops =
                 new FakeRuntimeOps()
@@ -155,8 +153,8 @@ class WorkflowInterpreterTest {
         flow.node("requestLeave", BuiltInNodes.service("createLeave"));
         flow.node("big", b -> b.type(NodeTypes.END_TASK));
         flow.node("normal", b -> b.type(NodeTypes.END_TASK));
-        flow.from("requestLeave").on(Outcomes.SUCCESS).when("${large}").to("big");
-        flow.from("requestLeave").on(Outcomes.SUCCESS).to("normal");
+        flow.from("requestLeave").on("SUCCESS").when("${large}").to("big");
+        flow.from("requestLeave").on("SUCCESS").to("normal");
 
         // Drive the guard via an initial variable through businessData-free ctx: use variables.
         WorkflowDefinition def = NodeConfigCodec.normalizeDefinition(flow.build());
@@ -190,7 +188,7 @@ class WorkflowInterpreterTest {
                         "typed-flow",
                         "Typed Flow",
                         List.of(typedNode, endNode),
-                        List.of(new EdgeDefinition("typed", "done", Outcomes.SUCCESS, null)),
+                        List.of(new EdgeDefinition("typed", "done", "SUCCESS", null)),
                         "typed");
 
         NodeHandlerRegistry registry = new NodeHandlerRegistry();
@@ -247,7 +245,7 @@ class WorkflowInterpreterTest {
                         "typed-compensation",
                         "Typed Compensation",
                         List.of(okNode, failNode),
-                        List.of(new EdgeDefinition("ok", "fail", Outcomes.SUCCESS, null)),
+                        List.of(new EdgeDefinition("ok", "fail", "SUCCESS", null)),
                         "ok");
 
         NodeHandlerRegistry registry = new NodeHandlerRegistry();
@@ -293,7 +291,7 @@ class WorkflowInterpreterTest {
         flow.node("requestLeave", BuiltInNodes.service("createLeave"));
         flow.node("done", b -> b.type(NodeTypes.END_TASK));
         flow.node("rejected", b -> b.type(NodeTypes.END_TASK));
-        flow.from("requestLeave").on(Outcomes.SUCCESS).to("approvals");
+        flow.from("requestLeave").on("SUCCESS").to("approvals");
         JoinSpec join =
                 anyJoin
                         ? any(
@@ -304,9 +302,9 @@ class WorkflowInterpreterTest {
                                 node("mgr", BuiltInNodes.approval("mgr")));
         flow.from("approvals")
                 .join(join)
-                .on(Outcomes.APPROVED)
+                .on("APPROVED")
                 .to("done")
-                .on(Outcomes.REJECTED)
+                .on("REJECTED")
                 .to("rejected");
         return flow.build();
     }
@@ -375,11 +373,6 @@ class WorkflowInterpreterTest {
         }
 
         @Override
-        public Set<String> outcomes() {
-            return Set.of(Outcomes.SUCCESS);
-        }
-
-        @Override
         public NodeResult run(NodeExecutionContext ctx, TypedConfig config) {
             throw new AssertionError("typed run overload was not used");
         }
@@ -418,7 +411,7 @@ class WorkflowInterpreterTest {
                 TypedConfig config,
                 TypedEvent eventPayload) {
             this.deliveredPayload = eventPayload;
-            return NodeResult.completed(Outcomes.SUCCESS);
+            return NodeResult.completed("SUCCESS");
         }
     }
 
@@ -446,11 +439,6 @@ class WorkflowInterpreterTest {
         }
 
         @Override
-        public Set<String> outcomes() {
-            return Set.of(Outcomes.SUCCESS);
-        }
-
-        @Override
         public NodeResult run(NodeExecutionContext ctx, TypedConfig config) {
             throw new AssertionError("typed run overload was not used");
         }
@@ -458,7 +446,7 @@ class WorkflowInterpreterTest {
         @Override
         public NodeResult run(NodeExecutionContext ctx, TypedConfig config, TypedState state) {
             this.runState = state;
-            return NodeResult.completed(Outcomes.SUCCESS);
+            return NodeResult.completed("SUCCESS");
         }
 
         @Override
@@ -473,7 +461,7 @@ class WorkflowInterpreterTest {
                 NodeResult completedResult,
                 TypedState state) {
             this.compensatedState = state;
-            return NodeResult.completed(Outcomes.SUCCESS);
+            return NodeResult.completed("SUCCESS");
         }
     }
 
@@ -489,11 +477,6 @@ class WorkflowInterpreterTest {
         @Override
         public Class<Void> configType() {
             return Void.class;
-        }
-
-        @Override
-        public Set<String> outcomes() {
-            return Set.of(Outcomes.FAILED);
         }
 
         @Override

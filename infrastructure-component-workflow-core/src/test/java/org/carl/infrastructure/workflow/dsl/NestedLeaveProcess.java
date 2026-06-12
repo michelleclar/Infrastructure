@@ -6,7 +6,6 @@ import static org.carl.infrastructure.workflow.dsl.Dsl.node;
 
 import org.carl.infrastructure.workflow.definition.WorkflowDefinition;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 
 /**
  * Static {@link WorkflowDefinition} factory for nested-taskGroup tests.
@@ -50,16 +49,16 @@ final class NestedLeaveProcess {
                 node("cfoApproval",     BuiltInNodes.approval("cfo")));
 
         // Outer taskGroup: ALL (HR AND management-layer)
-        flow.from("requestLeave").on(Outcomes.SUCCESS).to("approvals");
+        flow.from("requestLeave").on("SUCCESS").to("approvals");
         flow.from("approvals")
                 .join(all(
                         node("hrApproval", BuiltInNodes.approval("hr")),
                         node("managementApproval",
                                 new NodeConfig(NodeTypes.TASK_GROUP, java.util.Map.of()),
                                 managementLayer)))
-                .on(Outcomes.APPROVED).to("onLeave")
-                .on(Outcomes.REJECTED).to("rejected");
-        flow.from("onLeave").on(Outcomes.SUCCESS).to("completed");
+                .on("APPROVED").to("onLeave")
+                .on("REJECTED").to("rejected");
+        flow.from("onLeave").on("SUCCESS").to("completed");
 
         return flow.build();
     }

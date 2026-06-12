@@ -29,7 +29,6 @@ import org.carl.infrastructure.workflow.runtime.WorkerSetup;
 import org.carl.infrastructure.workflow.runtime.WorkflowInput;
 import org.carl.infrastructure.workflow.runtime.WorkflowResult;
 import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -103,7 +102,7 @@ class LeaveWorkflowRemoteTest {
         WorkflowResult result = WorkflowStub.fromTyped(workflow).getResult(WorkflowResult.class);
 
         assertEquals("completed", result.finalNodeId());
-        assertEquals(Outcomes.APPROVED, result.nodeResults().get("leaveApproval").outcome());
+        assertEquals("APPROVED", result.nodeResults().get("leaveApproval").outcome());
         assertNotNull(result.executionRecords(), "executionRecords should be present");
     }
 
@@ -118,7 +117,7 @@ class LeaveWorkflowRemoteTest {
         WorkflowResult result = WorkflowStub.fromTyped(workflow).getResult(WorkflowResult.class);
 
         assertEquals("rejected", result.finalNodeId());
-        assertEquals(Outcomes.REJECTED, result.nodeResults().get("leaveApproval").outcome());
+        assertEquals("REJECTED", result.nodeResults().get("leaveApproval").outcome());
     }
 
     // ---- helpers ----------------------------------------------------------------

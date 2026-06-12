@@ -100,8 +100,6 @@ public interface NodeHandler<C> {
 
     Class<C> configType();
 
-    Set<String> outcomes();
-
     NodeResult run(NodeExecutionContext ctx, C config);
 
     default boolean canAccept(NodeExecutionContext ctx, WorkflowEvent event, C config) {

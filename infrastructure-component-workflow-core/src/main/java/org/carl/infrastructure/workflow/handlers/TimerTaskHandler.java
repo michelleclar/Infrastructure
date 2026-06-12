@@ -5,12 +5,10 @@ import org.carl.infrastructure.workflow.definition.NodeStatus;
 import org.carl.infrastructure.workflow.spi.NodeExecutionContext;
 import org.carl.infrastructure.workflow.spi.NodeHandler;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Built-in handler for {@code timerTask} nodes.
@@ -39,11 +37,6 @@ public final class TimerTaskHandler implements NodeHandler<TimerTaskConfig, Obje
     }
 
     @Override
-    public Set<String> outcomes() {
-        return Set.of(Outcomes.TRIGGERED, Outcomes.CANCELLED);
-    }
-
-    @Override
     public NodeResult run(NodeExecutionContext ctx, TimerTaskConfig config) {
         Map<String, Object> payload = new LinkedHashMap<>();
         if (config != null && config.duration() != null) {
@@ -66,10 +59,10 @@ public final class TimerTaskHandler implements NodeHandler<TimerTaskConfig, Obje
             return NodeResult.waiting();
         }
         if (FIRED_EVENT.equals(ev.name())) {
-            return NodeResult.completed(Outcomes.TRIGGERED);
+            return NodeResult.completed("TRIGGERED");
         }
         if (CANCEL_EVENT.equals(ev.name())) {
-            return NodeResult.completed(Outcomes.CANCELLED);
+            return NodeResult.completed("CANCELLED");
         }
         return NodeResult.waiting();
     }

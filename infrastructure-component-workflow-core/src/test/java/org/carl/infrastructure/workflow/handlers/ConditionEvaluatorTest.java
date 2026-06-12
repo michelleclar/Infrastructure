@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.carl.infrastructure.workflow.definition.NodeResult;
 import org.carl.infrastructure.workflow.spi.ConditionEvaluator;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -149,7 +148,7 @@ class ConditionEvaluatorTest {
     @Test
     void resultsOutcomeEquality() {
         TestContext ctx =
-                new TestContext().setResult("createOrder", NodeResult.completed(Outcomes.SUCCESS));
+                new TestContext().setResult("createOrder", NodeResult.completed("SUCCESS"));
         assertTrue(
                 ConditionEvaluator.evaluate("${results.createOrder.outcome == \"SUCCESS\"}", ctx));
         assertFalse(
@@ -159,7 +158,7 @@ class ConditionEvaluatorTest {
     @Test
     void resultsStatusEquality() {
         TestContext ctx =
-                new TestContext().setResult("myNode", NodeResult.completed(Outcomes.SUCCESS));
+                new TestContext().setResult("myNode", NodeResult.completed("SUCCESS"));
         assertTrue(ConditionEvaluator.evaluate("${results.myNode.status == \"COMPLETED\"}", ctx));
     }
 
@@ -170,7 +169,7 @@ class ConditionEvaluatorTest {
                         .setResult(
                                 "createOrder",
                                 NodeResult.completed(
-                                        Outcomes.SUCCESS, Map.of("orderId", "ORD-42")));
+                                        "SUCCESS", Map.of("orderId", "ORD-42")));
         // payload field without "payload." prefix
         Object val = ctx.resultOf("createOrder").payload().get("orderId");
         assertTrue("ORD-42".equals(val));
@@ -186,7 +185,7 @@ class ConditionEvaluatorTest {
                         .setResult(
                                 "createOrder",
                                 NodeResult.completed(
-                                        Outcomes.SUCCESS, Map.of("orderId", "ORD-42")));
+                                        "SUCCESS", Map.of("orderId", "ORD-42")));
         // expression: results.createOrder.payload.orderId
         assertTrue(
                 ConditionEvaluator.evaluate(
@@ -271,7 +270,7 @@ class ConditionEvaluatorTest {
                         .setResult(
                                 "createOrder",
                                 NodeResult.completed(
-                                        Outcomes.SUCCESS, Map.of("output", outputNode)));
+                                        "SUCCESS", Map.of("output", outputNode)));
         // ${results.createOrder.payload.output.orderId} == "ORD-001"
         assertTrue(
                 ConditionEvaluator.evaluate(
@@ -289,7 +288,7 @@ class ConditionEvaluatorTest {
                         .setResult(
                                 "createOrder",
                                 NodeResult.completed(
-                                        Outcomes.SUCCESS, Map.of("output", outputNode)));
+                                        "SUCCESS", Map.of("output", outputNode)));
         // ${results.createOrder.payload.output.amount > 400} is true; > 600 is false
         assertTrue(
                 ConditionEvaluator.evaluate(

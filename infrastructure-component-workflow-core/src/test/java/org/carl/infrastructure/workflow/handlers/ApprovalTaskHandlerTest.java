@@ -9,12 +9,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.carl.infrastructure.workflow.definition.NodeResult;
 import org.carl.infrastructure.workflow.definition.NodeStatus;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
-import java.util.Set;
 
 class ApprovalTaskHandlerTest {
 
@@ -25,9 +23,6 @@ class ApprovalTaskHandlerTest {
     void metadataMatchesSpec() {
         assertEquals(NodeTypes.APPROVAL_TASK, handler.type());
         assertEquals(ApprovalTaskConfig.class, handler.configType());
-        assertEquals(
-                Set.of(Outcomes.APPROVED, Outcomes.REJECTED, Outcomes.SENDBACK, Outcomes.TIMEOUT),
-                handler.outcomes());
     }
 
     @Test
@@ -74,14 +69,14 @@ class ApprovalTaskHandlerTest {
                         new TestContext(),
                         new WorkflowEvent("_timeout", null),
                         new ApprovalTaskConfig("u", null, "PT1H"));
-        assertEquals(Outcomes.TIMEOUT, r.outcome());
+        assertEquals("TIMEOUT", r.outcome());
     }
 
     @Test
     void onEventDecisionMapping() throws Exception {
         ApprovalTaskConfig cfg = new ApprovalTaskConfig("u", null, null);
         assertEquals(
-                Outcomes.APPROVED,
+                "APPROVED",
                 handler.onEvent(
                                 new TestContext(),
                                 new WorkflowEvent(
@@ -89,7 +84,7 @@ class ApprovalTaskHandlerTest {
                                 cfg)
                         .outcome());
         assertEquals(
-                Outcomes.REJECTED,
+                "REJECTED",
                 handler.onEvent(
                                 new TestContext(),
                                 new WorkflowEvent(
@@ -97,7 +92,7 @@ class ApprovalTaskHandlerTest {
                                 cfg)
                         .outcome());
         assertEquals(
-                Outcomes.SENDBACK,
+                "SENDBACK",
                 handler.onEvent(
                                 new TestContext(),
                                 new WorkflowEvent(

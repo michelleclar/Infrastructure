@@ -30,7 +30,6 @@ import org.carl.infrastructure.workflow.runtime.WorkflowInput;
 import org.carl.infrastructure.workflow.runtime.WorkflowResult;
 import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -105,7 +104,7 @@ class ConditionRoutingTest {
         // did not.
         NodeResult big = result.nodeResults().get("bigApproval");
         assertNotNull(big, "bigApproval should have executed");
-        assertEquals(Outcomes.APPROVED, big.outcome());
+        assertEquals("APPROVED", big.outcome());
         assertNull(
                 result.nodeResults().get("normalApproval"),
                 "normalApproval must NOT have executed when largeAmount=true");
@@ -133,7 +132,7 @@ class ConditionRoutingTest {
 
         NodeResult normal = result.nodeResults().get("normalApproval");
         assertNotNull(normal, "normalApproval should have executed");
-        assertEquals(Outcomes.APPROVED, normal.outcome());
+        assertEquals("APPROVED", normal.outcome());
         assertNull(
                 result.nodeResults().get("bigApproval"),
                 "bigApproval must NOT have executed when largeAmount=false");
@@ -163,12 +162,12 @@ class ConditionRoutingTest {
         flow.node("done", b -> b.type(NodeTypes.END_TASK).label("已完成"));
 
         // Conditional edge: only taken when ${largeAmount} is truthy.
-        flow.from("requestLeave").on(Outcomes.SUCCESS).when("${largeAmount}").to("bigApproval");
+        flow.from("requestLeave").on("SUCCESS").when("${largeAmount}").to("bigApproval");
         // Default edge: same outcome but no condition; routed to whenever the conditional
         // edge above does not match.
-        flow.from("requestLeave").on(Outcomes.SUCCESS).to("normalApproval");
-        flow.from("bigApproval").on(Outcomes.APPROVED).to("done");
-        flow.from("normalApproval").on(Outcomes.APPROVED).to("done");
+        flow.from("requestLeave").on("SUCCESS").to("normalApproval");
+        flow.from("bigApproval").on("APPROVED").to("done");
+        flow.from("normalApproval").on("APPROVED").to("done");
 
         return flow.build();
     }

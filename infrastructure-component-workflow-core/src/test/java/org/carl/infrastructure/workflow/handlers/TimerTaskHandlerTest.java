@@ -7,11 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.carl.infrastructure.workflow.definition.NodeResult;
 import org.carl.infrastructure.workflow.definition.NodeStatus;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 import org.junit.jupiter.api.Test;
-
-import java.util.Set;
 
 class TimerTaskHandlerTest {
 
@@ -21,7 +18,6 @@ class TimerTaskHandlerTest {
     void metadataMatchesSpec() {
         assertEquals(NodeTypes.TIMER_TASK, handler.type());
         assertEquals(TimerTaskConfig.class, handler.configType());
-        assertEquals(Set.of(Outcomes.TRIGGERED, Outcomes.CANCELLED), handler.outcomes());
     }
 
     @Test
@@ -45,10 +41,10 @@ class TimerTaskHandlerTest {
         TimerTaskConfig cfg = new TimerTaskConfig("PT1S");
         TestContext ctx = new TestContext();
         assertEquals(
-                Outcomes.TRIGGERED,
+                "TRIGGERED",
                 handler.onEvent(ctx, new WorkflowEvent("_timerFired", null), cfg).outcome());
         assertEquals(
-                Outcomes.CANCELLED,
+                "CANCELLED",
                 handler.onEvent(ctx, new WorkflowEvent("_cancel", null), cfg).outcome());
         assertEquals(
                 NodeStatus.WAITING,

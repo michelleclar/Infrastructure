@@ -7,12 +7,10 @@ import org.carl.infrastructure.workflow.definition.NodeStatus;
 import org.carl.infrastructure.workflow.spi.NodeExecutionContext;
 import org.carl.infrastructure.workflow.spi.NodeHandler;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Built-in handler for {@code subProcess} nodes.
@@ -20,8 +18,8 @@ import java.util.Set;
  * <p>Delegates execution to a nested workflow (identified by {@link SubProcessConfig#subWorkflowId}
  * or an inline JSON definition). The parent workflow suspends until the runtime delivers {@value
  * #COMPLETED_EVENT} carrying a {@code subOutcome} field. The outcome can be remapped via {@link
- * SubProcessConfig#outcomeMapping()} so child-workflow-specific outcomes are translated into
- * parent-workflow outcomes without coupling the two definitions.
+ * SubProcessConfig#outcomeMapping()} so child-workflow-specific result values are translated into
+ * parent-workflow result values without coupling the two definitions.
  */
 public final class SubProcessHandler implements NodeHandler<SubProcessConfig, Object, Object> {
 
@@ -36,11 +34,6 @@ public final class SubProcessHandler implements NodeHandler<SubProcessConfig, Ob
     @Override
     public Class<SubProcessConfig> configType() {
         return SubProcessConfig.class;
-    }
-
-    @Override
-    public Set<String> outcomes() {
-        return Set.of(Outcomes.COMPLETED, Outcomes.CANCELLED, Outcomes.FAILED);
     }
 
     @Override

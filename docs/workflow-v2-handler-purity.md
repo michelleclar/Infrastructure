@@ -12,7 +12,7 @@ the same decisions as the original execution; otherwise Temporal's state machine
 workflow instance corrupts.
 
 `NodeHandler.run(...)`, `onEvent(...)`, `canAccept(...)`, `compensate(...)` and the metadata
-methods (`type()`, `configType()`, `outcomes()`, `compensable()`) all execute inside the
+methods (`type()`, `configType()`, `compensable()`) all execute inside the
 workflow thread. They are part of the replayed decision logic. **They must be deterministic.**
 
 ## Forbidden inside a handler
@@ -42,7 +42,7 @@ public NodeResult run(NodeExecutionContext ctx, FetchUserConfig cfg) {
     // BAD: HTTP call on the workflow thread. Breaks replay.
     UserDto user = httpClient.get("/users/" + cfg.userId());
     ctx.variables().put("user", user);          // BAD: mutating context directly.
-    return NodeResult.completed(Outcomes.SUCCESS);
+    return NodeResult.completed("SUCCESS");
 }
 ```
 
@@ -65,7 +65,7 @@ public boolean canAccept(NodeExecutionContext ctx, WorkflowEvent event, FetchUse
 public NodeResult onEvent(NodeExecutionContext ctx, WorkflowEvent event, FetchUserConfig cfg) {
     String status = event.payload().path("status").asText(null);
     return "success".equalsIgnoreCase(status)
-            ? NodeResult.completed(Outcomes.SUCCESS)
+            ? NodeResult.completed("SUCCESS")
             : NodeResult.failed(event.payload().path("message").asText("fetch failed"));
 }
 ```
@@ -123,5 +123,5 @@ recorded histories in your integration suite.
 - [ ] Handler reads only from `NodeExecutionContext` and `config`.
 - [ ] No `now()`, no `random*`, no `Thread.sleep`, no IO inline.
 - [ ] Variable mutations expressed as payload intents, not direct `ctx.variables().put(...)`.
-- [ ] `type()`, `configType()`, `outcomes()` return stable constants.
+- [ ] `type()` and `configType()` return stable constants.
 - [ ] `NodeHandlerRegistry.register()` always runs `DeterminismGuard.assertPure()` — no extra setup needed.

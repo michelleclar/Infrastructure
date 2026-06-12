@@ -2,8 +2,6 @@ package org.carl.infrastructure.workflow.definition;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-import org.carl.infrastructure.workflow.spi.Outcomes;
-
 import java.util.Map;
 import java.util.Objects;
 
@@ -18,8 +16,8 @@ import java.util.Objects;
  * <ul>
  *   <li>{@link #waiting()}: node is suspended, no outcome yet.
  *   <li>{@link #completed(String)}, {@link #completed(String, Map)}: node finished with an outcome.
- *   <li>{@link #failed(String)}: node failed; outcome is {@link Outcomes#FAILED}.
- *   <li>{@link #cancelled()}: node cancelled; outcome is {@link Outcomes#CANCELLED}.
+ *   <li>{@link #failed(String)}: node failed; outcome is {@code "FAILED"}.
+ *   <li>{@link #cancelled()}: node cancelled; outcome is {@code "CANCELLED"}.
  * </ul>
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -44,10 +42,10 @@ public record NodeResult(
     }
 
     public static NodeResult failed(String message) {
-        return new NodeResult(NodeStatus.FAILED, Outcomes.FAILED, Map.of(), message);
+        return new NodeResult(NodeStatus.FAILED, "FAILED", Map.of(), message);
     }
 
     public static NodeResult cancelled() {
-        return new NodeResult(NodeStatus.CANCELLED, Outcomes.CANCELLED, Map.of(), null);
+        return new NodeResult(NodeStatus.CANCELLED, "CANCELLED", Map.of(), null);
     }
 }

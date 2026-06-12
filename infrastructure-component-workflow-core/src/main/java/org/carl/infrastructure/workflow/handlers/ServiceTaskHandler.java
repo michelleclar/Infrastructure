@@ -7,12 +7,10 @@ import org.carl.infrastructure.workflow.definition.NodeStatus;
 import org.carl.infrastructure.workflow.spi.NodeExecutionContext;
 import org.carl.infrastructure.workflow.spi.NodeHandler;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Built-in handler for {@code serviceTask} nodes.
@@ -36,11 +34,6 @@ public final class ServiceTaskHandler implements NodeHandler<ServiceTaskConfig, 
     @Override
     public Class<ServiceTaskConfig> configType() {
         return ServiceTaskConfig.class;
-    }
-
-    @Override
-    public Set<String> outcomes() {
-        return Set.of(Outcomes.SUCCESS, Outcomes.FAILED);
     }
 
     @Override
@@ -82,9 +75,9 @@ public final class ServiceTaskHandler implements NodeHandler<ServiceTaskConfig, 
             // Propagate the activity's output into the NodeResult payload so downstream nodes
             // can read it via ${results['nodeId'].output} in condition expressions.
             if (outputNode != null && !outputNode.isNull()) {
-                return NodeResult.completed(Outcomes.SUCCESS, Map.of("output", outputNode));
+                return NodeResult.completed("SUCCESS", Map.of("output", outputNode));
             }
-            return NodeResult.completed(Outcomes.SUCCESS);
+            return NodeResult.completed("SUCCESS");
         }
         // Any non-success status (or missing status field) is treated as failure. The runtime
         // message takes priority over the generic fallback to preserve the root-cause detail.
@@ -111,7 +104,7 @@ public final class ServiceTaskHandler implements NodeHandler<ServiceTaskConfig, 
         if (config == null
                 || config.compensateActivity() == null
                 || config.compensateActivity().isBlank()) {
-            return NodeResult.completed(Outcomes.SUCCESS);
+            return NodeResult.completed("SUCCESS");
         }
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put(RuntimeIntents.ACTIVITY, config.compensateActivity());

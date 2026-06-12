@@ -36,7 +36,7 @@
 ```
 infrastructure-component-workflow-core   （纯 Java，0 Temporal 依赖）
   definition/   不可变 POJO + Jackson 注解
-  spi/          SPI 抽象（NodeHandler / NodeExecutionContext / WorkflowEvent / Outcomes / NodeTypes / NodeSpec / ConditionEvaluator / JsonNodeELResolver / ResultsELResolver / NodeHandlerRegistry / DeterminismGuard）
+  spi/          SPI 抽象（NodeHandler / NodeExecutionContext / WorkflowEvent / NodeTypes / NodeSpec / ConditionEvaluator / JsonNodeELResolver / ResultsELResolver / NodeHandlerRegistry / DeterminismGuard）
   handlers/     9 个内置 NodeHandler + 配置 record + RuntimeIntents + BuiltInNodeSpecs
   dsl/          Java DSL（Flow / FlowDef / FlowFrom / FlowJoin / NodeBuilder / BuiltInNodes / Dsl / NodeConfig / ChildNodeSpec / JoinSpec）
   graph/        定义校验 + 可达性 + 边匹配（WorkflowGraph / GraphValidator / EdgeMatch / ValidationReport）
@@ -145,7 +145,6 @@ public interface NodeHandler<CONFIG, STATE, EVENT> {
     Class<CONFIG> configType();                               // 节点配置类型
     default Class<STATE> stateType();                         // businessData typed view
     default Class<EVENT> eventType();                         // event.payload typed view
-    Set<String> outcomes();                                   // 可能产出的 outcome 闭集合（校验用）
     NodeResult run(NodeExecutionContext ctx, CONFIG config);  // 兼容入口
     default NodeResult run(NodeExecutionContext ctx, CONFIG config, STATE state);
 
@@ -255,7 +254,7 @@ interface AsyncInterceptor extends WorkflowInterceptor { /* 同样 7 个 hook */
 
 ## 6. 内置节点类型
 
-定义在 `spi/NodeTypes.java`（type 字符串常量）+ `spi/Outcomes.java`（outcome 字符串常量）+ `handlers/` 包下 9 个 handler。
+定义在 `spi/NodeTypes.java`（type 字符串常量）+ `handlers/` 包下 9 个 handler。边上的 `on(...)` 使用 handler 返回的 `NodeResult.outcome()` 路由值。
 
 | type | 常量 | 配置 record | 产出 outcome | 触发的 RuntimeIntents |
 |------|------|------------|--------------|----------------------|
@@ -408,9 +407,9 @@ flow.node("done", b -> b
         .label("已完成")
         .config(BuiltInNodeSpecs.END_TASK, new EndTaskConfig()));
 
-flow.from("createOrder").on(Outcomes.SUCCESS).to("approve");
-flow.from("approve").on(Outcomes.APPROVED).when("${ctx.variables.flag == true}").to("done");
-flow.from("approve").on(Outcomes.APPROVED).to("alt-done");
+flow.from("createOrder").on("SUCCESS").to("approve");
+flow.from("approve").on("APPROVED").when("${ctx.variables.flag == true}").to("done");
+flow.from("approve").on("APPROVED").to("alt-done");
 // .on() 写入 EdgeDefinition.event
 // .when() 写入 EdgeDefinition.when
 // 旧 JSON 中的 EdgeDefinition.outcome 会被 ignoreUnknown 丢弃
@@ -434,12 +433,12 @@ Dsl.node(String, Consumer<NodeBuilder>, JoinSpec)
 ### 7.5 join / taskGroup 组合
 
 ```java
-flow.from("createOrder").on(Outcomes.SUCCESS).to("approvals");
+flow.from("createOrder").on("SUCCESS").to("approvals");
 flow.from("approvals").join(Dsl.all(
         Dsl.node("hrApproval", BuiltInNodes.approval("hr")),
         Dsl.node("managerApproval", BuiltInNodes.approval("manager"))
-)).on(Outcomes.APPROVED).to("ship")
-  .on(Outcomes.REJECTED).to("cancel");
+)).on("APPROVED").to("ship")
+  .on("REJECTED").to("cancel");
 ```
 
 `flow.from("approvals").join(...)` 会自动把 `approvals` 注册为 `taskGroup` 类型节点。
@@ -713,13 +712,13 @@ static WorkflowDefinition coSignFlow() {
             .label("已拒绝")
             .config(BuiltInNodeSpecs.END_TASK, new EndTaskConfig()));
 
-    flow.from("requestLeave").on(Outcomes.SUCCESS).to("approvals");
+    flow.from("requestLeave").on("SUCCESS").to("approvals");
     flow.from("approvals").join(Dsl.all(
             Dsl.node("hrApproval", BuiltInNodes.approval("hr")),
             Dsl.node("managerApproval", BuiltInNodes.approval("manager"))
-    )).on(Outcomes.APPROVED).to("onLeave")
-      .on(Outcomes.REJECTED).to("rejected");
-    flow.from("onLeave").on(Outcomes.SUCCESS).to("completed");
+    )).on("APPROVED").to("onLeave")
+      .on("REJECTED").to("rejected");
+    flow.from("onLeave").on("SUCCESS").to("completed");
 
     return flow.build();
 }
@@ -753,7 +752,7 @@ stub.signal(new WorkflowEvent("approval", mgrPayload));
 // 5. 等结果
 WorkflowResult result = WorkflowStub.fromTyped(stub).getResult(WorkflowResult.class);
 assert result.finalNodeId().equals("completed");
-assert result.nodeResults().get("approvals").outcome().equals(Outcomes.APPROVED);
+assert result.nodeResults().get("approvals").outcome().equals("APPROVED");
 ```
 
 实际跑这个 demo 的 test：`LeaveTaskGroupExampleTest` ⭐

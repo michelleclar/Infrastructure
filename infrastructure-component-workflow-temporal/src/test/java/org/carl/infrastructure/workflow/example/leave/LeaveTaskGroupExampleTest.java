@@ -27,7 +27,6 @@ import org.carl.infrastructure.workflow.runtime.WorkerSetup;
 import org.carl.infrastructure.workflow.runtime.WorkflowInput;
 import org.carl.infrastructure.workflow.runtime.WorkflowResult;
 import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -100,14 +99,14 @@ class LeaveTaskGroupExampleTest {
 
         NodeResult approvals = result.nodeResults().get("approvals");
         assertNotNull(approvals, "approvals taskGroup result should be recorded");
-        assertEquals(Outcomes.APPROVED, approvals.outcome());
+        assertEquals("APPROVED", approvals.outcome());
 
         NodeResult hr = result.nodeResults().get(HR_KEY);
         NodeResult mgr = result.nodeResults().get(MANAGER_KEY);
         assertNotNull(hr, "HR child result should be recorded under " + HR_KEY);
         assertNotNull(mgr, "Manager child result should be recorded under " + MANAGER_KEY);
-        assertEquals(Outcomes.APPROVED, hr.outcome());
-        assertEquals(Outcomes.APPROVED, mgr.outcome());
+        assertEquals("APPROVED", hr.outcome());
+        assertEquals("APPROVED", mgr.outcome());
     }
 
     @Test
@@ -130,11 +129,11 @@ class LeaveTaskGroupExampleTest {
 
         NodeResult approvals = result.nodeResults().get("approvals");
         assertNotNull(approvals, "approvals taskGroup result should be recorded");
-        assertEquals(Outcomes.REJECTED, approvals.outcome());
+        assertEquals("REJECTED", approvals.outcome());
 
         NodeResult mgr = result.nodeResults().get(MANAGER_KEY);
         assertNotNull(mgr, "Manager child result should be recorded under " + MANAGER_KEY);
-        assertEquals(Outcomes.REJECTED, mgr.outcome());
+        assertEquals("REJECTED", mgr.outcome());
     }
 
     /**
@@ -169,7 +168,7 @@ class LeaveTaskGroupExampleTest {
 
         assertEquals(NodeStatus.COMPLETED, result.finalStatus());
         assertEquals("completed", result.finalNodeId());
-        assertEquals(Outcomes.APPROVED, result.nodeResults().get("approvals").outcome());
+        assertEquals("APPROVED", result.nodeResults().get("approvals").outcome());
     }
 
     // ---- helpers ---------------------------------------------------------------------

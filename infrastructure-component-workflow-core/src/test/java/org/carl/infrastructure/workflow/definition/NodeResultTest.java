@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -29,7 +28,7 @@ class NodeResultTest {
 
     @Test
     void completedFactoryWithoutPayload() {
-        NodeResult r = NodeResult.completed(Outcomes.SUCCESS);
+        NodeResult r = NodeResult.completed("SUCCESS");
         assertEquals(NodeStatus.COMPLETED, r.status());
         assertEquals("SUCCESS", r.outcome());
         assertNotNull(r.payload());
@@ -43,7 +42,7 @@ class NodeResultTest {
         payload.put("amount", 123);
         payload.put("currency", "CNY");
 
-        NodeResult r = NodeResult.completed(Outcomes.APPROVED, payload);
+        NodeResult r = NodeResult.completed("APPROVED", payload);
 
         assertEquals(NodeStatus.COMPLETED, r.status());
         assertEquals("APPROVED", r.outcome());
@@ -62,7 +61,7 @@ class NodeResultTest {
     void failedFactoryUsesFailedOutcomeAndCarriesMessage() {
         NodeResult r = NodeResult.failed("boom");
         assertEquals(NodeStatus.FAILED, r.status());
-        assertEquals(Outcomes.FAILED, r.outcome(), "failed() outcome must be Outcomes.FAILED");
+        assertEquals("FAILED", r.outcome(), "failed() outcome must be \"FAILED\"");
         assertEquals("FAILED", r.outcome());
         assertEquals("boom", r.message());
         assertNotNull(r.payload());
@@ -73,8 +72,7 @@ class NodeResultTest {
     void cancelledFactoryUsesCancelledOutcome() {
         NodeResult r = NodeResult.cancelled();
         assertEquals(NodeStatus.CANCELLED, r.status());
-        assertEquals(
-                Outcomes.CANCELLED, r.outcome(), "cancelled() outcome must be Outcomes.CANCELLED");
+        assertEquals("CANCELLED", r.outcome(), "cancelled() outcome must be \"CANCELLED\"");
         assertEquals("CANCELLED", r.outcome());
         assertNull(r.message());
         assertTrue(r.payload().isEmpty());
@@ -95,7 +93,7 @@ class NodeResultTest {
     @Test
     void nodeResultIsJsonRoundtripable() throws Exception {
         ObjectMapper mapper = new ObjectMapper();
-        NodeResult original = NodeResult.completed(Outcomes.APPROVED, Map.of("a", 1, "b", "two"));
+        NodeResult original = NodeResult.completed("APPROVED", Map.of("a", 1, "b", "two"));
 
         String json = mapper.writeValueAsString(original);
         NodeResult back = mapper.readValue(json, NodeResult.class);

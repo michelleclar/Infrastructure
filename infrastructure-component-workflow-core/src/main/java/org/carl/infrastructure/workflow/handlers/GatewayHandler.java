@@ -6,17 +6,12 @@ import org.carl.infrastructure.workflow.spi.NodeExecutionContext;
 import org.carl.infrastructure.workflow.spi.NodeHandler;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
 
-import java.util.Set;
-
 /**
  * Built-in handler for {@code gateway} nodes.
  *
  * <p>Synchronous: evaluates branches in order using {@link ConditionEvaluator}; the first branch
  * whose condition is {@code true} wins. Falls back to {@link GatewayConfig#defaultOutcome()}; fails
  * when no branch matches and no default is configured.
- *
- * <p>The {@link #outcomes()} set is intentionally empty because the produced outcome string is
- * dynamic and depends on the configured branches.
  */
 public final class GatewayHandler implements NodeHandler<GatewayConfig, Object, Object> {
 
@@ -28,11 +23,6 @@ public final class GatewayHandler implements NodeHandler<GatewayConfig, Object, 
     @Override
     public Class<GatewayConfig> configType() {
         return GatewayConfig.class;
-    }
-
-    @Override
-    public Set<String> outcomes() {
-        return Set.of();
     }
 
     @Override

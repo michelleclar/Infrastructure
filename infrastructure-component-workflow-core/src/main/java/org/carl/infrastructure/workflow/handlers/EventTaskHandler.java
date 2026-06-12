@@ -5,19 +5,17 @@ import org.carl.infrastructure.workflow.definition.NodeStatus;
 import org.carl.infrastructure.workflow.spi.NodeExecutionContext;
 import org.carl.infrastructure.workflow.spi.NodeHandler;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Built-in handler for {@code eventTask} nodes.
  *
  * <p>Suspends execution until the runtime delivers the named event (or a {@value #TIMEOUT_EVENT}).
  * Unlike {@code approvalTask}, this handler carries no {@code decision} field — the sole outcome
- * on a successful signal is {@link org.carl.infrastructure.workflow.spi.Outcomes#RECEIVED}.
+ * on a successful signal is {@code "RECEIVED"}.
  */
 public final class EventTaskHandler implements NodeHandler<EventTaskConfig, Object, Object> {
 
@@ -32,11 +30,6 @@ public final class EventTaskHandler implements NodeHandler<EventTaskConfig, Obje
     @Override
     public Class<EventTaskConfig> configType() {
         return EventTaskConfig.class;
-    }
-
-    @Override
-    public Set<String> outcomes() {
-        return Set.of(Outcomes.RECEIVED, Outcomes.TIMEOUT);
     }
 
     @Override
@@ -74,10 +67,10 @@ public final class EventTaskHandler implements NodeHandler<EventTaskConfig, Obje
             return NodeResult.waiting();
         }
         if (TIMEOUT_EVENT.equals(event.name())) {
-            return NodeResult.completed(Outcomes.TIMEOUT);
+            return NodeResult.completed("TIMEOUT");
         }
         if (cfg != null && cfg.awaitEvent() != null && cfg.awaitEvent().equals(event.name())) {
-            return NodeResult.completed(Outcomes.RECEIVED);
+            return NodeResult.completed("RECEIVED");
         }
         return NodeResult.waiting();
     }

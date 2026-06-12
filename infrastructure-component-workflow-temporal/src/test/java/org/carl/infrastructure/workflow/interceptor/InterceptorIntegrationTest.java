@@ -32,7 +32,6 @@ import org.carl.infrastructure.workflow.runtime.WorkflowInput;
 import org.carl.infrastructure.workflow.runtime.WorkflowResult;
 import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -319,7 +318,7 @@ class InterceptorIntegrationTest {
                 BuiltInNodes.service("doCompensableWork")
                         .andThen(b -> b.set("compensateActivity", "undoWork")));
         flow.node("node2", BuiltInNodes.service("doFailingWork"));
-        flow.from("node1").on(Outcomes.SUCCESS).to("node2");
+        flow.from("node1").on("SUCCESS").to("node2");
         WorkflowDefinition def = flow.build();
 
         // Register the activities: doCompensableWork succeeds, doFailingWork throws,
@@ -374,7 +373,7 @@ class InterceptorIntegrationTest {
         flow.start("work");
         flow.node("work", BuiltInNodes.service("doWork"));
         flow.node("completed", b -> b.type(NodeTypes.END_TASK).label("Completed"));
-        flow.from("work").on(Outcomes.SUCCESS).to("completed");
+        flow.from("work").on("SUCCESS").to("completed");
         return flow.build();
     }
 
@@ -390,8 +389,8 @@ class InterceptorIntegrationTest {
                 BuiltInNodes.approval("manager").andThen(b -> b.set("awaitEvent", "approval")));
         flow.node("approved", b -> b.type(NodeTypes.END_TASK).label("Approved"));
         flow.node("rejected", b -> b.type(NodeTypes.END_TASK).label("Rejected"));
-        flow.from("approval").on(Outcomes.APPROVED).to("approved");
-        flow.from("approval").on(Outcomes.REJECTED).to("rejected");
+        flow.from("approval").on("APPROVED").to("approved");
+        flow.from("approval").on("REJECTED").to("rejected");
         return flow.build();
     }
 

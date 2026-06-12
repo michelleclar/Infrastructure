@@ -2,8 +2,6 @@ package org.carl.infrastructure.workflow.spi;
 
 import org.carl.infrastructure.workflow.definition.NodeResult;
 
-import java.util.Set;
-
 /**
  * Pluggable node-type handler. The workflow engine only knows the {@code type} string; concrete
  * execution semantics are provided by registered {@code NodeHandler} implementations.
@@ -29,7 +27,7 @@ import java.util.Set;
  * <p>Inside {@link #run(NodeExecutionContext, Object)}, {@link #onEvent(NodeExecutionContext,
  * WorkflowEvent, Object)}, {@link #canAccept(NodeExecutionContext, WorkflowEvent, Object)}, {@link
  * #compensable()}, {@link #compensate(NodeExecutionContext, Object, NodeResult)}, {@link
- * #outcomes()}, {@link #configType()} and {@link #type()}, implementations MUST NOT:
+ * #configType()} and {@link #type()}, implementations MUST NOT:
  *
  * <ul>
  *   <li>read wall-clock time ({@code System.currentTimeMillis}, {@code Instant.now}, {@code new
@@ -114,13 +112,6 @@ public interface NodeHandler<CONFIG, STATE, EVENT> {
     }
 
     /**
-     * Closed set of outcome strings this handler can return via {@link NodeResult#outcome()}. The
-     * runtime uses this set for definition validation against outgoing edges. Must return a stable,
-     * deterministic set (typically a {@code Set.of(...)} constant).
-     */
-    Set<String> outcomes();
-
-    /**
      * Invoked once when the workflow enters this node. Return {@link NodeResult#completed(String)}
      * to advance the workflow along the matching outcome edge, or {@link NodeResult#waiting()} —
      * optionally with a {@code RuntimeIntents} payload — to suspend until an event arrives.
@@ -198,11 +189,11 @@ public interface NodeHandler<CONFIG, STATE, EVENT> {
      * {@link #run(NodeExecutionContext, Object)} apply; return {@link NodeResult#waiting()} with an
      * {@code ACTIVITY} intent to route IO through the runtime rather than performing it inline.
      * Return {@link NodeResult#completed(String)} (any outcome) when no compensating action is
-     * required. The default no-op returns {@link NodeResult#completed(Outcomes#SUCCESS)}.
+     * required. The default no-op returns {@code "SUCCESS"}.
      */
     default NodeResult compensate(
             NodeExecutionContext ctx, CONFIG config, NodeResult completedResult) {
-        return NodeResult.completed(Outcomes.SUCCESS);
+        return NodeResult.completed("SUCCESS");
     }
 
     /**

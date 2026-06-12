@@ -18,7 +18,6 @@ import org.carl.infrastructure.workflow.runtime.WorkflowHandle;
 import org.carl.infrastructure.workflow.runtime.WorkflowResult;
 import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
@@ -73,10 +72,10 @@ class WorkflowEngineRemoteTest {
         flow.node("notify", BuiltInNodes.service("notify"));
         flow.node("completed", b -> b.type(NodeTypes.END_TASK).label("完成"));
         flow.node("rejected", b -> b.type(NodeTypes.END_TASK).label("拒绝"));
-        flow.from("requestLeave").on(Outcomes.SUCCESS).to("approval");
-        flow.from("approval").on(Outcomes.APPROVED).to("notify");
-        flow.from("approval").on(Outcomes.REJECTED).to("rejected");
-        flow.from("notify").on(Outcomes.SUCCESS).to("completed");
+        flow.from("requestLeave").on("SUCCESS").to("approval");
+        flow.from("approval").on("APPROVED").to("notify");
+        flow.from("approval").on("REJECTED").to("rejected");
+        flow.from("notify").on("SUCCESS").to("completed");
         return flow.build();
     }
 }

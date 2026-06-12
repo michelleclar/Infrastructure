@@ -27,7 +27,6 @@ import org.carl.infrastructure.workflow.runtime.WorkflowInput;
 import org.carl.infrastructure.workflow.runtime.WorkflowResult;
 import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -94,7 +93,7 @@ class SubProcessTest {
         childFlow.start("autoApprove");
         childFlow.node("autoApprove", BuiltInNodes.service("autoApprove"));
         childFlow.node("done", b -> b.type(NodeTypes.END_TASK).label("Done"));
-        childFlow.from("autoApprove").on(Outcomes.SUCCESS).to("done");
+        childFlow.from("autoApprove").on("SUCCESS").to("done");
         WorkflowDefinition childDef = childFlow.build();
 
         String childDefJson = mapper.writeValueAsString(childDef);
@@ -113,13 +112,13 @@ class SubProcessTest {
                                 "definitionJson",
                                 childDefJson,
                                 "outcomeMapping",
-                                Map.of(Outcomes.COMPLETED, "approved"))));
+                                Map.of("COMPLETED", "approved"))));
         parentFlow.node("confirmOrder", BuiltInNodes.service("confirmOrder"));
         parentFlow.node("completed", b -> b.type(NodeTypes.END_TASK).label("Completed"));
 
-        parentFlow.from("createRequest").on(Outcomes.SUCCESS).to("subApproval");
+        parentFlow.from("createRequest").on("SUCCESS").to("subApproval");
         parentFlow.from("subApproval").on("approved").to("confirmOrder");
-        parentFlow.from("confirmOrder").on(Outcomes.SUCCESS).to("completed");
+        parentFlow.from("confirmOrder").on("SUCCESS").to("completed");
 
         WorkflowDefinition parentDef = parentFlow.build();
 
@@ -162,8 +161,8 @@ class SubProcessTest {
                         ));
         parentFlow.node("done", b -> b.type(NodeTypes.END_TASK).label("Done"));
 
-        parentFlow.from("createRequest").on(Outcomes.SUCCESS).to("sub");
-        parentFlow.from("sub").on(Outcomes.COMPLETED).to("done");
+        parentFlow.from("createRequest").on("SUCCESS").to("sub");
+        parentFlow.from("sub").on("COMPLETED").to("done");
 
         WorkflowDefinition parentDef = parentFlow.build();
 

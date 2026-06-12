@@ -204,12 +204,12 @@ flow.from("approval").on("approved").to("nextStep");
 
 // 按条件路由（新增 .when() 语法）
 flow.from("checkAmount")
-    .on(Outcomes.SUCCESS)
+    .on("SUCCESS")
     .when("${amount} > 10000}")  // 条件为真时路由到 ceoApproval
     .to("ceoApproval");
 
 flow.from("checkAmount")
-    .on(Outcomes.SUCCESS)
+    .on("SUCCESS")
     .to("managerApproval");  // 默认路由（无条件）
 ```
 
@@ -314,23 +314,23 @@ public class LeaveWorkflowExample {
 ```java
 // 全会签（AND）- 所有人都需要批准
 flow.from("requestLeave")
-    .on(Outcomes.SUCCESS)
+    .on("SUCCESS")
     .join(all(
         node("hrApproval", approval(Map.of("assignee", "hr"))),
         node("managerApproval", approval(Map.of("assignee", "manager")))
     ))
-    .on(Outcomes.APPROVED).to("onLeave")
-    .on(Outcomes.REJECTED).to("rejected");
+    .on("APPROVED").to("onLeave")
+    .on("REJECTED").to("rejected");
 
 // 或签（ANY）- 任一人批准即可
 flow.from("requestLeave")
-    .on(Outcomes.SUCCESS)
+    .on("SUCCESS")
     .join(any(
         node("hrApproval", approval(Map.of("assignee", "hr"))),
         node("managerApproval", approval(Map.of("assignee", "manager")))
     ))
-    .on(Outcomes.APPROVED).to("onLeave")
-    .on(Outcomes.REJECTED).to("rejected");
+    .on("APPROVED").to("onLeave")
+    .on("REJECTED").to("rejected");
 ```
 
 ### 2. 条件路由
@@ -344,13 +344,13 @@ flow.endNode("rejected", "已拒绝");
 
 // 带条件的路由（条件为真时执行）
 flow.from("checkAmount")
-    .on(Outcomes.SUCCESS)
+    .on("SUCCESS")
     .when("${days} > 3}")  // 大于3天需要经理审批
     .to("managerApproval");
 
 // 默认路由（无条件，fallback）
 flow.from("checkAmount")
-    .on(Outcomes.SUCCESS)
+    .on("SUCCESS")
     .to("autoApprove");  // 小于等于3天自动批准
 ```
 

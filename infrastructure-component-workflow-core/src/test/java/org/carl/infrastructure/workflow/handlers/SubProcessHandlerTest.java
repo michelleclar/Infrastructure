@@ -9,12 +9,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.carl.infrastructure.workflow.definition.NodeResult;
 import org.carl.infrastructure.workflow.definition.NodeStatus;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
-import org.carl.infrastructure.workflow.spi.Outcomes;
 import org.carl.infrastructure.workflow.spi.WorkflowEvent;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
-import java.util.Set;
 
 class SubProcessHandlerTest {
 
@@ -25,9 +23,6 @@ class SubProcessHandlerTest {
     void metadataMatchesSpec() {
         assertEquals(NodeTypes.SUB_PROCESS, handler.type());
         assertEquals(SubProcessConfig.class, handler.configType());
-        assertEquals(
-                Set.of(Outcomes.COMPLETED, Outcomes.CANCELLED, Outcomes.FAILED),
-                handler.outcomes());
     }
 
     @Test
@@ -53,17 +48,17 @@ class SubProcessHandlerTest {
         WorkflowEvent ev =
                 new WorkflowEvent(
                         "_subProcessCompleted", mapper.readTree("{\"subOutcome\":\"COMPLETED\"}"));
-        assertEquals(Outcomes.COMPLETED, handler.onEvent(new TestContext(), ev, cfg).outcome());
+        assertEquals("COMPLETED", handler.onEvent(new TestContext(), ev, cfg).outcome());
     }
 
     @Test
     void onEventAppliesOutcomeMapping() throws Exception {
         SubProcessConfig cfg =
-                new SubProcessConfig("x", null, null, Map.of("MY_DONE", Outcomes.COMPLETED));
+                new SubProcessConfig("x", null, null, Map.of("MY_DONE", "COMPLETED"));
         WorkflowEvent ev =
                 new WorkflowEvent(
                         "_subProcessCompleted", mapper.readTree("{\"subOutcome\":\"MY_DONE\"}"));
-        assertEquals(Outcomes.COMPLETED, handler.onEvent(new TestContext(), ev, cfg).outcome());
+        assertEquals("COMPLETED", handler.onEvent(new TestContext(), ev, cfg).outcome());
     }
 
     @Test
