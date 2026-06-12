@@ -94,7 +94,7 @@ public final class NodeConfigCodec {
      * @param mapper the Jackson mapper to bind with (passed in rather than held statically so this
      *     stays a pure function and carries no Temporal/runtime dependency)
      */
-    public static Object decode(ObjectMapper mapper, NodeHandler<?> handler, JsonNode rawConfig) {
+    public static Object decode(ObjectMapper mapper, NodeHandler<?, ?, ?> handler, JsonNode rawConfig) {
         Class<?> configType = handler.configType();
         if (configType == null || configType == Void.class) {
             return null;
@@ -110,6 +110,40 @@ public final class NodeConfigCodec {
                     "Failed to decode config for node type "
                             + handler.type()
                             + ": "
+                            + e.getMessage(),
+                    e);
+        }
+    }
+
+    /** Decode immutable workflow start input into the handler's requested state type. */
+    public static Object decodeState(
+            ObjectMapper mapper, NodeHandler<?, ?, ?> handler, JsonNode businessData) {
+        return decodeJsonValue(mapper, businessData, handler.stateType(), "businessData");
+    }
+
+    /** Decode a workflow event payload into the handler's requested event type. */
+    public static Object decodeEventPayload(
+            ObjectMapper mapper, NodeHandler<?, ?, ?> handler, JsonNode payload) {
+        return decodeJsonValue(mapper, payload, handler.eventType(), "event payload");
+    }
+
+    private static Object decodeJsonValue(
+            ObjectMapper mapper, JsonNode raw, Class<?> targetType, String label) {
+        if (targetType == null || targetType == Void.class) {
+            return null;
+        }
+        JsonNode source =
+                (raw == null || raw.isNull() || raw.isMissingNode())
+                        ? mapper.createObjectNode()
+                        : raw;
+        if (JsonNode.class.isAssignableFrom(targetType)) {
+            return source;
+        }
+        try {
+            return mapper.treeToValue(source, targetType);
+        } catch (Exception e) {
+            throw new IllegalStateException(
+                    "Failed to decode " + label + " as " + targetType.getName() + ": "
                             + e.getMessage(),
                     e);
         }

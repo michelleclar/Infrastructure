@@ -31,8 +31,10 @@ flowchart LR
 1. DSL 构造 `WorkflowDefinition`。
 2. `GraphValidator` 校验定义结构和 handler config 反序列化。
 3. runtime 通过 `NodeConfigCodec.decode` 得到 typed config。
-4. runtime 调用 `NodeHandler.run` 或 `NodeHandler.onEvent`。
-5. runtime 用 `EdgeRouter.pickNextEdge` 决定下一个节点。
+4. runtime 通过 `NodeConfigCodec.decodeState` 从 `businessData` 得到 handler 请求的 typed state。
+5. runtime 调用 `NodeHandler.run(ctx, config, state)`；等待事件时先用三参 `canAccept` 过滤，再用 `decodeEventPayload` 得到 typed event payload。
+6. runtime 调用 `NodeHandler.canAccept(ctx, event, config, eventPayload)` 和 `NodeHandler.onEvent(ctx, event, config, eventPayload)`。
+7. runtime 用 `EdgeRouter.pickNextEdge` 决定下一个节点。
 
 ## DSL 构建链
 
@@ -126,7 +128,6 @@ classDiagram
         +String from()
         +String to()
         +String event()
-        +String outcome()
         +String when()
     }
     class NodeResult {
@@ -205,7 +206,6 @@ flowchart TD
     J["nextCandidates(currentNodeId, match)"] --> H
     J --> J1["EdgeMatch.Any -> return all outgoing"]
     J --> J2["EdgeMatch.ByEvent -> edge.event equals eventName"]
-    J --> J3["EdgeMatch.ByOutcome -> edge.outcome equals outcome"]
     K["canAccept(currentNodeId, event)"] --> J
 
     L["canReach(fromNodeId, toNodeId)"] --> H1
@@ -235,11 +235,19 @@ flowchart TD
     E --> G["return original node"]
     F --> H["new WorkflowDefinition(...)"]
 
-    I["NodeConfigCodec.decode(mapper, handler, nodeType, rawConfig)"] --> J["handler.configType()"]
+    I["NodeConfigCodec.decode(mapper, handler, rawConfig)"] --> J["handler.configType()"]
     J --> K["Void/null -> return null"]
-    J --> L["normalizeConfig(nodeType, rawConfig)"]
+    J --> L["normalizeConfig(handler.type(), rawConfig)"]
     L --> M["null config -> mapper.createObjectNode()"]
     M --> N["mapper.treeToValue(normalized, configType)"]
+
+    O["NodeConfigCodec.decodeState(mapper, handler, businessData)"] --> P["handler.stateType()"]
+    Q["NodeConfigCodec.decodeEventPayload(mapper, handler, payload)"] --> R["handler.eventType()"]
+    P --> S["decodeJsonValue(...)"]
+    R --> S
+    S --> T["Void/null -> return null"]
+    S --> U["JsonNode target -> return JsonNode source"]
+    S --> V["mapper.treeToValue(source, targetType)"]
 ```
 
 ```mermaid
@@ -251,12 +259,11 @@ flowchart TD
     D --> F["otherwise throw IllegalStateException"]
 
     G["EdgeRouter.pickNextEdge(graph, currentNodeId, outcome, ctx)"] --> H["outcome != null"]
-    H --> I["graph.nextCandidates(currentNodeId, EdgeMatch.byEvent(outcome))"]
-    I --> J["matchesCondition(edge.when, ctx)"]
-    J --> K["ConditionEvaluator.evaluateOrTrue(...)"]
-    H --> L["graph.nextCandidates(currentNodeId, EdgeMatch.byOutcome(outcome))"]
-    L --> K
-    G --> M["fallback: first outgoing edge with event/outcome/when all null"]
+    H --> I["for edge in graph.outgoing(currentNodeId)"]
+    I --> J["outcome equals edge.event"]
+    J --> K["matchesCondition(edge.when, ctx)"]
+    K --> L["ConditionEvaluator.evaluateOrTrue(...)"]
+    G --> M["fallback: first outgoing edge with event/when null"]
     M --> N["return edge or null"]
 ```
 
@@ -309,6 +316,54 @@ EL resolver 调用关系：
 
 ## 内置 handler 统一执行模型
 
+`NodeHandler<CONFIG, STATE, EVENT>` 的三个泛型只影响 Java 侧 handler 入口类型，不改变流程定义 JSON：
+
+| 泛型 | JSON 来源 | 解码方法 | 主要入口 |
+|---|---|---|---|
+| `CONFIG` | `NodeDefinition.config()` | `NodeConfigCodec.decode(...)` | `run` / `canAccept` / `onEvent` / `compensate` |
+| `STATE` | `NodeExecutionContext.businessData()` | `NodeConfigCodec.decodeState(...)` | `run(ctx, config, state)` / `compensate(ctx, config, completedResult, state)` |
+| `EVENT` | `WorkflowEvent.payload()` | `NodeConfigCodec.decodeEventPayload(...)` | `canAccept(ctx, event, config, eventPayload)` / `onEvent(ctx, event, config, eventPayload)` |
+
+```mermaid
+classDiagram
+    class NodeHandler~CONFIG STATE EVENT~ {
+        +String type()
+        +Class~CONFIG~ configType()
+        +Class~STATE~ stateType()
+        +Class~EVENT~ eventType()
+        +Set~String~ outcomes()
+        +NodeResult run(ctx, CONFIG)
+        +NodeResult run(ctx, CONFIG, STATE)
+        +boolean canAccept(ctx, event, CONFIG)
+        +boolean canAccept(ctx, event, CONFIG, EVENT)
+        +NodeResult onEvent(ctx, event, CONFIG)
+        +NodeResult onEvent(ctx, event, CONFIG, EVENT)
+        +boolean compensable()
+        +NodeResult compensate(ctx, CONFIG, completedResult)
+        +NodeResult compensate(ctx, CONFIG, completedResult, STATE)
+    }
+    class NodeExecutionContext {
+        +JsonNode businessData()
+        +Map variables()
+        +NodeResult resultOf(nodeId)
+        +WorkflowEvent currentEvent()
+    }
+    class WorkflowEvent {
+        +String name()
+        +JsonNode payload()
+        +String eventId()
+    }
+    NodeHandler --> NodeExecutionContext
+    NodeHandler --> WorkflowEvent
+```
+
+兼容关系：
+
+1. 已有内置 handler 仍实现二参 `run(ctx, config)`、三参 `canAccept(ctx, event, config)`、三参 `onEvent(ctx, event, config)`。
+2. runtime 调用 typed 重载；默认实现会回落到旧入口。
+3. 自定义 handler 需要 typed state/event 时，覆盖 `stateType()` / `eventType()` 和对应 typed 重载即可。
+4. 事件匹配顺序是三参 `canAccept` 先执行；只有返回 `true` 时才解码 `EVENT` 并调用四参 `canAccept`。
+
 runtime 对 core handler 的典型调用顺序：
 
 ```mermaid
@@ -321,13 +376,18 @@ sequenceDiagram
 
     R->>REG: lookup(node.type)
     REG-->>R: NodeHandler
-    R->>C: decode(mapper, handler, node.type, node.config)
+    R->>C: decode(mapper, handler, node.config)
     C-->>R: typed config
-    R->>H: run(ctx, config)
+    R->>C: decodeState(mapper, handler, ctx.businessData)
+    C-->>R: typed state
+    R->>H: run(ctx, config, state)
     alt result.status == WAITING
         R->>R: perform RuntimeIntents side effect
         R->>H: canAccept(ctx, event, config)
-        R->>H: onEvent(ctx, event, config)
+        R->>C: decodeEventPayload(mapper, handler, event.payload)
+        C-->>R: typed event payload
+        R->>H: canAccept(ctx, event, config, eventPayload)
+        R->>H: onEvent(ctx, event, config, eventPayload)
     end
     R->>ER: pickNextEdge(graph, nodeId, result.outcome, ctx)
     ER-->>R: EdgeDefinition or null
@@ -514,6 +574,7 @@ Hook 方法名在两个接口中一致：
 | 要改的能力 | 主要文件 | 先看方法 |
 |---|---|---|
 | 新增内置节点类型 | `handlers/*Handler.java`, `handlers/*Config.java`, `spi/NodeTypes.java`, `spi/BuiltInNodeType.java`, `handlers/BuiltInHandlers.java`, `dsl/BuiltInNodes.java` | `NodeHandler.run`, `NodeHandler.canAccept`, `NodeHandler.onEvent`, `BuiltInHandlers.registerAll` |
+| 修改 handler 泛型输入 | `spi/NodeHandler.java`, `engine/NodeConfigCodec.java` | `configType`, `stateType`, `eventType`, `decode`, `decodeState`, `decodeEventPayload` |
 | 修改 DSL 输出 JSON | `dsl/FlowDef.java`, `dsl/NodeBuilder.java`, `dsl/Dsl.java` | `FlowDef.build`, `FlowDef.buildTaskGroupConfig`, `NodeBuilder.buildConfig` |
 | 修改流程图校验 | `graph/GraphValidator.java`, `graph/WorkflowGraph.java` | `GraphValidator.validate`, `GraphValidator.validateNodeConfig`, `WorkflowGraph.detectCycles` |
 | 修改路由规则 | `engine/EdgeRouter.java`, `graph/WorkflowGraph.java` | `EdgeRouter.pickNextEdge`, `WorkflowGraph.nextCandidates` |
@@ -521,4 +582,3 @@ Hook 方法名在两个接口中一致：
 | 修改自定义 handler 注册规则 | `spi/NodeHandlerRegistry.java`, `spi/DeterminismGuard.java` | `NodeHandlerRegistry.register`, `DeterminismGuard.staticScan` |
 | 修改会签聚合 | `handlers/TaskGroupHandler.java`, `handlers/TaskGroupContract.java` | `TaskGroupHandler.onEvent`, `TaskGroupHandler.aggregate`, `TaskGroupContract.childKey` |
 | 修改生命周期 hook | `interceptor/*` | `WorkflowInterceptorRegistry.register`, `insertSorted` |
-

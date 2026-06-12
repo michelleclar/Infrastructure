@@ -107,7 +107,7 @@ class DeterminismGuardTest {
     }
 
     /** A handler that touches no forbidden JDK APIs. */
-    static final class CleanHandler implements NodeHandler<Void> {
+    static final class CleanHandler implements NodeHandler<Void, Object, Object> {
         @Override
         public String type() {
             return "clean";
@@ -130,7 +130,7 @@ class DeterminismGuardTest {
     }
 
     /** A handler that intentionally violates the determinism contract by reading wall clock. */
-    static final class DirtyClockHandler implements NodeHandler<Void> {
+    static final class DirtyClockHandler implements NodeHandler<Void, Object, Object> {
         @Override
         public String type() {
             return "dirtyClock";
@@ -157,7 +157,7 @@ class DeterminismGuardTest {
     }
 
     /** A handler that intentionally violates by generating a random UUID. */
-    static final class DirtyUuidHandler implements NodeHandler<Void> {
+    static final class DirtyUuidHandler implements NodeHandler<Void, Object, Object> {
         @Override
         public String type() {
             return "dirtyUuid";

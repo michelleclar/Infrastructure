@@ -33,7 +33,7 @@ import java.util.Set;
  * "approvals/hrApproval"} or just {@code "hrApproval"}). If the payload is absent or has no {@value
  * #PAYLOAD_TASK_ID} field, the legacy name-only match applies for backward compatibility.
  */
-public final class ApprovalTaskHandler implements NodeHandler<ApprovalTaskConfig> {
+public final class ApprovalTaskHandler implements NodeHandler<ApprovalTaskConfig, Object, Object> {
 
     /** Default event name when {@link ApprovalTaskConfig#awaitEvent()} is null/blank. */
     public static final String DEFAULT_AWAIT_EVENT = "approval";

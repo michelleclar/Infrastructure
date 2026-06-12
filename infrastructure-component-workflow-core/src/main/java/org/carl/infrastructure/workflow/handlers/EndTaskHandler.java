@@ -14,7 +14,7 @@ import java.util.Set;
  * <p>Always completes immediately with {@link Outcomes#COMPLETED}; the runtime is expected to
  * terminate the workflow instance when an end task completes.
  */
-public final class EndTaskHandler implements NodeHandler<EndTaskConfig> {
+public final class EndTaskHandler implements NodeHandler<EndTaskConfig, Object, Object> {
 
     @Override
     public String type() {

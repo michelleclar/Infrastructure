@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentMap;
  */
 public final class NodeHandlerRegistry {
 
-    private final ConcurrentMap<String, NodeHandler<?>> handlers = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, NodeHandler<?, ?, ?>> handlers = new ConcurrentHashMap<>();
 
     /**
      * No-op retained for backward compatibility. {@link #register(NodeHandler)} is always strict —
@@ -55,10 +55,10 @@ public final class NodeHandlerRegistry {
      * type is already registered.
      */
     @SuppressWarnings("unchecked")
-    public void register(NodeHandler<?> handler) {
+    public void register(NodeHandler<?, ?, ?> handler) {
         Objects.requireNonNull(handler, "handler");
         String type = validateType(handler);
-        DeterminismGuard.assertPure((Class<? extends NodeHandler<?>>) handler.getClass());
+        DeterminismGuard.assertPure((Class<? extends NodeHandler<?, ?, ?>>) handler.getClass());
         putHandler(type, handler);
     }
 
@@ -66,7 +66,7 @@ public final class NodeHandlerRegistry {
      * Trusted path for built-in handlers. Skips the {@link DeterminismGuard} scan. Throws {@link
      * IllegalStateException} if the type is already registered.
      */
-    public void registerBuiltIn(NodeHandler<?> handler) {
+    public void registerBuiltIn(NodeHandler<?, ?, ?> handler) {
         Objects.requireNonNull(handler, "handler");
         String type = validateType(handler);
         putHandler(type, handler);
@@ -77,9 +77,9 @@ public final class NodeHandlerRegistry {
      *
      * @throws IllegalArgumentException if no handler is registered for the given type
      */
-    public NodeHandler<?> lookup(String type) {
+    public NodeHandler<?, ?, ?> lookup(String type) {
         Objects.requireNonNull(type, "type");
-        NodeHandler<?> handler = handlers.get(type);
+        NodeHandler<?, ?, ?> handler = handlers.get(type);
         if (handler == null) {
             throw new IllegalArgumentException("No NodeHandler registered for type: " + type);
         }
@@ -87,7 +87,7 @@ public final class NodeHandlerRegistry {
     }
 
     /** Returns the handler for {@code type}, or {@link Optional#empty()} if absent. */
-    public Optional<NodeHandler<?>> find(String type) {
+    public Optional<NodeHandler<?, ?, ?>> find(String type) {
         if (type == null) {
             return Optional.empty();
         }
@@ -99,7 +99,7 @@ public final class NodeHandlerRegistry {
         return Collections.unmodifiableSet(handlers.keySet());
     }
 
-    private static String validateType(NodeHandler<?> handler) {
+    private static String validateType(NodeHandler<?, ?, ?> handler) {
         String type = handler.type();
         Objects.requireNonNull(type, "handler.type()");
         if (type.isBlank()) {
@@ -108,8 +108,8 @@ public final class NodeHandlerRegistry {
         return type;
     }
 
-    private void putHandler(String type, NodeHandler<?> handler) {
-        NodeHandler<?> previous = handlers.putIfAbsent(type, handler);
+    private void putHandler(String type, NodeHandler<?, ?, ?> handler) {
+        NodeHandler<?, ?, ?> previous = handlers.putIfAbsent(type, handler);
         if (previous != null) {
             throw new IllegalStateException("NodeHandler already registered for type: " + type);
         }

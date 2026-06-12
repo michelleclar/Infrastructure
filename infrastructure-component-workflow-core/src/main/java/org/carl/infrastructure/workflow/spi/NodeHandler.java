@@ -71,10 +71,14 @@ import java.util.Set;
  *   <li>{@code GatewayHandler} — pure routing.
  * </ul>
  *
- * @param <C> handler-specific configuration type; not part of the serialized workflow definition
- *     (definitions store {@code JsonNode} and the runtime converts via {@link #configType()}).
+ * @param <CONFIG> handler-specific configuration type. Serialized definitions store config as
+ *     {@code JsonNode}; the runtime converts it through {@link #configType()}.
+ * @param <STATE> typed immutable business input view for this handler. The wire/runtime source
+ *     remains {@link NodeExecutionContext#businessData()}.
+ * @param <EVENT> typed event payload view for this handler. The wire/runtime source remains
+ *     {@link WorkflowEvent#payload()}.
  */
-public interface NodeHandler<C> {
+public interface NodeHandler<CONFIG, STATE, EVENT> {
 
     /**
      * The node type string this handler implements. Must return a stable, deterministic value
@@ -87,7 +91,27 @@ public interface NodeHandler<C> {
      * before {@link #run(NodeExecutionContext, Object)} is invoked. Must return a stable class
      * reference.
      */
-    Class<C> configType();
+    Class<CONFIG> configType();
+
+    /**
+     * Typed view of {@link NodeExecutionContext#businessData()} requested by this handler. Defaults
+     * to {@code JsonNode} so existing handlers keep seeing the original JSON-compatible state
+     * source through {@link NodeExecutionContext}.
+     */
+    @SuppressWarnings("unchecked")
+    default Class<STATE> stateType() {
+        return (Class<STATE>) com.fasterxml.jackson.databind.JsonNode.class;
+    }
+
+    /**
+     * Typed view of {@link WorkflowEvent#payload()} requested by this handler. Defaults to {@code
+     * JsonNode}. Handlers that need a typed event payload should override this and the four-arg
+     * {@link #onEvent(NodeExecutionContext, WorkflowEvent, Object, Object)}.
+     */
+    @SuppressWarnings("unchecked")
+    default Class<EVENT> eventType() {
+        return (Class<EVENT>) com.fasterxml.jackson.databind.JsonNode.class;
+    }
 
     /**
      * Closed set of outcome strings this handler can return via {@link NodeResult#outcome()}. The
@@ -103,7 +127,16 @@ public interface NodeHandler<C> {
      *
      * <p><strong>Must be deterministic.</strong> See the class-level contract.
      */
-    NodeResult run(NodeExecutionContext ctx, C config);
+    NodeResult run(NodeExecutionContext ctx, CONFIG config);
+
+    /**
+     * Typed-state entry hook. Runtime adapters call this overload after decoding {@code STATE} from
+     * {@link NodeExecutionContext#businessData()}. The default delegates to the legacy two-arg
+     * method, so existing handlers do not need to use typed state.
+     */
+    default NodeResult run(NodeExecutionContext ctx, CONFIG config, STATE state) {
+        return run(ctx, config);
+    }
 
     /**
      * Cheap filter invoked when an external or internal event arrives while this node is the
@@ -117,8 +150,19 @@ public interface NodeHandler<C> {
      * parameter rather than {@code ctx.currentEvent()}, since during batch canAccept evaluation the
      * context's current event may not match the candidate.
      */
-    default boolean canAccept(NodeExecutionContext ctx, WorkflowEvent event, C config) {
+    default boolean canAccept(NodeExecutionContext ctx, WorkflowEvent event, CONFIG config) {
         return false;
+    }
+
+    /**
+     * Typed-event refinement hook. Runtime adapters should first call the three-arg {@link
+     * #canAccept(NodeExecutionContext, WorkflowEvent, Object)} as a cheap name/shape filter, then
+     * decode the event payload and call this overload. The default accepts the event once the
+     * three-arg filter accepted it.
+     */
+    default boolean canAccept(
+            NodeExecutionContext ctx, WorkflowEvent event, CONFIG config, EVENT eventPayload) {
+        return true;
     }
 
     /**
@@ -128,8 +172,17 @@ public interface NodeHandler<C> {
      *
      * <p><strong>Must be deterministic.</strong> See the class-level contract.
      */
-    default NodeResult onEvent(NodeExecutionContext ctx, WorkflowEvent event, C config) {
+    default NodeResult onEvent(NodeExecutionContext ctx, WorkflowEvent event, CONFIG config) {
         return NodeResult.waiting();
+    }
+
+    /**
+     * Typed-event handler. Runtime adapters call this overload after decoding {@code EVENT} from
+     * {@link WorkflowEvent#payload()}. The default delegates to the legacy three-arg method.
+     */
+    default NodeResult onEvent(
+            NodeExecutionContext ctx, WorkflowEvent event, CONFIG config, EVENT eventPayload) {
+        return onEvent(ctx, event, config);
     }
 
     /**
@@ -147,7 +200,16 @@ public interface NodeHandler<C> {
      * Return {@link NodeResult#completed(String)} (any outcome) when no compensating action is
      * required. The default no-op returns {@link NodeResult#completed(Outcomes#SUCCESS)}.
      */
-    default NodeResult compensate(NodeExecutionContext ctx, C config, NodeResult completedResult) {
+    default NodeResult compensate(
+            NodeExecutionContext ctx, CONFIG config, NodeResult completedResult) {
         return NodeResult.completed(Outcomes.SUCCESS);
+    }
+
+    /**
+     * Typed-state compensation hook. The default delegates to the legacy three-arg method.
+     */
+    default NodeResult compensate(
+            NodeExecutionContext ctx, CONFIG config, NodeResult completedResult, STATE state) {
+        return compensate(ctx, config, completedResult);
     }
 }

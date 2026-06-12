@@ -20,7 +20,7 @@ import java.util.Set;
  * runtime through {@link RuntimeIntents#DURATION} in the {@code run} result payload; the handler
  * itself never starts a timer — that is the runtime's responsibility.
  */
-public final class TimerTaskHandler implements NodeHandler<TimerTaskConfig> {
+public final class TimerTaskHandler implements NodeHandler<TimerTaskConfig, Object, Object> {
 
     /** Internal event delivered when the timer fires. */
     public static final String FIRED_EVENT = "_timerFired";

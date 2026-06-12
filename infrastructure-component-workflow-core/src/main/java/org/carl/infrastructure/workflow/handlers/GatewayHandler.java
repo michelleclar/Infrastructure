@@ -18,7 +18,7 @@ import java.util.Set;
  * <p>The {@link #outcomes()} set is intentionally empty because the produced outcome string is
  * dynamic and depends on the configured branches.
  */
-public final class GatewayHandler implements NodeHandler<GatewayConfig> {
+public final class GatewayHandler implements NodeHandler<GatewayConfig, Object, Object> {
 
     @Override
     public String type() {

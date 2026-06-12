@@ -25,7 +25,7 @@ import java.util.Set;
  * #CHILD_COMPLETED_EVENT} events. On each notification the parent re-evaluates its own outcome
  * using {@link #aggregate(JoinRule, List)}.
  */
-public final class TaskGroupHandler implements NodeHandler<TaskGroupConfig> {
+public final class TaskGroupHandler implements NodeHandler<TaskGroupConfig, Object, Object> {
 
     /** Internal event the runtime emits whenever a child task finishes. */
     public static final String CHILD_COMPLETED_EVENT = "_childCompleted";

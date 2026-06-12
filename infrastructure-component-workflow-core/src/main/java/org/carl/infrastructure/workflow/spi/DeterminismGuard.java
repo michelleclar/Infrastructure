@@ -96,7 +96,7 @@ public final class DeterminismGuard {
      * @return a (possibly empty) human-readable list of violations. An empty list means the lint
      *     found nothing suspicious — it does NOT prove determinism.
      */
-    public static List<String> staticScan(Class<? extends NodeHandler<?>> handlerClass) {
+    public static List<String> staticScan(Class<? extends NodeHandler<?, ?, ?>> handlerClass) {
         List<String> violations = new ArrayList<>();
         byte[] bytes;
         try {
@@ -142,7 +142,7 @@ public final class DeterminismGuard {
      *
      * @throws IllegalStateException with the handler class name and a bullet list of violations.
      */
-    public static void assertPure(Class<? extends NodeHandler<?>> handlerClass) {
+    public static void assertPure(Class<? extends NodeHandler<?, ?, ?>> handlerClass) {
         List<String> violations = staticScan(handlerClass);
         if (!violations.isEmpty()) {
             throw new IllegalStateException(

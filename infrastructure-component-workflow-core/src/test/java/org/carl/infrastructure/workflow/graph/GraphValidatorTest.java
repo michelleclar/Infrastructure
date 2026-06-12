@@ -360,7 +360,7 @@ class GraphValidatorTest {
         public int retryLimit;
     }
 
-    static final class ServiceTaskHandler implements NodeHandler<ServiceConfig> {
+    static final class ServiceTaskHandler implements NodeHandler<ServiceConfig, Object, Object> {
         @Override
         public String type() {
             return NodeTypes.SERVICE_TASK;
@@ -382,7 +382,7 @@ class GraphValidatorTest {
         }
     }
 
-    static final class EndTaskHandler implements NodeHandler<Void> {
+    static final class EndTaskHandler implements NodeHandler<Void, Object, Object> {
         @Override
         public String type() {
             return NodeTypes.END_TASK;

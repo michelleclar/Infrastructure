@@ -19,7 +19,7 @@ import java.util.Set;
  * Unlike {@code approvalTask}, this handler carries no {@code decision} field — the sole outcome
  * on a successful signal is {@link org.carl.infrastructure.workflow.spi.Outcomes#RECEIVED}.
  */
-public final class EventTaskHandler implements NodeHandler<EventTaskConfig> {
+public final class EventTaskHandler implements NodeHandler<EventTaskConfig, Object, Object> {
 
     /** Internal timeout event delivered by the runtime. */
     public static final String TIMEOUT_EVENT = "_timeout";

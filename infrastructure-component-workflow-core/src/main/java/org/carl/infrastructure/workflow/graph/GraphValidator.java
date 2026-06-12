@@ -112,7 +112,7 @@ public final class GraphValidator {
                 if (node.type() == null || node.type().isBlank()) {
                     continue;
                 }
-                Optional<NodeHandler<?>> handler = registry.find(node.type());
+                Optional<NodeHandler<?, ?, ?>> handler = registry.find(node.type());
                 if (handler.isEmpty()) {
                     errors.add(
                             "node "
@@ -219,7 +219,7 @@ public final class GraphValidator {
         Objects.requireNonNull(node, "node");
         Objects.requireNonNull(registry, "registry");
 
-        Optional<NodeHandler<?>> handlerOpt = registry.find(node.type());
+        Optional<NodeHandler<?, ?, ?>> handlerOpt = registry.find(node.type());
         if (handlerOpt.isEmpty()) {
             return List.of(
                     "node " + node.id() + " (" + node.type() + ") has no handler registered");
@@ -228,7 +228,7 @@ public final class GraphValidator {
     }
 
     /** Config-binding check against an already-resolved handler (no registry lookup). */
-    private static List<String> validateConfigBinding(NodeDefinition node, NodeHandler<?> handler) {
+    private static List<String> validateConfigBinding(NodeDefinition node, NodeHandler<?, ?, ?> handler) {
         Class<?> configType = handler.configType();
         if (configType == null || configType == Void.class) {
             return List.of();

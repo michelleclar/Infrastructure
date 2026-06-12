@@ -18,7 +18,7 @@ class NodeHandlerRegistryTest {
     @Test
     void registerAndLookupRoundTrip() {
         NodeHandlerRegistry registry = new NodeHandlerRegistry();
-        NodeHandler<Void> handler = serviceTaskHandler();
+        NodeHandler<Void, Object, Object> handler = serviceTaskHandler();
 
         registry.register(handler);
 
@@ -49,9 +49,9 @@ class NodeHandlerRegistryTest {
         assertTrue(registry.find("missing").isEmpty());
         assertTrue(registry.find(null).isEmpty(), "null type yields empty Optional");
 
-        NodeHandler<Void> handler = serviceTaskHandler();
+        NodeHandler<Void, Object, Object> handler = serviceTaskHandler();
         registry.register(handler);
-        Optional<NodeHandler<?>> found = registry.find(NodeTypes.SERVICE_TASK);
+        Optional<NodeHandler<?, ?, ?>> found = registry.find(NodeTypes.SERVICE_TASK);
         assertTrue(found.isPresent());
         assertSame(handler, found.get());
     }
@@ -82,7 +82,7 @@ class NodeHandlerRegistryTest {
         NodeHandlerRegistry registry = new NodeHandlerRegistry();
         registry.register(serviceTaskHandler());
         registry.register(
-                new NodeHandler<Void>() {
+                new NodeHandler<Void, Object, Object>() {
                     @Override
                     public String type() {
                         return NodeTypes.APPROVAL_TASK;
@@ -128,7 +128,7 @@ class NodeHandlerRegistryTest {
     }
 
     /** Handler that uses UUID.randomUUID() — forbidden by DeterminismGuard. */
-    static final class DirtyHandler implements NodeHandler<Void> {
+    static final class DirtyHandler implements NodeHandler<Void, Object, Object> {
         @Override
         public String type() {
             return "dirtyForRegistryTest";
@@ -151,8 +151,8 @@ class NodeHandlerRegistryTest {
         }
     }
 
-    private static NodeHandler<Void> serviceTaskHandler() {
-        return new NodeHandler<Void>() {
+    private static NodeHandler<Void, Object, Object> serviceTaskHandler() {
+        return new NodeHandler<Void, Object, Object>() {
             @Override
             public String type() {
                 return NodeTypes.SERVICE_TASK;

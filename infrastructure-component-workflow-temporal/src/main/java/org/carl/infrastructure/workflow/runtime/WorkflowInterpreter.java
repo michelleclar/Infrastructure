@@ -88,6 +88,7 @@ final class WorkflowInterpreter {
             NodeDefinition node,
             @SuppressWarnings("rawtypes") NodeHandler handler,
             Object config,
+            Object state,
             NodeResult completedResult) {}
 
     // ── Main loop ────────────────────────────────────────────────────────────────────────────
@@ -100,19 +101,22 @@ final class WorkflowInterpreter {
         while (true) {
             NodeDefinition node = graph.node(currentNodeId);
             @SuppressWarnings("unchecked")
-            NodeHandler<Object> handler = (NodeHandler<Object>) registry.lookup(node.type());
+            NodeHandler<Object, Object, Object> handler =
+                    (NodeHandler<Object, Object, Object>) registry.lookup(node.type());
             Object config = NodeConfigCodec.decode(mapper, handler, node.config());
+            Object state = NodeConfigCodec.decodeState(mapper, handler, ctx.businessData());
 
             fireHook(HookPhases.NODE_ENTER, node, null, null, null);
 
-            NodeResult lastResult = executeNode(node, currentNodeId, handler, config);
+            NodeResult lastResult = executeNode(node, currentNodeId, handler, config, state);
             ctx.recordResult(currentNodeId, lastResult);
 
             fireHook(HookPhases.NODE_EXIT, node, lastResult, null, null);
 
             if (handler.compensable() && lastResult.status() == NodeStatus.COMPLETED) {
                 compensationStack.add(
-                        new CompensationRecord(currentNodeId, node, handler, config, lastResult));
+                        new CompensationRecord(
+                                currentNodeId, node, handler, config, state, lastResult));
             }
 
             if (lastResult.status() == NodeStatus.FAILED
@@ -158,13 +162,17 @@ final class WorkflowInterpreter {
 
     /** Drive a single node through its handler loop until a non-WAITING result. */
     private NodeResult executeNode(
-            NodeDefinition node, String qualifier, NodeHandler<Object> handler, Object config) {
+            NodeDefinition node,
+            String qualifier,
+            NodeHandler<Object, Object, Object> handler,
+            Object config,
+            Object state) {
         ctx.setCurrentNodeId(qualifier);
         ctx.setCurrentEvent(null);
 
-        NodeResult current = handler.run(ctx, config);
+        NodeResult current = handler.run(ctx, config, state);
         while (current.status() == NodeStatus.WAITING) {
-            current = drive(handler, config, current, node, qualifier);
+            current = drive(handler, config, state, current, node, qualifier);
         }
         return current;
     }
@@ -172,41 +180,45 @@ final class WorkflowInterpreter {
     /** Lookup + decode + execute a taskGroup child (invoked by the adapter via a callback). */
     private NodeResult executeChild(NodeDefinition childNode, String qualifier) {
         @SuppressWarnings("unchecked")
-        NodeHandler<Object> handler = (NodeHandler<Object>) registry.lookup(childNode.type());
+        NodeHandler<Object, Object, Object> handler =
+                (NodeHandler<Object, Object, Object>) registry.lookup(childNode.type());
         Object config = NodeConfigCodec.decode(mapper, handler, childNode.config());
-        return executeNode(childNode, qualifier, handler, config);
+        Object state = NodeConfigCodec.decodeState(mapper, handler, ctx.businessData());
+        return executeNode(childNode, qualifier, handler, config, state);
     }
 
     /** Translate a WAITING result into the matching side effect via {@link RuntimeOps}. */
     private NodeResult drive(
-            NodeHandler<Object> handler,
+            NodeHandler<Object, Object, Object> handler,
             Object config,
+            Object state,
             NodeResult waiting,
             NodeDefinition node,
             String qualifier) {
         Map<String, Object> payload = waiting.payload();
 
         if (payload.containsKey(RuntimeIntents.ACTIVITY)) {
-            return driveActivity(handler, config, payload, node);
+            return driveActivity(handler, config, state, payload, node);
         }
         if (payload.containsKey(RuntimeIntents.DURATION)) {
-            return driveTimer(handler, config, payload, node);
+            return driveTimer(handler, config, state, payload, node);
         }
         if (payload.containsKey(RuntimeIntents.CHILDREN)) {
-            return driveTaskGroup(handler, config, payload, node, qualifier);
+            return driveTaskGroup(handler, config, state, payload, node, qualifier);
         }
         if (payload.containsKey(RuntimeIntents.SUB_WORKFLOW_ID)) {
-            return driveSubProcess(handler, config, payload, node);
+            return driveSubProcess(handler, config, state, payload, node);
         }
         if (payload.containsKey(RuntimeIntents.AWAIT_EVENT)) {
-            return driveAwait(handler, config, payload, node);
+            return driveAwait(handler, config, state, payload, node);
         }
         return NodeResult.failed("unknown waiting intent: " + payload.keySet());
     }
 
     private NodeResult driveActivity(
-            NodeHandler<Object> handler,
+            NodeHandler<Object, Object, Object> handler,
             Object config,
+            Object state,
             Map<String, Object> payload,
             NodeDefinition node) {
         String activityName = String.valueOf(payload.get(RuntimeIntents.ACTIVITY));
@@ -227,23 +239,25 @@ final class WorkflowInterpreter {
         JsonNode eventJson = mapper.valueToTree(eventPayload);
         WorkflowEvent event =
                 new WorkflowEvent(ServiceTaskHandler.ACTIVITY_RESULT_EVENT, eventJson);
-        return deliver(handler, config, event, node);
+        return deliver(handler, config, state, event, node);
     }
 
     private NodeResult driveTimer(
-            NodeHandler<Object> handler,
+            NodeHandler<Object, Object, Object> handler,
             Object config,
+            Object state,
             Map<String, Object> payload,
             NodeDefinition node) {
         Duration duration = parseDurationOrThrow(payload.get(RuntimeIntents.DURATION));
         ops.sleep(duration);
         return deliver(
-                handler, config, new WorkflowEvent(TimerTaskHandler.FIRED_EVENT, null), node);
+                handler, config, state, new WorkflowEvent(TimerTaskHandler.FIRED_EVENT, null), node);
     }
 
     private NodeResult driveAwait(
-            NodeHandler<Object> handler,
+            NodeHandler<Object, Object, Object> handler,
             Object config,
+            Object state,
             Map<String, Object> payload,
             NodeDefinition node) {
         Object awaitObj = payload.get(RuntimeIntents.AWAIT_EVENT);
@@ -256,18 +270,30 @@ final class WorkflowInterpreter {
         Duration timeout = timeoutObj == null ? null : parseDurationOrThrow(timeoutObj);
 
         RuntimeOps.EventMatcher matcher =
-                ev -> handler.canAccept(fixedNodeCtx(capturedNodeId, ev), ev, config);
+                ev -> {
+                    NodeExecutionContext eventCtx = fixedNodeCtx(capturedNodeId, ev);
+                    if (!handler.canAccept(eventCtx, ev, config)) {
+                        return false;
+                    }
+                    Object eventPayload =
+                            ev == null
+                                    ? null
+                                    : NodeConfigCodec.decodeEventPayload(
+                                            mapper, handler, ev.payload());
+                    return handler.canAccept(eventCtx, ev, config, eventPayload);
+                };
         RuntimeOps.AwaitOutcome outcome = ops.awaitEvent(matcher, timeout);
 
         if (outcome.matched() != null) {
             ctx.setCurrentNodeId(capturedNodeId);
-            return deliver(handler, config, outcome.matched(), node);
+            return deliver(handler, config, state, outcome.matched(), node);
         }
         if (outcome.timedOut()) {
             ctx.setCurrentNodeId(capturedNodeId);
             return deliver(
                     handler,
                     config,
+                    state,
                     new WorkflowEvent(resolveTimeoutEventName(handler), null),
                     node);
         }
@@ -275,8 +301,9 @@ final class WorkflowInterpreter {
     }
 
     private NodeResult driveSubProcess(
-            NodeHandler<Object> handler,
+            NodeHandler<Object, Object, Object> handler,
             Object config,
+            Object state,
             Map<String, Object> payload,
             NodeDefinition node) {
         String subWorkflowId = String.valueOf(payload.get(RuntimeIntents.SUB_WORKFLOW_ID));
@@ -309,7 +336,7 @@ final class WorkflowInterpreter {
         eventPayload.put("subOutcome", subOutcome);
         JsonNode eventJson = mapper.valueToTree(eventPayload);
         WorkflowEvent event = new WorkflowEvent(SubProcessHandler.COMPLETED_EVENT, eventJson);
-        return deliver(handler, config, event, node);
+        return deliver(handler, config, state, event, node);
     }
 
     /**
@@ -320,8 +347,9 @@ final class WorkflowInterpreter {
      * are cancelled and their (CANCELLED) results drained for caller inspection.
      */
     private NodeResult driveTaskGroup(
-            NodeHandler<Object> handler,
+            NodeHandler<Object, Object, Object> handler,
             Object config,
+            Object state,
             Map<String, Object> payload,
             NodeDefinition node,
             String parentQualifier) {
@@ -332,6 +360,7 @@ final class WorkflowInterpreter {
             return deliver(
                     handler,
                     config,
+                    state,
                     new WorkflowEvent(TaskGroupHandler.CHILD_COMPLETED_EVENT, null),
                     node);
         }
@@ -383,6 +412,7 @@ final class WorkflowInterpreter {
                         deliver(
                                 handler,
                                 config,
+                                state,
                                 new WorkflowEvent(TaskGroupHandler.CHILD_COMPLETED_EVENT, null),
                                 node);
                 if (aggregated.status() != NodeStatus.WAITING) {
@@ -408,12 +438,20 @@ final class WorkflowInterpreter {
     // ── Event delivery ───────────────────────────────────────────────────────────────────────
 
     private NodeResult deliver(
-            NodeHandler<Object> handler, Object config, WorkflowEvent event, NodeDefinition node) {
+            NodeHandler<Object, Object, Object> handler,
+            Object config,
+            Object state,
+            WorkflowEvent event,
+            NodeDefinition node) {
         ctx.setCurrentEvent(event);
         if (event != null) {
             lastEventName = event.name();
         }
-        NodeResult next = handler.onEvent(ctx, event, config);
+        Object eventPayload =
+                event == null
+                        ? null
+                        : NodeConfigCodec.decodeEventPayload(mapper, handler, event.payload());
+        NodeResult next = handler.onEvent(ctx, event, config, eventPayload);
         fireHook(HookPhases.EVENT, node, null, null, event);
         return next == null ? NodeResult.waiting() : next;
     }
@@ -429,7 +467,9 @@ final class WorkflowInterpreter {
                 fireHook(HookPhases.COMPENSATE, rec.node(), rec.completedResult(), null, null);
                 @SuppressWarnings("unchecked")
                 NodeResult compResult =
-                        rec.handler().compensate(ctx, rec.config(), rec.completedResult());
+                        rec.handler()
+                                .compensate(
+                                        ctx, rec.config(), rec.completedResult(), rec.state());
                 if (compResult != null
                         && compResult.status() == NodeStatus.WAITING
                         && compResult.payload() != null
@@ -561,7 +601,7 @@ final class WorkflowInterpreter {
         };
     }
 
-    private static String resolveTimeoutEventName(NodeHandler<?> handler) {
+    private static String resolveTimeoutEventName(NodeHandler<?, ?, ?> handler) {
         if (handler instanceof ApprovalTaskHandler) {
             return ApprovalTaskHandler.TIMEOUT_EVENT;
         }

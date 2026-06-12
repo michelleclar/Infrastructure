@@ -26,7 +26,7 @@ import java.util.Set;
  * event payload to disambiguate sibling user tasks that share an {@code awaitEvent} name. See
  * {@link ApprovalTaskHandler} for the detailed semantics.
  */
-public final class UserTaskHandler implements NodeHandler<UserTaskConfig> {
+public final class UserTaskHandler implements NodeHandler<UserTaskConfig, Object, Object> {
 
     /** Default event name when {@link UserTaskConfig#awaitEvent()} is null/blank. */
     public static final String DEFAULT_AWAIT_EVENT = "userTask";

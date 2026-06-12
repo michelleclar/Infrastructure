@@ -23,7 +23,7 @@ import java.util.Set;
  * SubProcessConfig#outcomeMapping()} so child-workflow-specific outcomes are translated into
  * parent-workflow outcomes without coupling the two definitions.
  */
-public final class SubProcessHandler implements NodeHandler<SubProcessConfig> {
+public final class SubProcessHandler implements NodeHandler<SubProcessConfig, Object, Object> {
 
     /** Internal completion event delivered by the runtime when the sub-workflow finishes. */
     public static final String COMPLETED_EVENT = "_subProcessCompleted";

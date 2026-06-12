@@ -23,7 +23,7 @@ import java.util.Set;
  * deliver the result back via an internal {@code "_activityResult"} event whose payload contains
  * {@code "status"} ({@code "success"}/{@code "failed"}) and an optional {@code "message"}.
  */
-public final class ServiceTaskHandler implements NodeHandler<ServiceTaskConfig> {
+public final class ServiceTaskHandler implements NodeHandler<ServiceTaskConfig, Object, Object> {
 
     /** Internal event name used by the runtime to deliver the activity result. */
     public static final String ACTIVITY_RESULT_EVENT = "_activityResult";
