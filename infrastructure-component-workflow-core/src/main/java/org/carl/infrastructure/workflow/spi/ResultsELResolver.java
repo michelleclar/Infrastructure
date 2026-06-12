@@ -75,6 +75,7 @@ public final class ResultsELResolver extends ELResolver {
     }
 
     @Override
+    @SuppressWarnings("removal")
     public Iterator<FeatureDescriptor> getFeatureDescriptors(ELContext c, Object base) {
         return null;
     }

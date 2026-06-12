@@ -66,6 +66,7 @@ public final class JsonNodeELResolver extends ELResolver {
     }
 
     @Override
+    @SuppressWarnings("removal")
     public Iterator<FeatureDescriptor> getFeatureDescriptors(ELContext c, Object base) {
         return null;
     }

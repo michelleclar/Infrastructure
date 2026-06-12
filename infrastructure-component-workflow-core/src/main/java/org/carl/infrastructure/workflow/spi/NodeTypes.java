@@ -7,12 +7,13 @@ package org.carl.infrastructure.workflow.spi;
  * runtime where a plain string is required (JSON wire format, registry lookups, switch
  * statements).
  *
- * <p>For typed DSL contexts (compile-time safety, IDE autocomplete, refactor support) prefer the
- * matching {@link BuiltInNodeType} enum constants:
+ * <p>For typed DSL contexts that only need the type discriminator, use the matching {@link
+ * BuiltInNodeType} enum constants. For type + config safety, use {@link
+ * org.carl.infrastructure.workflow.handlers.BuiltInNodeSpecs}.
  *
  * <pre>
- * flow.node("step1", b -&gt; b.type(BuiltInNodeType.SERVICE_TASK));   // typed
- * flow.node("step1", b -&gt; b.type(NodeTypes.SERVICE_TASK));         // string (still valid)
+ * flow.node("step1", b -&gt; b.type(BuiltInNodeType.SERVICE_TASK));   // typed type only
+ * flow.node("step1", b -&gt; b.type(NodeTypes.SERVICE_TASK));         // string
  * </pre>
  */
 public final class NodeTypes {

@@ -19,9 +19,8 @@ import java.util.Objects;
  * </ul>
  *
  * <p><strong>Edge-routing semantics:</strong> the DSL writes the argument of {@link #on(String)}
- * into {@link EdgeDefinition#event()}; {@link EdgeDefinition#outcome()} is always {@code null} for
- * edges produced through this builder. Runtime routing layers that need to dispatch by node outcome
- * must materialise outcomes into events themselves.
+ * into {@link EdgeDefinition#event()}. The runtime compares a node's completed outcome with that
+ * field when choosing the next edge.
  *
  * <p>The optional {@link FlowTo#when(String)} step writes an EL guard expression into {@link
  * EdgeDefinition#when()}.

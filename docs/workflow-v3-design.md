@@ -20,7 +20,7 @@
 
 固化的设计原则。后续修改如违背任一条须显式记录。
 
-1. **业务感知不到 Temporal**：业务只写 `NodeHandler<C>.run(ctx, config) → NodeResult` 和 `Activity`。`@WorkflowInterface` / `Workflow.await` / `ActivityStub` 等 Temporal API 仅出现在 `infrastructure-component-workflow-temporal` 的 runtime 包内
+1. **业务感知不到 Temporal**：业务只写 `NodeHandler<CONFIG, STATE, EVENT>` 和 `Activity`。`@WorkflowInterface` / `Workflow.await` / `ActivityStub` 等 Temporal API 仅出现在 `infrastructure-component-workflow-temporal` 的 runtime 包内
 2. **两层定位**：JSON 配置层（前端可视化）与 Java 编码层（强类型）共享一个 `WorkflowDefinition` POJO；两层的差异只在"怎么生成 POJO"，不在 POJO 自身
 3. **业务自定义节点零侵入**：新增一个 NodeHandler 不需要修改 `workflow-core` 任何文件
 4. **节点不直接决定下一节点**：节点产 `NodeResult(status, outcome, payload)`，路由由 `EdgeDefinition` 决定
@@ -36,8 +36,8 @@
 ```
 infrastructure-component-workflow-core   （纯 Java，0 Temporal 依赖）
   definition/   不可变 POJO + Jackson 注解
-  spi/          SPI 抽象（NodeHandler / NodeExecutionContext / WorkflowEvent / Outcomes / NodeTypes / ConditionEvaluator / JsonNodeELResolver / ResultsELResolver / NodeHandlerRegistry / DeterminismGuard）
-  handlers/     9 个内置 NodeHandler + 配置 record + RuntimeIntents
+  spi/          SPI 抽象（NodeHandler / NodeExecutionContext / WorkflowEvent / Outcomes / NodeTypes / NodeSpec / ConditionEvaluator / JsonNodeELResolver / ResultsELResolver / NodeHandlerRegistry / DeterminismGuard）
+  handlers/     9 个内置 NodeHandler + 配置 record + RuntimeIntents + BuiltInNodeSpecs
   dsl/          Java DSL（Flow / FlowDef / FlowFrom / FlowJoin / NodeBuilder / BuiltInNodes / Dsl / NodeConfig / ChildNodeSpec / JoinSpec）
   graph/        定义校验 + 可达性 + 边匹配（WorkflowGraph / GraphValidator / EdgeMatch / ValidationReport）
   engine/       平台无关的编排决策（EdgeRouter：起点/路由；NodeConfigCodec：DSL 形状规范化 + 配置解码）——从 Temporal adapter 下沉，可脱离 Temporal 单测
@@ -140,16 +140,22 @@ record WorkflowEvent(
 ### 4.1 NodeHandler（`spi/NodeHandler.java`）
 
 ```java
-public interface NodeHandler<C> {
+public interface NodeHandler<CONFIG, STATE, EVENT> {
     String type();                                            // 稳定的 type 标识
-    Class<C> configType();                                    // 配置类型
+    Class<CONFIG> configType();                               // 节点配置类型
+    default Class<STATE> stateType();                         // businessData typed view
+    default Class<EVENT> eventType();                         // event.payload typed view
     Set<String> outcomes();                                   // 可能产出的 outcome 闭集合（校验用）
-    NodeResult run(NodeExecutionContext ctx, C config);       // 进入节点时调用一次
+    NodeResult run(NodeExecutionContext ctx, CONFIG config);  // 兼容入口
+    default NodeResult run(NodeExecutionContext ctx, CONFIG config, STATE state);
 
-    default boolean canAccept(NodeExecutionContext ctx, WorkflowEvent event, C config);
-    default NodeResult onEvent(NodeExecutionContext ctx, WorkflowEvent event, C config);
+    default boolean canAccept(NodeExecutionContext ctx, WorkflowEvent event, CONFIG config);
+    default boolean canAccept(NodeExecutionContext ctx, WorkflowEvent event, CONFIG config, EVENT eventPayload);
+    default NodeResult onEvent(NodeExecutionContext ctx, WorkflowEvent event, CONFIG config);
+    default NodeResult onEvent(NodeExecutionContext ctx, WorkflowEvent event, CONFIG config, EVENT eventPayload);
     default boolean compensable();
-    default NodeResult compensate(NodeExecutionContext ctx, C config, NodeResult completedResult);
+    default NodeResult compensate(NodeExecutionContext ctx, CONFIG config, NodeResult completedResult);
+    default NodeResult compensate(NodeExecutionContext ctx, CONFIG config, NodeResult completedResult, STATE state);
 }
 ```
 
@@ -176,8 +182,8 @@ public interface NodeExecutionContext {
 ### 4.3 NodeHandlerRegistry（`spi/NodeHandlerRegistry.java`）
 
 ```java
-register(NodeHandler<?>)            // 用户路径：先过 DeterminismGuard.assertPure 字节码扫描
-registerBuiltIn(NodeHandler<?>)     // 内置路径：跳过 guard
+register(NodeHandler<?, ?, ?>)      // 用户路径：先过 DeterminismGuard.assertPure 字节码扫描
+registerBuiltIn(NodeHandler<?, ?, ?>) // 内置路径：跳过 guard
 lookup(String type)                 // 抛 IllegalArgumentException 若缺
 find(String type)                   // 返回 Optional
 registeredTypes()                   // 已注册 type 集合
@@ -293,84 +299,81 @@ V3 的核心改进：**业务自定义 handler 零侵入接入 DSL**。
 ```java
 public final class NodeBuilder {
     public NodeBuilder type(String type);              // 原生字符串
-    public NodeBuilder type(NodeType nodeType);        // 类型化包装（推荐）
+    public NodeBuilder type(NodeType nodeType);        // 类型化 type 包装
+    public <C> NodeBuilder config(NodeSpec<C> spec, C config); // 类型化 type + config（推荐）
     public NodeBuilder label(String label);
     public NodeBuilder set(String key, Object value);  // 单 key-value
     public NodeBuilder setAll(Map<String, Object>);    // 批量 Map 形式
-    public NodeBuilder setAll(Object pojo);            // 类型化 POJO（推荐）
+    public NodeBuilder setAll(Object pojo);            // POJO 转 props，兼容旧写法
 }
 
-// FlowDef 上的 builder 形 node 方法
+// FlowDef 上的 node 方法
 public FlowDef node(String id, Consumer<NodeBuilder> configurer);
 ```
 
-新增/自定义节点类型**不需要改 `workflow-core`**。三种写法力度递增：
+新增/自定义节点类型**不需要改 `workflow-core`**。强类型写法：
 
 ```java
-// 写法 1：纯字符串（最自由，无 IDE 帮助，仅适合 JSON 驱动场景）
+public record AiReviewConfig(String model, double threshold) {}
+
+public final class MyNodeSpecs {
+    public static final NodeSpec<AiReviewConfig> AI_REVIEW =
+            NodeSpec.of("aiReview", AiReviewConfig.class);
+
+    private MyNodeSpecs() {}
+}
+
+flow.node("智能审核", b -> b
+    .label("智能审核")
+    .config(MyNodeSpecs.AI_REVIEW, new AiReviewConfig("gpt-4", 0.85)));
+```
+
+`NodeSpec<C>` 同时绑定 `NodeDefinition.type()` 的字符串值和 handler 的 config record 类型。`WorkflowDefinition` 仍然保存 `JsonNode config`，所以 JSON 持久化、可视化、跨语言转换不受泛型影响。
+
+动态/JSON 驱动场景仍可使用旧写法：
+
+```java
 flow.node("智能审核", b -> b
     .type("aiReview")
     .set("model", "gpt-4")
     .set("threshold", 0.85));
-
-// 写法 2：业务声明 NodeType + 自由 set（typed type，untyped config）
-public enum MyNodeType implements NodeType {
-    AI_REVIEW("aiReview");
-    private final String value;
-    MyNodeType(String v) { this.value = v; }
-    @Override public String value() { return value; }
-}
-
-flow.node("智能审核", b -> b
-    .type(MyNodeType.AI_REVIEW)         // typed type
-    .set("model", "gpt-4")              // 还是字符串 key
-    .set("threshold", 0.85));
-
-// 写法 3：业务声明 NodeType + typed config record（端到端 typed，**推荐**）
-public record AiReviewConfig(String model, double threshold) {}
-
-flow.node("智能审核", b -> b
-    .type(MyNodeType.AI_REVIEW)                                // typed
-    .setAll(new AiReviewConfig("gpt-4", 0.85)));               // typed
 ```
 
 `NodeType` 是单方法函数式接口 `value() -> String`，业务可以用 enum / class / `NodeType.of(string)` 三种方式实现。
 
-`setAll(Object pojo)` 用 Jackson 把 POJO 转 `Map<String, Object>` 合并进 props——任何 Jackson 能序列化的 record/bean 都可以。
+`set(String, Object)` / `setAll(...)` 保留给动态节点和兼容代码。业务代码需要避免手写 config key 时使用 `NodeSpec<C>`。
 
 业务想给自定义类型加 sugar：
 
 ```java
 public final class MyNodes {
     public static Consumer<NodeBuilder> aiReview(String model, double threshold) {
-        return b -> b.type(MyNodeType.AI_REVIEW)
-                     .setAll(new AiReviewConfig(model, threshold));
+        return b -> b.config(MyNodeSpecs.AI_REVIEW, new AiReviewConfig(model, threshold));
     }
 }
 ```
 
-### 7.1.1 内置类型的 typed 入口（`spi/BuiltInNodeType.java`）
+### 7.1.1 内置类型的 typed 入口（`handlers/BuiltInNodeSpecs.java`）
 
 ```java
-public enum BuiltInNodeType implements NodeType {
-    SERVICE_TASK("serviceTask"),
-    APPROVAL_TASK("approvalTask"),
-    USER_TASK("userTask"),
-    EVENT_TASK("eventTask"),
-    TIMER_TASK("timerTask"),
-    TASK_GROUP("taskGroup"),
-    GATEWAY("gateway"),
-    SUB_PROCESS("subProcess"),
-    END_TASK("endTask");
-    // ...
+public final class BuiltInNodeSpecs {
+    public static final NodeSpec<ServiceTaskConfig> SERVICE_TASK;
+    public static final NodeSpec<ApprovalTaskConfig> APPROVAL_TASK;
+    public static final NodeSpec<UserTaskConfig> USER_TASK;
+    public static final NodeSpec<EventTaskConfig> EVENT_TASK;
+    public static final NodeSpec<TimerTaskConfig> TIMER_TASK;
+    public static final NodeSpec<TaskGroupConfig> TASK_GROUP;
+    public static final NodeSpec<GatewayConfig> GATEWAY;
+    public static final NodeSpec<SubProcessConfig> SUB_PROCESS;
+    public static final NodeSpec<EndTaskConfig> END_TASK;
 }
 ```
 
-`NodeTypes.X` 字符串常量保留兼容（JSON 驱动、运行时字符串比较仍需要），**新代码用 `BuiltInNodeType.X`**。两者由 `BuiltInNodeTypeAlignmentTest` 强制对齐。
+`NodeTypes.X` 字符串常量和 `BuiltInNodeType.X` enum 保留兼容（JSON 驱动、运行时字符串比较、只想约束 type 的 DSL 仍需要），**新代码声明 config 时用 `BuiltInNodeSpecs.X`**。
 
 ### 7.2 BuiltInNodes（`dsl/BuiltInNodes.java`）
 
-内置 sugar，返回 `Consumer<NodeBuilder>`。可选用——业务用 `.type(...).set(...)` 直接写也行。
+内置 sugar，返回 `Consumer<NodeBuilder>`。内部使用 `BuiltInNodeSpecs.X + *Config`，调用方无需手写 config key。
 
 ```java
 BuiltInNodes.service(String activity)
@@ -379,20 +382,15 @@ BuiltInNodes.approval(String assignee)
 BuiltInNodes.userTask(String assignee)
 BuiltInNodes.event(String awaitEvent)
 BuiltInNodes.timer(String iso8601Duration)
-BuiltInNodes.gateway()
 BuiltInNodes.subProcess(String subWorkflowId)
-BuiltInNodes.endTask()
-BuiltInNodes.taskGroup()
 ```
 
-单参 `service` 需要传额外 key 时用 `Consumer.andThen`；双参 `service` 直接内联 activityInput：
+`gateway` / `endTask` / `taskGroup` 没有独立 sugar；使用 `BuiltInNodeSpecs.GATEWAY`、`flow.endNode(name)`，或 `flow.from(name).join(...)`。
+
+`service` 支持单参和双参：
 
 ```java
-// 单参 + andThen（仍有效）
-flow.node("submit", BuiltInNodes.service("createOrder")
-    .andThen(b -> b.set("activityInput", Map.of("customerId", "alice"))));
-
-// 双参（推荐）
+flow.node("submit", BuiltInNodes.service("createOrder"));
 flow.node("submit", BuiltInNodes.service("createOrder", Map.of("customerId", "alice")));
 ```
 
@@ -403,16 +401,19 @@ FlowDef flow = Flow.define("orderV2", "下单流程");
 flow.start("createOrder");
 
 flow.node("createOrder", BuiltInNodes.service("createOrder"));
-flow.node("approve", BuiltInNodes.approval("manager")
-    .andThen(b -> b.set("awaitEvent", "approveOrder")));
-flow.node("done", b -> b.type(NodeTypes.END_TASK).label("已完成"));
+flow.node("approve", b -> b.config(
+        BuiltInNodeSpecs.APPROVAL_TASK,
+        new ApprovalTaskConfig("manager", "approveOrder", null)));
+flow.node("done", b -> b
+        .label("已完成")
+        .config(BuiltInNodeSpecs.END_TASK, new EndTaskConfig()));
 
 flow.from("createOrder").on(Outcomes.SUCCESS).to("approve");
 flow.from("approve").on(Outcomes.APPROVED).when("${ctx.variables.flag == true}").to("done");
 flow.from("approve").on(Outcomes.APPROVED).to("alt-done");
 // .on() 写入 EdgeDefinition.event
 // .when() 写入 EdgeDefinition.when
-// EdgeDefinition.outcome 字段保留兼容但新 DSL 不写
+// 旧 JSON 中的 EdgeDefinition.outcome 会被 ignoreUnknown 丢弃
 
 WorkflowDefinition def = flow.build();
 ```
@@ -702,11 +703,15 @@ static WorkflowDefinition coSignFlow() {
     FlowDef flow = Flow.define("leaveCoSignV2", "请假流程会签 V2");
     flow.start("requestLeave");
 
-    flow.node("requestLeave", BuiltInNodes.service("createLeaveRequest")
-            .andThen(b -> b.set("activityInput", Map.of("employeeId", "alice"))));
+    flow.node("requestLeave",
+            BuiltInNodes.service("createLeaveRequest", Map.of("employeeId", "alice")));
     flow.node("onLeave", BuiltInNodes.service("notifyManager"));
-    flow.node("completed", b -> b.type(NodeTypes.END_TASK).label("完成"));
-    flow.node("rejected", b -> b.type(NodeTypes.END_TASK).label("已拒绝"));
+    flow.node("completed", b -> b
+            .label("完成")
+            .config(BuiltInNodeSpecs.END_TASK, new EndTaskConfig()));
+    flow.node("rejected", b -> b
+            .label("已拒绝")
+            .config(BuiltInNodeSpecs.END_TASK, new EndTaskConfig()));
 
     flow.from("requestLeave").on(Outcomes.SUCCESS).to("approvals");
     flow.from("approvals").join(Dsl.all(
@@ -835,7 +840,7 @@ assert result.nodeResults().get("approvals").outcome().equals(Outcomes.APPROVED)
 |---|--------|------|----------|
 | 1 | ~~"等的事件名" 4 种拼法：`AWAIT_EVENT="awaitEvent"` vs `AWAITED_EVENT="awaitedEvent"` vs 字段不一致~~ | ✅ **已修（阶段 12）**：全部统一为 `awaitEvent`；`AWAITED_EVENT` 常量已删；`EventTaskConfig` 字段已重命名（保留 `@JsonAlias` 向后兼容） | — |
 | 2 | ~~`NodeBuilder.set(k, v)` vs `.config(map)` vs `.config(POJO)`：名字不对称~~ | ✅ **已修（阶段 12）**：`config(Map)` → `setAll(Map)`；`config(Object)` → `setAll(Object)`；所有调用点已迁移 | — |
-| 3 | `NodeResult.payload` / `NodeConfig.props` / `NodeDefinition.config(JsonNode)` 三个名字 | **非问题**：三者处于不同生命周期层（运行时产物 / DSL 中间态 / 持久化 JSON），名字巧合但语义不重叠，保留各自名字 | 不改代码 |
+| 3 | `NodeConfig.props` 是自由 `Map<String,Object>`，业务手写 key 会漏校验 | ✅ **已修**：`props` 保留为 DSL 到 JSON 的内部中间态；新增 `NodeSpec<C>`、`BuiltInNodeSpecs`、`NodeBuilder.config(spec, config)`。新代码在 `flow.node(id, b -> b.config(...))` / `Dsl.node(name, b -> b.config(...))` 链式 builder 中使用 typed config record，不直接手写 props key | 旧 `set/setAll` 保留给动态/JSON 驱动场景 |
 | 4 | ~~`BuiltInNodes.service(activity)` 无 `activityInput` 参数~~ | ✅ **已修（阶段 12）**：新增 `service(String, Map<String,Object>)` 双参重载 | — |
 | 5 | `EdgeMatch.ByOutcome` 已 `@Deprecated`，`WorkflowGraph.nextCandidates` 内部仍引用 | ✅ **已修（阶段 12）**：在 `nextCandidates` 方法加 `@SuppressWarnings("deprecation")`；`GenericWorkflowImpl.pickNextEdge` legacy 分支同样 suppress；`ByOutcome` 本身保留以维持运行时向后兼容 | 下一个大版本可干净删除 |
 | 6 | ~~Interceptor SPI 已建好但 `GenericWorkflowImpl` 未集成 hook 派发~~ | ✅ **已修（阶段 13/14）**：7/7 phase 全部接入。阶段 13 接 5 个（WORKFLOW_START / NODE_ENTER / NODE_EXIT / NODE_ERROR / WORKFLOW_END），阶段 14（F2）补 EVENT（`deliver` 内 `handler.onEvent` 之后）+ COMPENSATE（`runCompensation` 内 `handler.compensate` 之前）。`CompensationRecord` 加 `NodeDefinition` 字段；所有 `deliver` / `drive*` 链路传 `node` 参数 | — |
@@ -872,7 +877,7 @@ assert result.nodeResults().get("approvals").outcome().equals(Outcomes.APPROVED)
 | 阶段 8：端到端 demo（请假 + 会签 + 补偿 + 子流程 + 条件路由 + 回环） | ✅ 17 通过 / 0 失败 |
 | 阶段 9：远程 Temporal + DB 归档集成测试 | ✅ 28 通过 / 0 失败（含 LeaveWorkflowRemoteTest / LeaveFlowDslRemoteTest / DatabaseArchiveIntegrationTest） |
 | 阶段 10：V3 文档 | ✅ 本文档 |
-| 阶段 11：DSL typed 自定义节点（`NodeType` 接口 + `BuiltInNodeType` enum + `NodeBuilder.setAll(POJO)`） | ✅ workflow-core 271 测试通过 |
+| 阶段 11：DSL typed 自定义节点（`NodeType` 接口 + `BuiltInNodeType` enum + `NodeBuilder.setAll(POJO)`） | ✅ workflow-core 271 测试通过；后续补强为 `NodeSpec<C>` + `BuiltInNodeSpecs` + typed config API |
 | 阶段 12：§13 语义清理 + 死代码扫尾（E1 awaitEvent 统一 / E2 setAll 重命名 / E4 service 双参 / E5 deprecation suppress / E8 FlowFrom.join 校验） | ✅ workflow-core 276 测试通过；workflow-temporal compileTestJava 通过 |
 | 阶段 13：Interceptor runtime 集成（F：5/7 phase 内联 + Activity 派发；新增 `InterceptorHolder` / `HookPhases` / `AsyncHookInvocation` / `AsyncInterceptorActivity(Impl)` / `SimpleInterceptorContext`；`WorkerSetup` 双 overload） | ✅ workflow-temporal 23 通过 / 0 失败；端到端 17 个 demo 不破 |
 | 阶段 14：Interceptor EVENT + COMPENSATE（F2：`deliver` / `drive*` 链路传 node 参数；`CompensationRecord` 加 NodeDefinition；fireHook(EVENT) 在 onEvent 后；fireHook(COMPENSATE) 在 compensate 前） | ✅ workflow-temporal 27 通过 / 0 失败（+2 新 hook 测试） |
@@ -900,7 +905,7 @@ assert result.nodeResults().get("approvals").outcome().equals(Outcomes.APPROVED)
 | SPI 抽象 | `workflow-core/.../spi/*.java` |
 | 自定义 handler 怎么写 | 参考 `workflow-core/.../handlers/ServiceTaskHandler.java` |
 | 自定义 handler 怎么注册 | `workflow-core/.../spi/NodeHandlerRegistry.java` |
-| 自定义 NodeType / typed config | `workflow-core/.../spi/NodeType.java` + `BuiltInNodeType.java` + `test/.../dsl/CustomHandlerTypedDslTest.java` |
+| 自定义 NodeType / typed config | `workflow-core/.../spi/NodeType.java` + `NodeSpec.java` + `handlers/BuiltInNodeSpecs.java` + `test/.../dsl/CustomHandlerTypedDslTest.java` + `NodeBuilderTypedTest.java` |
 | DSL 怎么用 | 本文档 §7 + `workflow-temporal/test/.../leave/LeaveProcess.java` |
 | 表达式语法 | `workflow-core/.../spi/ConditionEvaluator.java` 的 class javadoc |
 | Temporal 适配 | `workflow-temporal/.../runtime/GenericWorkflowImpl.java` |

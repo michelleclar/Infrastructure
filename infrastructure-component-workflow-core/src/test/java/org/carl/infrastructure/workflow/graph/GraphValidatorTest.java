@@ -13,6 +13,12 @@ import org.carl.infrastructure.workflow.definition.EdgeDefinition;
 import org.carl.infrastructure.workflow.definition.NodeDefinition;
 import org.carl.infrastructure.workflow.definition.NodeResult;
 import org.carl.infrastructure.workflow.definition.WorkflowDefinition;
+import org.carl.infrastructure.workflow.dsl.BuiltInNodes;
+import org.carl.infrastructure.workflow.dsl.Dsl;
+import org.carl.infrastructure.workflow.dsl.Flow;
+import org.carl.infrastructure.workflow.dsl.FlowDef;
+import org.carl.infrastructure.workflow.handlers.BuiltInHandlers;
+import org.carl.infrastructure.workflow.spi.BuiltInNodeType;
 import org.carl.infrastructure.workflow.spi.NodeExecutionContext;
 import org.carl.infrastructure.workflow.spi.NodeHandler;
 import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
@@ -123,6 +129,44 @@ class GraphValidatorTest {
                 report.errors().stream()
                         .anyMatch(s -> s.contains("config invalid") && s.contains("A")),
                 () -> "expected 'config invalid' error: " + report.errors());
+    }
+
+    @Test
+    void registryRejectsEdgeEventNotDeclaredByHandlerOutcomes() {
+        WorkflowDefinition def =
+                WorkflowDefinition.of(
+                        "w",
+                        "W",
+                        List.of(node("A", NodeTypes.SERVICE_TASK), node("end", NodeTypes.END_TASK)),
+                        List.of(event("A", "end", "sucess")));
+        NodeHandlerRegistry registry = new NodeHandlerRegistry();
+        registry.register(new ServiceTaskHandler());
+        registry.register(new EndTaskHandler());
+
+        ValidationReport report = GraphValidator.validate(def, registry);
+
+        assertFalse(report.ok());
+        assertTrue(
+                report.errors().stream()
+                        .anyMatch(s -> s.contains("sucess") && s.contains("handler outcomes")),
+                () -> "expected handler-outcomes error: " + report.errors());
+    }
+
+    @Test
+    void registryAcceptsDslTaskGroupConfigShapeAfterNormalization() {
+        FlowDef flow = Flow.define("w", "W");
+        flow.start("approvals");
+        flow.node("done", b -> b.type(BuiltInNodeType.END_TASK));
+        flow.from("approvals")
+                .join(Dsl.all(Dsl.node("hr", BuiltInNodes.approval("hr"))))
+                .on(Outcomes.APPROVED)
+                .to("done");
+        NodeHandlerRegistry registry = new NodeHandlerRegistry();
+        BuiltInHandlers.registerAll(registry);
+
+        ValidationReport report = GraphValidator.validate(flow.build(), registry);
+
+        assertTrue(report.ok(), () -> "expected no errors but got: " + report.errors());
     }
 
     @Test

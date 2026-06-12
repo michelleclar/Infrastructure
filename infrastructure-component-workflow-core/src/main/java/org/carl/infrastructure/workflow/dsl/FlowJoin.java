@@ -16,8 +16,8 @@ import java.util.Objects;
  * </pre>
  *
  * <p><strong>Edge-routing semantics:</strong> the DSL writes the argument of {@link #on(String)}
- * into {@link EdgeDefinition#event()}; {@link EdgeDefinition#outcome()} is always {@code null} for
- * edges produced through this builder. See {@link FlowFrom} for the full discussion.
+ * into {@link EdgeDefinition#event()}. The runtime compares a node's completed outcome with that
+ * field when choosing the next edge. See {@link FlowFrom} for the full discussion.
  */
 public final class FlowJoin {
 

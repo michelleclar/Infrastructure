@@ -2,13 +2,18 @@ package org.carl.infrastructure.workflow.dsl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
 import org.carl.infrastructure.workflow.definition.NodeDefinition;
 import org.carl.infrastructure.workflow.definition.WorkflowDefinition;
+import org.carl.infrastructure.workflow.handlers.BuiltInNodeSpecs;
+import org.carl.infrastructure.workflow.handlers.EventTaskConfig;
+import org.carl.infrastructure.workflow.handlers.ServiceTaskConfig;
 import org.carl.infrastructure.workflow.spi.BuiltInNodeType;
+import org.carl.infrastructure.workflow.spi.NodeSpec;
 import org.carl.infrastructure.workflow.spi.NodeType;
 import org.junit.jupiter.api.Test;
 
@@ -22,6 +27,9 @@ import java.util.Map;
 class NodeBuilderTypedTest {
 
     private record SampleConfig(String activity, Map<String, Object> activityInput) {}
+
+    private static final NodeSpec<SampleConfig> SAMPLE_SPEC =
+            NodeSpec.of("sampleTask", SampleConfig.class);
 
     @Test
     void type_nodeTypeOverload_writesValueString() {
@@ -126,5 +134,84 @@ class NodeBuilderTypedTest {
         JsonNode config = def.nodes().get(0).config();
         assertEquals("v1", config.get("k1").asText());
         assertEquals("createOrder", config.get("activity").asText());
+    }
+
+    @Test
+    void nodeBuilder_config_writesJsonConfigWithoutStringKeysAtCallSite() {
+        FlowDef flow = Flow.define("typed", "Typed Flow");
+        flow.node(
+                "step1",
+                b ->
+                        b.label("Create order")
+                                .config(
+                                        BuiltInNodeSpecs.SERVICE_TASK,
+                                        new ServiceTaskConfig(
+                                                "createOrder",
+                                                Map.of("customerId", "alice"),
+                                                null)));
+
+        WorkflowDefinition def = flow.build();
+        NodeDefinition node = def.nodes().get(0);
+        assertEquals("serviceTask", node.type());
+        assertEquals("Create order", node.label());
+        assertEquals("createOrder", node.config().get("activity").asText());
+        assertEquals("alice", node.config().get("activityInput").get("customerId").asText());
+    }
+
+    @Test
+    void nodeBuilder_config_typedSpecAndConfig_replacesMutableProps() {
+        FlowDef flow = Flow.define("typed", "Typed Flow");
+        flow.node(
+                "step1",
+                b ->
+                        b.set("old", "value")
+                                .config(
+                                        SAMPLE_SPEC,
+                                        new SampleConfig("createOrder", Map.of("customerId", "alice"))));
+
+        JsonNode config = flow.build().nodes().get(0).config();
+        assertEquals("createOrder", config.get("activity").asText());
+        assertEquals("alice", config.get("activityInput").get("customerId").asText());
+        assertNull(config.get("old"));
+    }
+
+    @Test
+    void dslNode_typedSpecAndConfig_writesChildConfig() {
+        ChildNodeSpec child =
+                Dsl.node(
+                        "child",
+                        b ->
+                                b.config(
+                                        BuiltInNodeSpecs.EVENT_TASK,
+                                        new EventTaskConfig("approval", "PT24H")));
+
+        assertEquals("eventTask", child.config().type());
+        assertEquals("approval", child.config().props().get("awaitEvent"));
+        assertEquals("PT24H", child.config().props().get("timeoutDuration"));
+    }
+
+    @Test
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void nodeConfigOf_rawSpecMismatch_failsAtRuntime() {
+        NodeSpec raw = BuiltInNodeSpecs.SERVICE_TASK;
+
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> NodeConfig.of(raw, new EventTaskConfig("approval", null)));
+
+        assertEquals(
+                "config type "
+                        + EventTaskConfig.class.getName()
+                        + " does not match node spec serviceTask config type "
+                        + ServiceTaskConfig.class.getName(),
+                ex.getMessage());
+    }
+
+    @Test
+    void nodeConfigOf_nullConfigForNonVoidSpec_failsFast() {
+        assertThrows(
+                NullPointerException.class,
+                () -> NodeConfig.of(BuiltInNodeSpecs.SERVICE_TASK, null));
     }
 }

@@ -3,13 +3,12 @@ package org.carl.infrastructure.workflow.spi;
 /**
  * Typed counterparts of the built-in node-type strings exposed by {@link NodeTypes}.
  *
- * <p>Use {@code BuiltInNodeType.X} in DSL contexts when you want compile-time type safety and
- * IDE autocomplete:
+ * <p>Use {@code BuiltInNodeType.X} in DSL contexts when you only need compile-time safety for the
+ * type discriminator. Use {@link org.carl.infrastructure.workflow.handlers.BuiltInNodeSpecs} when
+ * the config object should be checked with the type.
  *
  * <pre>
- * flow.node("step1", b -&gt; b
- *     .type(BuiltInNodeType.SERVICE_TASK)
- *     .setAll(new ServiceTaskConfig("createOrder", null, null)));
+ * flow.node("step1", b -&gt; b.type(BuiltInNodeType.SERVICE_TASK));
  * </pre>
  *
  * <p>The {@code value()} returned by each enum constant is the same wire-format string as the

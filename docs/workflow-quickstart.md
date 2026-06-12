@@ -49,13 +49,14 @@ ORDER BY started_at DESC;
 ### 场景1：请假审批流程
 
 ```java
+import static org.carl.infrastructure.workflow.dsl.BuiltInNodes.*;
 import static org.carl.infrastructure.workflow.dsl.Dsl.*;
 
 // 定义工作流（简洁语法）
 FlowDef flow = Flow.define("leave", "请假流程");
 flow.start("发起请假");
 flow.node("发起请假", service("createLeaveRequest", Map.of("employeeId", "alice")));
-flow.node("经理审批", approval(Map.of("assignee", "manager")));
+flow.node("经理审批", approval("manager"));
 flow.node("通知主管", service("notifyManager", Map.of()));
 flow.endNode("已批准");
 flow.endNode("已拒绝");
@@ -72,6 +73,7 @@ WorkflowDefinition leaveWorkflow = flow.build();
 ### 场景2：订单处理流程
 
 ```java
+import static org.carl.infrastructure.workflow.dsl.BuiltInNodes.*;
 import static org.carl.infrastructure.workflow.dsl.Dsl.*;
 
 FlowDef flow = Flow.define("order", "订单流程");
@@ -95,6 +97,7 @@ WorkflowDefinition orderWorkflow = flow.build();
 ### 场景3：会签流程
 
 ```java
+import static org.carl.infrastructure.workflow.dsl.BuiltInNodes.*;
 import static org.carl.infrastructure.workflow.dsl.Dsl.*;
 
 FlowDef flow = Flow.define("approval", "会签流程");
@@ -102,14 +105,17 @@ flow.start("submitRequest");
 
 // 定义节点（简洁语法）
 flow.node("submitRequest", service("submitRequest", Map.of()));
-flow.node("groupApproval", taskGroup());
-flow.endNode("approved", "已批准");
-flow.endNode("rejected", "已拒绝");
+flow.endNode("approved");
+flow.endNode("rejected");
 
 // 定义路由（on语法更直观）
 flow.from("submitRequest").on("success").to("groupApproval");
-flow.from("groupApproval").on("approved").to("approved");
-flow.from("groupApproval").on("rejected").to("rejected");
+flow.from("groupApproval")
+    .join(all(
+        node("hrApproval", approval("hr")),
+        node("managerApproval", approval("manager"))))
+    .on("approved").to("approved")
+    .on("rejected").to("rejected");
 
 WorkflowDefinition approvalWorkflow = flow.build();
 ```
@@ -214,11 +220,12 @@ registry.register("riskyOperation", input -> {
 ### 3. 超时设置
 
 ```java
-flow.node("approval", approval(Map.of(
-    "assignee", "manager",
-    "awaitEvent", "approval",
-    "timeoutDuration", "PT24H"  // 24小时超时
-)));
+import org.carl.infrastructure.workflow.handlers.ApprovalTaskConfig;
+import org.carl.infrastructure.workflow.handlers.BuiltInNodeSpecs;
+
+flow.node("approval", b -> b.config(
+    BuiltInNodeSpecs.APPROVAL_TASK,
+    new ApprovalTaskConfig("manager", "approval", "PT24H"))); // 24小时超时
 ```
 
 ## 📊 监控和调试

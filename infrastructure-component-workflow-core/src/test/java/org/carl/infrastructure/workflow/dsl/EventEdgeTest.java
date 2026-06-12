@@ -16,7 +16,7 @@ import java.util.List;
 
 /**
  * Verifies that {@code FlowFrom#on(...)} and {@code FlowJoin#on(...)} write the supplied name into
- * {@link EdgeDefinition#event()} and leave {@link EdgeDefinition#outcome()} {@code null}.
+ * {@link EdgeDefinition#event()}.
  */
 class EventEdgeTest {
 

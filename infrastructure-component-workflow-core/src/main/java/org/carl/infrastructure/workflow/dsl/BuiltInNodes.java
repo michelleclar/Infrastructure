@@ -1,5 +1,12 @@
 package org.carl.infrastructure.workflow.dsl;
 
+import org.carl.infrastructure.workflow.handlers.ApprovalTaskConfig;
+import org.carl.infrastructure.workflow.handlers.BuiltInNodeSpecs;
+import org.carl.infrastructure.workflow.handlers.EventTaskConfig;
+import org.carl.infrastructure.workflow.handlers.ServiceTaskConfig;
+import org.carl.infrastructure.workflow.handlers.SubProcessConfig;
+import org.carl.infrastructure.workflow.handlers.TimerTaskConfig;
+import org.carl.infrastructure.workflow.handlers.UserTaskConfig;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
 
 import java.util.Map;
@@ -30,7 +37,8 @@ public final class BuiltInNodes {
 
     /** {@link NodeTypes#SERVICE_TASK} configurer that pins the {@code activity} property. */
     public static Consumer<NodeBuilder> service(String activity) {
-        return b -> b.type(NodeTypes.SERVICE_TASK).set("activity", activity);
+        return b -> b.config(
+                BuiltInNodeSpecs.SERVICE_TASK, new ServiceTaskConfig(activity, null, null));
     }
 
     /**
@@ -42,27 +50,26 @@ public final class BuiltInNodes {
      *     equivalent to {@code Map.of()}
      */
     public static Consumer<NodeBuilder> service(String activity, Map<String, Object> activityInput) {
-        return b -> {
-            b.type(NodeTypes.SERVICE_TASK).set("activity", activity);
-            if (activityInput != null) {
-                b.set("activityInput", activityInput);
-            }
-        };
+        return b -> b.config(
+                BuiltInNodeSpecs.SERVICE_TASK,
+                new ServiceTaskConfig(activity, activityInput, null));
     }
 
     /** {@link NodeTypes#APPROVAL_TASK} configurer that pins the {@code assignee} property. */
     public static Consumer<NodeBuilder> approval(String assignee) {
-        return b -> b.type(NodeTypes.APPROVAL_TASK).set("assignee", assignee);
+        return b -> b.config(
+                BuiltInNodeSpecs.APPROVAL_TASK, new ApprovalTaskConfig(assignee, null, null));
     }
 
     /** {@link NodeTypes#USER_TASK} configurer that pins the {@code assignee} property. */
     public static Consumer<NodeBuilder> userTask(String assignee) {
-        return b -> b.type(NodeTypes.USER_TASK).set("assignee", assignee);
+        return b -> b.config(
+                BuiltInNodeSpecs.USER_TASK, new UserTaskConfig(assignee, null, null));
     }
 
     /** {@link NodeTypes#EVENT_TASK} configurer that pins the {@code awaitEvent} property. */
     public static Consumer<NodeBuilder> event(String awaitEvent) {
-        return b -> b.type(NodeTypes.EVENT_TASK).set("awaitEvent", awaitEvent);
+        return b -> b.config(BuiltInNodeSpecs.EVENT_TASK, new EventTaskConfig(awaitEvent, null));
     }
 
     /**
@@ -70,11 +77,13 @@ public final class BuiltInNodes {
      * supplied ISO-8601 string.
      */
     public static Consumer<NodeBuilder> timer(String iso8601Duration) {
-        return b -> b.type(NodeTypes.TIMER_TASK).set("duration", iso8601Duration);
+        return b -> b.config(BuiltInNodeSpecs.TIMER_TASK, new TimerTaskConfig(iso8601Duration));
     }
 
     /** {@link NodeTypes#SUB_PROCESS} configurer that pins the {@code subWorkflowId} property. */
     public static Consumer<NodeBuilder> subProcess(String subWorkflowId) {
-        return b -> b.type(NodeTypes.SUB_PROCESS).set("subWorkflowId", subWorkflowId);
+        return b -> b.config(
+                BuiltInNodeSpecs.SUB_PROCESS,
+                new SubProcessConfig(subWorkflowId, null, null, null));
     }
 }

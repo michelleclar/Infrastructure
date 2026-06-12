@@ -1,18 +1,20 @@
 package org.carl.infrastructure.workflow.graph;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.carl.infrastructure.workflow.definition.EdgeDefinition;
 import org.carl.infrastructure.workflow.definition.NodeDefinition;
 import org.carl.infrastructure.workflow.definition.WorkflowDefinition;
+import org.carl.infrastructure.workflow.engine.NodeConfigCodec;
 import org.carl.infrastructure.workflow.spi.NodeHandler;
 import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
 import org.carl.infrastructure.workflow.spi.NodeTypes;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -107,6 +109,7 @@ public final class GraphValidator {
         }
 
         // 7. node type must be in registry (if given) + node config deserialises
+        Map<String, NodeHandler<?, ?, ?>> handlersByNodeId = new HashMap<>();
         if (registry != null) {
             for (NodeDefinition node : definition.nodes()) {
                 if (node.type() == null || node.type().isBlank()) {
@@ -124,6 +127,31 @@ public final class GraphValidator {
                 }
                 // Reuse the handler we just looked up instead of re-querying the registry.
                 errors.addAll(validateConfigBinding(node, handler.get()));
+                handlersByNodeId.put(node.id(), handler.get());
+            }
+            for (EdgeDefinition edge : definition.edges()) {
+                NodeHandler<?, ?, ?> handler = handlersByNodeId.get(edge.from());
+                if (handler == null || edge.event() == null || edge.event().isBlank()) {
+                    continue;
+                }
+                Set<String> outcomes = handler.outcomes();
+                if (outcomes == null || outcomes.isEmpty()) {
+                    continue;
+                }
+                if (!outcomes.contains(edge.event())) {
+                    errors.add(
+                            "edge "
+                                    + edge.from()
+                                    + " -> "
+                                    + edge.to()
+                                    + " event '"
+                                    + edge.event()
+                                    + "' is not declared by handler outcomes for node "
+                                    + edge.from()
+                                    + " ("
+                                    + handler.type()
+                                    + ")");
+                }
             }
         }
 
@@ -228,21 +256,10 @@ public final class GraphValidator {
     }
 
     /** Config-binding check against an already-resolved handler (no registry lookup). */
-    private static List<String> validateConfigBinding(NodeDefinition node, NodeHandler<?, ?, ?> handler) {
-        Class<?> configType = handler.configType();
-        if (configType == null || configType == Void.class) {
-            return List.of();
-        }
-        JsonNode configNode = node.config();
-        if (configNode == null || configNode.isNull() || configNode.isMissingNode()) {
-            // A handler that declares a real config type but receives no config should not
-            // silently pass. Substitute an empty object so Jackson's deserialization runs and
-            // produces its own diagnostic (e.g. missing required fields). Some config records
-            // have all-optional fields and will succeed on an empty object, which is fine.
-            configNode = MAPPER.createObjectNode();
-        }
+    private static List<String> validateConfigBinding(
+            NodeDefinition node, NodeHandler<?, ?, ?> handler) {
         try {
-            MAPPER.treeToValue(configNode, configType);
+            NodeConfigCodec.decode(MAPPER, handler, node.config());
             return List.of();
         } catch (Exception e) {
             return List.of(

@@ -6,12 +6,12 @@
 
 ```mermaid
 flowchart LR
-    DSL["dsl<br/>Flow / FlowDef / FlowFrom / FlowJoin / NodeBuilder"]
+    DSL["dsl<br/>Flow / FlowDef / FlowFrom / FlowJoin / NodeBuilder / NodeConfig"]
     DEF["definition<br/>WorkflowDefinition / NodeDefinition / EdgeDefinition / NodeResult"]
     GRAPH["graph<br/>WorkflowGraph / GraphValidator"]
     ENGINE["engine<br/>NodeConfigCodec / EdgeRouter"]
-    SPI["spi<br/>NodeHandler / NodeHandlerRegistry / ConditionEvaluator"]
-    HANDLERS["handlers<br/>BuiltInHandlers / *Handler / *Config"]
+    SPI["spi<br/>NodeHandler / NodeHandlerRegistry / NodeSpec / ConditionEvaluator"]
+    HANDLERS["handlers<br/>BuiltInHandlers / BuiltInNodeSpecs / *Handler / *Config"]
     INTC["interceptor<br/>WorkflowInterceptorRegistry / hooks"]
 
     DSL --> DEF
@@ -29,7 +29,7 @@ flowchart LR
 核心数据流：
 
 1. DSL 构造 `WorkflowDefinition`。
-2. `GraphValidator` 校验定义结构和 handler config 反序列化。
+2. `GraphValidator` 校验定义结构、handler config 反序列化、edge event 是否属于 handler outcomes。
 3. runtime 通过 `NodeConfigCodec.decode` 得到 typed config。
 4. runtime 通过 `NodeConfigCodec.decodeState` 从 `businessData` 得到 handler 请求的 typed state。
 5. runtime 调用 `NodeHandler.run(ctx, config, state)`；等待事件时先用三参 `canAccept` 过滤，再用 `decodeEventPayload` 得到 typed event payload。
@@ -46,8 +46,10 @@ flowchart TD
     B --> E["FlowDef.node(id, Consumer<NodeBuilder>)"]
     E --> E1["new NodeBuilder()"]
     E1 --> E2["configurer.accept(b)"]
-    E2 --> E3["NodeBuilder.type(...) / label(...) / set(...) / setAll(...)"]
+    E2 --> E3["NodeBuilder.type(...) / config(NodeSpec&lt;C&gt;, C) / label(...) / set(...) / setAll(...)"]
+    E3 --> E5["NodeBuilder.config(...) -> NodeConfig.of(spec, config)"]
     E3 --> E4["NodeBuilder.buildConfig()"]
+    E5 --> E4
     E4 --> D
 
     B --> F["FlowDef.from(name)"]
@@ -85,6 +87,21 @@ flowchart TD
     AA --> AB["new WorkflowDefinition(workflowId, workflowName, nodes, edges, startNodeId)"]
 ```
 
+节点 config 类型边界：
+
+```mermaid
+flowchart LR
+    A["NodeSpec&lt;C&gt;<br/>type string + configType"] --> B["NodeBuilder.config(spec, C config)"]
+    B --> C["NodeConfig.of(spec, config)"]
+    C --> D["Jackson convertValue(config)<br/>Map&lt;String,Object&gt; props"]
+    D --> E["FlowDef.build()<br/>MAPPER.valueToTree(props)"]
+    E --> F["NodeDefinition.config()<br/>JsonNode"]
+    F --> G["NodeConfigCodec.decode(mapper, handler, rawConfig)"]
+    G --> H["handler.configType()<br/>typed CONFIG"]
+```
+
+`NodeSpec<C>` 只约束 Java DSL 调用侧，`WorkflowDefinition` 仍保存 JSON；这保证可视化、持久化和跨 runtime 传输不依赖 Java 泛型。
+
 DSL 静态工厂：
 
 | 方法 | 直接创建/调用 |
@@ -92,18 +109,17 @@ DSL 静态工厂：
 | `Flow.define(String, String)` | `new FlowDef(...)` |
 | `Dsl.node(String, NodeConfig)` | `new ChildNodeSpec(name, config)` |
 | `Dsl.node(String, NodeConfig, JoinSpec)` | `new ChildNodeSpec(name, config, nestedJoin)` |
-| `Dsl.node(String, Consumer<NodeBuilder>)` | `new NodeBuilder()` -> `configurer.accept(b)` -> `b.buildConfig()` -> `new ChildNodeSpec(...)` |
+| `Dsl.node(String, Consumer<NodeBuilder>)` | `new NodeBuilder()` -> `configurer.accept(b)` -> `b.buildConfig()` -> `new ChildNodeSpec(...)`；子节点也可以在 builder 内调用 `NodeBuilder.config(NodeSpec<C>, C)` |
 | `Dsl.all(ChildNodeSpec...)` | `new JoinSpec("all", Arrays.asList(nodes))` |
 | `Dsl.any(ChildNodeSpec...)` | `new JoinSpec("any", Arrays.asList(nodes))` |
-| `BuiltInNodes.service(...)` | returns `Consumer<NodeBuilder>` that calls `NodeBuilder.type(NodeTypes.SERVICE_TASK)` and `NodeBuilder.set(...)` |
-| `BuiltInNodes.approval(...)` | returns `Consumer<NodeBuilder>` that calls `NodeBuilder.type(NodeTypes.APPROVAL_TASK)` and `NodeBuilder.set("assignee", ...)` |
-| `BuiltInNodes.userTask(...)` | returns `Consumer<NodeBuilder>` that calls `NodeBuilder.type(NodeTypes.USER_TASK)` and `NodeBuilder.set("assignee", ...)` |
-| `BuiltInNodes.event(...)` | returns `Consumer<NodeBuilder>` that calls `NodeBuilder.type(NodeTypes.EVENT_TASK)` and `NodeBuilder.set("awaitEvent", ...)` |
-| `BuiltInNodes.timer(...)` | returns `Consumer<NodeBuilder>` that calls `NodeBuilder.type(NodeTypes.TIMER_TASK)` and `NodeBuilder.set("duration", ...)` |
-| `BuiltInNodes.gateway()` | returns `Consumer<NodeBuilder>` that calls `NodeBuilder.type(NodeTypes.GATEWAY)` |
-| `BuiltInNodes.subProcess(...)` | returns `Consumer<NodeBuilder>` that calls `NodeBuilder.type(NodeTypes.SUB_PROCESS)` and `NodeBuilder.set("subWorkflowId", ...)` |
-| `BuiltInNodes.endTask()` | returns `Consumer<NodeBuilder>` that calls `NodeBuilder.type(NodeTypes.END_TASK)` |
-| `BuiltInNodes.taskGroup()` | returns `Consumer<NodeBuilder>` that calls `NodeBuilder.type(NodeTypes.TASK_GROUP)` |
+| `BuiltInNodes.service(...)` | returns `Consumer<NodeBuilder>` that calls `NodeBuilder.config(BuiltInNodeSpecs.SERVICE_TASK, new ServiceTaskConfig(...))` |
+| `BuiltInNodes.approval(...)` | returns `Consumer<NodeBuilder>` that calls `NodeBuilder.config(BuiltInNodeSpecs.APPROVAL_TASK, new ApprovalTaskConfig(...))` |
+| `BuiltInNodes.userTask(...)` | returns `Consumer<NodeBuilder>` that calls `NodeBuilder.config(BuiltInNodeSpecs.USER_TASK, new UserTaskConfig(...))` |
+| `BuiltInNodes.event(...)` | returns `Consumer<NodeBuilder>` that calls `NodeBuilder.config(BuiltInNodeSpecs.EVENT_TASK, new EventTaskConfig(...))` |
+| `BuiltInNodes.timer(...)` | returns `Consumer<NodeBuilder>` that calls `NodeBuilder.config(BuiltInNodeSpecs.TIMER_TASK, new TimerTaskConfig(...))` |
+| `BuiltInNodes.subProcess(...)` | returns `Consumer<NodeBuilder>` that calls `NodeBuilder.config(BuiltInNodeSpecs.SUB_PROCESS, new SubProcessConfig(...))` |
+
+`gateway` / `endTask` / `taskGroup` 没有额外配置 sugar。直接写 `b -> b.config(BuiltInNodeSpecs.GATEWAY, new GatewayConfig(...))`、`flow.endNode(name)`，或通过 `flow.from(name).join(...)` 生成 `taskGroup`。
 
 ## 定义模型
 
@@ -169,22 +185,30 @@ flowchart TD
     B --> C["check nodes not empty"]
     C --> D["check duplicate node id and blank type"]
     D --> E["check edge.from / edge.to references"]
-    E --> F["registry != null ? registry.find(node.type())"]
-    F --> G["validateNodeConfig(node, registry)"]
-    G --> H["handler.configType()"]
-    H --> I["MAPPER.treeToValue(configNode, configType)"]
-    E --> J["new WorkflowGraph(definition)"]
-    J --> K["graph.startNodes()"]
-    J --> L["graph.endNodes()"]
-    J --> M["graph.reachableFrom(start)"]
-    J --> N["graph.detectCycles()"]
-    K --> O["new ValidationReport(errors, warnings)"]
-    L --> O
-    M --> O
-    N --> O
-    O --> P["ValidationReport.ok()"]
-    O --> Q["ValidationReport.throwIfInvalid()"]
+    E --> F["registry != null"]
+    F --> G["for each node: registry.find(node.type())"]
+    G --> H["validateConfigBinding(node, handler)"]
+    H --> I["NodeConfigCodec.decode(MAPPER, handler, node.config)"]
+    I --> I1["normalize taskGroup DSL shape"]
+    I --> I2["mapper.treeToValue(normalized, handler.configType())"]
+    G --> J["handlersByNodeId.put(node.id, handler)"]
+    J --> K["for each edge: source handler outcomes()"]
+    K --> L["edge.event nonblank and outcomes nonempty"]
+    L --> M["outcomes contains edge.event ? ok : error"]
+    E --> N["new WorkflowGraph(definition)"]
+    N --> O["resolve explicit/topological starts"]
+    N --> P["graph.endNodes()"]
+    N --> Q["graph.reachableFrom(start roots)"]
+    N --> R["graph.detectCycles()"]
+    O --> S["new ValidationReport(errors, warnings)"]
+    P --> S
+    Q --> S
+    R --> S
+    S --> T["ValidationReport.ok()"]
+    S --> U["ValidationReport.throwIfInvalid()"]
 ```
+
+`GraphValidator.validate(definition, registry)` 的 registry 分支会缓存每个节点的 handler，再用同一个 handler 校验该节点的出边 event。`handler.outcomes()` 为空时表示动态 outcome（例如 gateway），不会做固定 outcome 集合校验。
 
 `WorkflowGraph` 方法关系：
 
@@ -573,9 +597,9 @@ Hook 方法名在两个接口中一致：
 
 | 要改的能力 | 主要文件 | 先看方法 |
 |---|---|---|
-| 新增内置节点类型 | `handlers/*Handler.java`, `handlers/*Config.java`, `spi/NodeTypes.java`, `spi/BuiltInNodeType.java`, `handlers/BuiltInHandlers.java`, `dsl/BuiltInNodes.java` | `NodeHandler.run`, `NodeHandler.canAccept`, `NodeHandler.onEvent`, `BuiltInHandlers.registerAll` |
+| 新增内置节点类型 | `handlers/*Handler.java`, `handlers/*Config.java`, `spi/NodeTypes.java`, `spi/BuiltInNodeType.java`, `spi/NodeSpec.java`, `handlers/BuiltInNodeSpecs.java`, `handlers/BuiltInHandlers.java`, `dsl/BuiltInNodes.java` | `NodeHandler.run`, `NodeHandler.canAccept`, `NodeHandler.onEvent`, `BuiltInHandlers.registerAll` |
 | 修改 handler 泛型输入 | `spi/NodeHandler.java`, `engine/NodeConfigCodec.java` | `configType`, `stateType`, `eventType`, `decode`, `decodeState`, `decodeEventPayload` |
-| 修改 DSL 输出 JSON | `dsl/FlowDef.java`, `dsl/NodeBuilder.java`, `dsl/Dsl.java` | `FlowDef.build`, `FlowDef.buildTaskGroupConfig`, `NodeBuilder.buildConfig` |
+| 修改 DSL 输出 JSON | `dsl/FlowDef.java`, `dsl/NodeBuilder.java`, `dsl/NodeConfig.java`, `dsl/Dsl.java` | `FlowDef.build`, `FlowDef.buildTaskGroupConfig`, `NodeConfig.of`, `NodeBuilder.buildConfig` |
 | 修改流程图校验 | `graph/GraphValidator.java`, `graph/WorkflowGraph.java` | `GraphValidator.validate`, `GraphValidator.validateNodeConfig`, `WorkflowGraph.detectCycles` |
 | 修改路由规则 | `engine/EdgeRouter.java`, `graph/WorkflowGraph.java` | `EdgeRouter.pickNextEdge`, `WorkflowGraph.nextCandidates` |
 | 修改表达式能力 | `spi/ConditionEvaluator.java`, `spi/JsonNodeELResolver.java`, `spi/ResultsELResolver.java` | `ConditionEvaluator.evaluateNonBlank`, resolver `getValue` |
