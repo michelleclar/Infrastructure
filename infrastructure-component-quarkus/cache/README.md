@@ -132,11 +132,11 @@ Uni<Boolean> setExpireAfterWrite(String key, long seconds, Object value)
 | 配置键 | 来源 | 说明 |
 |--------|------|------|
 | `quarkus.cache.enable` | `CacheService` `@IfBuildProperty` | 构建时开关，设为 `"true"` 激活 `CacheService` bean |
-| `quarkus.application.name` | `CacheContext.RemoteCacheContext` `prefix` 字段注解 | Redis key 的应用名前缀（注意事项见下文） |
+| `quarkus.application.name` | `CacheContextProvider` `@ConfigProperty` | Redis key 的应用名前缀，最终拼成 `<prefix>:<key>` |
 
-> **注意**：`RemoteCacheContext` 通过 `new` 直接实例化，不是 CDI 管理的 bean，其 `prefix`
-> 字段上的 `@ConfigProperty` 注解**不会被 CDI 容器处理**，`prefix` 在当前实现中为
-> `null`。实际使用时 Redis key 格式为 `null:<key>`，需关注此问题。
+> **前缀注入路径**：`RemoteCacheContext` 通过 `new` 构造、不是 CDI bean，因此 `prefix`
+> 不能直接由 `@ConfigProperty` 注入。应用名在 CDI bean `CacheContextProvider` 中解析，
+> 经 `CacheContext` 构造器透传给 `RemoteCacheContext` 的 `final prefix` 字段。
 
 Quarkus Redis 连接本身由 `quarkus-redis-client` 扩展管理，相关配置键（如
 `quarkus.redis.hosts`）请参考 Quarkus Redis 官方文档，不在本模块范围内。
@@ -203,9 +203,10 @@ public class SessionService extends CacheStd implements ICacheOperations {
 
 ## 注意事项
 
-1. **`RemoteCacheContext.prefix` 注入无效**：`RemoteCacheContext` 不受 CDI 管理，
-   `@ConfigProperty(name = "quarkus.application.name")` 不会被注入，`prefix` 为 `null`，
-   Redis key 实际格式为 `null:<key>`。如需正确前缀，需在创建 `RemoteCacheContext` 时手动传入应用名。
+1. **Redis key 前缀**：`RemoteCacheContext` 不受 CDI 管理，`prefix` 不能直接由
+   `@ConfigProperty` 注入；应用名在 `CacheContextProvider` 中解析后经构造器透传，最终
+   Redis key 形如 `<quarkus.application.name>:<key>`。若未配置 `quarkus.application.name`，
+   注入会失败（启动期报错），而非静默使用 `null` 前缀。
 
 2. **本地缓存无过期设置**：`LocalCacheContext` 的 Caffeine 缓存配置了
    `initialCapacity(100)` 和 `maximumSize(100000)`，过期相关配置（`expireAfterWrite` /

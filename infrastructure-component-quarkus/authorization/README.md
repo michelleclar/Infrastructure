@@ -343,9 +343,9 @@ ModuleAction action2 = ModuleAction.ModuleActionBuilder.create()
 
 ## FGA 客户端
 
-`FgaClientProvider` 通过 `@Produces` 生产 `OpenFgaClient` CDI bean。`FGAClient` 和 `FGASyncClient` 均注入该 bean，两者提供**完全相同的方法签名**，差异仅在 `check` 方法的实现细节上（见下文说明）。
+`FgaClientProvider` 通过 `@Produces` 生产 `OpenFgaClient` CDI bean。`FGAClient` 和 `FGASyncClient` 均注入该 bean。两者方法签名与实现**完全一致**——均为 `@ApplicationScoped`，每个方法都调用 `openFgaClient.xxx(request).get()` 阻塞等待结果（命名中的 "Sync" 并不代表存在异步变体，二者实为重复实现，可任选其一注入）。
 
-### `FGASyncClient`（推荐）
+### 方法一览（`FGASyncClient` / `FGAClient` 通用）
 
 `@ApplicationScoped` bean，所有方法调用 `openFgaClient.xxx(request).get()` 阻塞等待结果，适合同步请求处理路径。
 
@@ -372,7 +372,7 @@ ModuleAction action2 = ModuleAction.ModuleActionBuilder.create()
 
 ### `FGAClient`
 
-与 `FGASyncClient` 方法集完全一致，但 **`check` 方法存在实现缺陷**：当前版本的 `check(String, String, String)` 始终返回 `false`（`Boolean.TRUE.equals(false)`），调用结果不反映实际 FGA 判断。`checkWithContext` 方法实现正常。生产环境如需无上下文的权限检查，应使用 `FGASyncClient.check`。
+与 `FGASyncClient` 方法集和实现完全一致。早期 `FGAClient.check(String, String, String)` 曾因丢弃 `openFgaClient.check(request)` 的返回 Future、直接 `return Boolean.TRUE.equals(false)` 而恒返回 `false`，现已修复为 `return Boolean.TRUE.equals(response.getAllowed())`，与 `FGASyncClient.check` 行为一致。
 
 ---
 
@@ -474,7 +474,7 @@ boolean result = perm.hasPermission(user); // true
 
 ## 注意事项
 
-- `FGAClient.check(String, String, String)` 存在实现 bug，始终返回 `false`，请勿在生产环境使用；应改用 `FGASyncClient.check` 或 `FGAClient.checkWithContext`。
+- `FGAClient` 与 `FGASyncClient` 当前为重复实现，行为完全相同；如需精简可考虑合并为一个 bean。
 - `fga.api-url` 无默认值，应用启动时若未配置该属性，`FgaClientProvider` 将因 `@ConfigProperty` 注入失败而导致 CDI 部署异常。
 - `ResourceIPermission` 的 `hasPermission` 默认实现均返回 `false`，子类必须覆写才能实现实际的资源授权逻辑。
 - `Permission.hasPermission(Integer permissionLevel)` 的语义是 `permissionLevel >= maxLevel`（即调用方 level 不低于所需最大 level），与 `ModuleStandardPermission.hasPermission` 中 `current.level >= required.level` 的方向一致，使用前需确认含义符合业务预期。
