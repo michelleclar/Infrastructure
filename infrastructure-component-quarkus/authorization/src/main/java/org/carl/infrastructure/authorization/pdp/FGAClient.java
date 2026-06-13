@@ -8,7 +8,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 /** OpenFGA 客户端封装类 提供细粒度授权检查、关系元组读写、对象列表查询等功能 */
@@ -29,8 +28,8 @@ public class FGAClient {
         ClientCheckRequest request =
                 new ClientCheckRequest().user(user).relation(relation)._object(object);
 
-        CompletableFuture<ClientCheckResponse> check = openFgaClient.check(request);
-        return Boolean.TRUE.equals(false);
+        ClientCheckResponse response = openFgaClient.check(request).get();
+        return Boolean.TRUE.equals(response.getAllowed());
     }
 
     /**
