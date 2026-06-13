@@ -9,8 +9,6 @@ import io.quarkus.redis.datasource.keys.ReactiveKeyCommands;
 import io.quarkus.redis.datasource.value.ReactiveValueCommands;
 import io.smallrye.mutiny.Uni;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,11 +18,15 @@ public class CacheContext {
     public LocalCacheContext localCacheContext;
 
     public CacheContext(
-            CacheManager cacheManager, ReactiveRedisDataSource reactiveRedisDataSource) {
+            CacheManager cacheManager,
+            ReactiveRedisDataSource reactiveRedisDataSource,
+            String prefix) {
         this.reactiveRedisDataSource = reactiveRedisDataSource;
         this.remoteCacheContext =
                 new RemoteCacheContext(
-                        reactiveRedisDataSource.key(), reactiveRedisDataSource.value(Object.class));
+                        reactiveRedisDataSource.key(),
+                        reactiveRedisDataSource.value(Object.class),
+                        prefix);
         this.localCacheContext = new LocalCacheContext();
     }
 
@@ -71,14 +73,15 @@ public class CacheContext {
 
         private final ReactiveValueCommands<String, Object> reactiveValueCommands;
 
-        @ConfigProperty(name = "quarkus.application.name")
-        String prefix;
+        private final String prefix;
 
         RemoteCacheContext(
                 ReactiveKeyCommands<String> reactiveKeyCommands,
-                ReactiveValueCommands<String, Object> reactiveValueCommands) {
+                ReactiveValueCommands<String, Object> reactiveValueCommands,
+                String prefix) {
             this.reactiveKeyCommands = reactiveKeyCommands;
             this.reactiveValueCommands = reactiveValueCommands;
+            this.prefix = prefix;
         }
 
         @Override
