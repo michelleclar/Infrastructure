@@ -182,10 +182,10 @@ public class MyClient {
 | `USER_TASK` | `BuiltInNodes.userTask("assignee")` | 等用户提交 signal |
 | `EVENT_TASK` | `BuiltInNodes.event("signalName")` | 等指定 signal |
 | `TIMER_TASK` | `BuiltInNodes.timer("PT1H")` | `Workflow.sleep` |
-| `TASK_GROUP` | `BuiltInNodes.taskGroup()` | 并行子节点 + `JoinRule(all/any)`，支持嵌套 |
-| `GATEWAY` | `BuiltInNodes.gateway()` | 纯路由分叉 |
+| `TASK_GROUP` | `flow.from(X).join(all(...))` / `b -> b.type(BuiltInNodeType.TASK_GROUP)` | 并行子节点 + `JoinRule(all/any)`，支持嵌套 |
+| `GATEWAY` | `b -> b.type(BuiltInNodeType.GATEWAY)` | 纯路由分叉 |
 | `SUB_PROCESS` | `BuiltInNodes.subProcess("subFlowId")` | child workflow |
-| `END_TASK` | `BuiltInNodes.endTask()` | 终止节点 |
+| `END_TASK` | `b -> b.type(BuiltInNodeType.END_TASK)` | 终止节点 |
 
 ### 标准路由值
 
@@ -205,7 +205,7 @@ flow.from("requestLeave").on("SUCCESS").to("normalApproval");  // 默认分支
 ```
 
 EL 上下文可读（详见 `ConditionEvaluator`）：
-- `${varName}` — 裸标识符，从 `ctx.variables()` 取（初始值来自 `WorkflowInput.initialVariables`，handler 可改写）
+- `${varName}` — 裸标识符，从 `ctx.variables()` 取（初始值来自 `WorkflowInput.initialVariables`；handler 通过返回 `NodeResult` 携带 `RuntimeIntents.SET_VARIABLES` map 改写，runtime 在路由下一条边前落地）
 - `${variables.x}` / `${businessData.a.b}` — Map / JsonNode 嵌套访问
 - `${results['nodeId'].outcome}` / `${results.nodeId.outcome}` — 之前已完成节点的 `NodeResult`
 - `${ctx.variables}` / `${ctx.businessData}` / `${ctx.results}` — 聚合 view

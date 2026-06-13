@@ -13,7 +13,7 @@ import org.carl.infrastructure.workflow.spi.WorkflowEvent;
  *
  * <p>The workflow body is implemented by {@link GenericWorkflowImpl}. Business code never writes a
  * {@code @WorkflowInterface}: the entire flow is driven by the {@link
- * WorkflowInput#workflowDefinitionJson} + handler registry pair.
+ * WorkflowInput#workflowDefinition()} + handler registry pair.
  */
 @WorkflowInterface
 public interface GenericWorkflow {

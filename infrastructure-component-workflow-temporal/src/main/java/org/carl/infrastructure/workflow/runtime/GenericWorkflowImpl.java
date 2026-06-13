@@ -112,7 +112,7 @@ public final class GenericWorkflowImpl implements GenericWorkflow, RuntimeOps {
                         definition.id(),
                         input.businessData(),
                         input.initialVariables());
-        this.startedAt = Instant.now();
+        this.startedAt = workflowNow();
         this.archiveEnabled = input.archiveEnabled();
         this.interpreter =
                 new WorkflowInterpreter(
@@ -272,7 +272,7 @@ public final class GenericWorkflowImpl implements GenericWorkflow, RuntimeOps {
                         null,
                         result.finalStatus().name(),
                         startedAt,
-                        Instant.now(),
+                        workflowNow(),
                         result.finalNodeId(),
                         result.finalOutcome(),
                         result.finalStatus().name(),
@@ -310,6 +310,16 @@ public final class GenericWorkflowImpl implements GenericWorkflow, RuntimeOps {
             }
         }
         return null;
+    }
+
+    /**
+     * Replay-safe wall clock. Temporal forbids {@code Instant.now()} / {@code
+     * System.currentTimeMillis()} on the workflow thread — these are recomputed at replay time and
+     * are exactly the APIs {@code DeterminismGuard} bans for user handlers. {@link
+     * Workflow#currentTimeMillis()} is sourced from event time and returns the same value on replay.
+     */
+    private static Instant workflowNow() {
+        return Instant.ofEpochMilli(Workflow.currentTimeMillis());
     }
 
     /** Run one fanned-out child task, mapping Temporal cancellation / business throws to results. */

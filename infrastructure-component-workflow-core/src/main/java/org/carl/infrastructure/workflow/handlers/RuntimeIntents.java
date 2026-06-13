@@ -56,6 +56,18 @@ public final class RuntimeIntents {
     /** Sub-workflow input (Map&lt;String,Object&gt;). */
     public static final String SUB_INPUT = "subInput";
 
+    // ---- Variable mutation ----
+
+    /**
+     * Variables to merge into the workflow's mutable variable map (Map&lt;String,Object&gt;). A
+     * handler may include this key in the {@link
+     * org.carl.infrastructure.workflow.definition.NodeResult#payload()} of <em>any</em> result
+     * (WAITING or terminal). The runtime applies each entry to the variable map outside the
+     * deterministic boundary, before routing the node's outgoing edge, so guard expressions
+     * ({@code ${var}}) observe the new values. Last write wins on key collision.
+     */
+    public static final String SET_VARIABLES = "setVariables";
+
     // ---- Hook dispatch (Wave 3 interceptor) ----
 
     /**

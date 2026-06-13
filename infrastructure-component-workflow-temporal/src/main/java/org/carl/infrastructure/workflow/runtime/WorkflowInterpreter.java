@@ -170,6 +170,7 @@ final class WorkflowInterpreter {
         ctx.setCurrentEvent(null);
 
         NodeResult current = handler.run(ctx, config, state);
+        applyVariableIntent(current);
         while (current.status() == NodeStatus.WAITING) {
             current = drive(handler, config, state, current, node, qualifier);
         }
@@ -451,6 +452,7 @@ final class WorkflowInterpreter {
                         ? null
                         : NodeConfigCodec.decodeEventPayload(mapper, handler, event.payload());
         NodeResult next = handler.onEvent(ctx, event, config, eventPayload);
+        applyVariableIntent(next);
         fireHook(HookPhases.EVENT, node, null, null, event);
         return next == null ? NodeResult.waiting() : next;
     }
@@ -545,6 +547,28 @@ final class WorkflowInterpreter {
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Apply a handler-emitted {@link RuntimeIntents#SET_VARIABLES} intent: merge each entry into the
+     * shared variable map so subsequent guard expressions ({@code ${var}}) and downstream nodes
+     * observe the new values. This is a pure in-memory mutation of {@link ExecutionContext} — it
+     * issues no Temporal command, so it is replay-stable as long as the handler output is
+     * deterministic.
+     */
+    private void applyVariableIntent(NodeResult result) {
+        if (result == null) {
+            return;
+        }
+        Object raw = result.payload().get(RuntimeIntents.SET_VARIABLES);
+        if (!(raw instanceof Map<?, ?> vars)) {
+            return;
+        }
+        for (Map.Entry<?, ?> entry : vars.entrySet()) {
+            if (entry.getKey() != null) {
+                ctx.putVariable(String.valueOf(entry.getKey()), entry.getValue());
+            }
+        }
+    }
 
     private WorkflowResult buildResult(String currentNodeId, NodeResult lastResult) {
         return new WorkflowResult(

@@ -173,6 +173,35 @@ class WorkflowInterpreterTest {
     }
 
     @Test
+    void setVariablesIntent_visibleToDownstreamGuard() {
+        // A handler emits SET_VARIABLES on completion (no initialVariables seeded); the next edge's
+        // ${large} guard must observe the written value and route to "big".
+        FlowDef flow = Flow.define("interp-setvar", "变量写回");
+        flow.start("decide");
+        flow.node("decide", b -> b.type(VariableSettingHandler.TYPE));
+        flow.node("big", b -> b.type(NodeTypes.END_TASK));
+        flow.node("normal", b -> b.type(NodeTypes.END_TASK));
+        flow.from("decide").on("SUCCESS").when("${large}").to("big");
+        flow.from("decide").on("SUCCESS").to("normal");
+
+        WorkflowDefinition def = NodeConfigCodec.normalizeDefinition(flow.build());
+        NodeHandlerRegistry registry = new NodeHandlerRegistry();
+        BuiltInHandlers.registerAll(registry);
+        registry.registerBuiltIn(new VariableSettingHandler());
+        WorkflowGraph graph = new WorkflowGraph(def);
+        ExecutionContext ctx = new ExecutionContext("wf-1", "run-1", def.id(), null, Map.of());
+        WorkflowInterpreter interp =
+                new WorkflowInterpreter(
+                        def, graph, registry, MAPPER, ctx, new FakeRuntimeOps(),
+                        new WorkflowInterceptorRegistry());
+
+        WorkflowResult result = interp.run(null);
+
+        assertEquals("big", result.finalNodeId());
+        assertEquals(Boolean.TRUE, result.finalVariables().get("large"));
+    }
+
+    @Test
     void typedHandlerReceivesDecodedStateAndEventPayload() throws Exception {
         TypedWaitingHandler handler = new TypedWaitingHandler();
         NodeDefinition typedNode =
@@ -482,6 +511,28 @@ class WorkflowInterpreterTest {
         @Override
         public NodeResult run(NodeExecutionContext ctx, Void config) {
             return NodeResult.failed("downstream failed");
+        }
+    }
+
+    /** Writes {@code large=true} via a {@code SET_VARIABLES} intent on completion. */
+    private static final class VariableSettingHandler implements NodeHandler<Void, Object, Object> {
+
+        static final String TYPE = "setVarType";
+
+        @Override
+        public String type() {
+            return TYPE;
+        }
+
+        @Override
+        public Class<Void> configType() {
+            return Void.class;
+        }
+
+        @Override
+        public NodeResult run(NodeExecutionContext ctx, Void config) {
+            return NodeResult.completed(
+                    "SUCCESS", Map.of(RuntimeIntents.SET_VARIABLES, Map.of("large", Boolean.TRUE)));
         }
     }
 }

@@ -44,8 +44,11 @@ public interface NodeExecutionContext {
 
     /**
      * Returns an unmodifiable view of the current workflow variables. Handlers must not attempt to
-     * mutate this map. Variable changes should be expressed via the runtime's variable-setting
-     * mechanism (future wave).
+     * mutate this map directly; to change a variable, return a {@link NodeResult} whose {@link
+     * NodeResult#payload()} carries a {@code setVariables} map (see {@code
+     * RuntimeIntents.SET_VARIABLES}). The runtime applies those entries outside the deterministic
+     * boundary, before routing the node's outgoing edge, so guard expressions on outgoing edges
+     * observe the updated values.
      */
     Map<String, Object> variables();
 

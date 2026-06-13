@@ -17,7 +17,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 
 import static org.carl.ertool.infrastructure.jooq.generated.Tables.EXECUTION_RECORD;
 import static org.carl.ertool.infrastructure.jooq.generated.Tables.WORKFLOW_INSTANCE;
@@ -151,6 +151,8 @@ public class DatabaseArchiveActivities implements ArchiveActivities {
         if (instant == null) {
             return null;
         }
-        return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+        // UTC, not the worker's local zone: archived timestamps must be stable regardless of which
+        // host runs the archive activity.
+        return LocalDateTime.ofInstant(instant, ZoneOffset.UTC);
     }
 }
