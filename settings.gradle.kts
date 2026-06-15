@@ -42,3 +42,6 @@ include("infrastructure-component-pdp")
 include("infrastructure-component-statemachine")
 include("infrastructure-component-redis")
 // infrastructure-component-audit moved to infrastructure-component-quarkus:audit
+
+// 平台/版本收口 BOM（java-platform）
+include("infrastructure-bom")

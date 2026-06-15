@@ -7,6 +7,16 @@ tasks.named("jandex") {
     enabled = false
 }
 subprojects {
+    if (name == "infrastructure-bom") {
+        // java-platform 与 java/java-library 互斥，单独处理、跳过下方 java 相关配置
+        group = "org.carl"
+        version = "1.0-BATE-SNAPSHOT"
+        repositories {
+            mavenCentral()
+            mavenLocal()
+        }
+        return@subprojects
+    }
     apply {
         plugin("java")
         plugin("idea")
@@ -14,7 +24,7 @@ subprojects {
         plugin("org.kordamp.gradle.jandex")
     }
     group = "org.carl"
-    version = "1.0-BATE"
+    version = "1.0-BATE-SNAPSHOT"
     repositories {
         mavenCentral()
         mavenLocal()
