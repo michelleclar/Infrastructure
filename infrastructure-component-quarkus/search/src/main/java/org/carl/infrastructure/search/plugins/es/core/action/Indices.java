@@ -46,13 +46,12 @@ public class Indices {
     public DeleteIndexResponse delete(String indexName) {
 
         try {
-            return indicesClient.delete(c -> c.index(indexName));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (ElasticsearchException e) {
-            if (e.getMessage().contains("already exists")) {
+            // 索引不存在时静默返回 null（幂等删除），存在才真正执行删除
+            if (!indicesClient.exists(e -> e.index(indexName)).value()) {
                 return null;
             }
+            return indicesClient.delete(c -> c.index(indexName));
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

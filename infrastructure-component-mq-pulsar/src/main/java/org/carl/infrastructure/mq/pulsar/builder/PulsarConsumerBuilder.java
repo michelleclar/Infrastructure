@@ -42,7 +42,10 @@ class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
 
     public static PulsarConsumerBuilder<byte[]> create(
             PulsarClient client, MQConfig.ConsumerConfig consumerConfig) {
-        return new PulsarConsumerBuilder<>(client, Schema.AUTO_PRODUCE_BYTES(), consumerConfig);
+        // Schema.BYTES (not AUTO_PRODUCE_BYTES, which is a producer-only schema and throws
+        // "Schema is not initialized before used" when used to consume a schema'd topic).
+        // BYTES delivers the raw message payload regardless of the topic's registered schema.
+        return new PulsarConsumerBuilder<>(client, Schema.BYTES, consumerConfig);
     }
 
     private PulsarConsumerBuilder(

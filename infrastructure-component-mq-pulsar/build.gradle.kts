@@ -9,15 +9,15 @@ publishing {
             from(components["java"])
             groupId = project.group.toString()
             artifactId = project.name
-            version = "1.1-BATE"
+            version = project.version.toString()
         }
     }
     repositories {
 
         maven {
             credentials {
-                username = System.getenv("ALIYUN_MAVEN_USERNAME").toString()
-                password = System.getenv("ALIYUN_MAVEN_PASSWORD").toString()
+                username = System.getenv("ALIYUN_MAVEN_USERNAME") ?: ""
+                password = System.getenv("ALIYUN_MAVEN_PASSWORD") ?: ""
             }
             url = uri("https://packages.aliyun.com/659e01070cab697efe1345a8/maven/repo-wdhey")
         }
