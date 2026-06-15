@@ -27,7 +27,7 @@ public interface IESOperations extends IESProvider {
     }
 
     default <T, K> Update<T, K> update(UpdateRequest.Builder<T, K> builder) {
-        return new Update<>(getESContext().getClient(), builder, null);
+        return new Update<>(getESContext().getClient(), builder);
     }
 
     default Delete delete(DeleteRequest.Builder builder) {

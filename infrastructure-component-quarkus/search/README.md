@@ -118,11 +118,11 @@ Index<T>.index(String indexName)        → Index.Query<T>
 ```
 Update<T,K>.index(String indexName)     → Update.Query<T,K>
     .id(String value)                   → Update.Action<T,K>
-    .upsert()                           → Update.Executor<T,K>
+    .upsert(K doc)                      → Update.Executor<T,K>
     .executor()                         → UpdateResponse<T>
 ```
 
-`Update` 有两个构造函数，支持传入完整文档（`T doc`）或同时传入完整文档与局部更新文档（`T doc, K tPartialDocument`）。
+文档在 `.upsert(doc)` 处传入：内部对请求设置 `doc(doc)` 与 `docAsUpsert(true)`，语义为「目标文档存在则按 `doc` 部分更新，不存在则按 `doc` 整条插入」。泛型 `<T>` 为文档类型（用于响应反序列化），`<K>` 为写入文档类型，常见用法两者相同（如 `UpdateRequest.Builder<Article, Article>`）。
 
 ### Search — 搜索
 
@@ -162,7 +162,7 @@ CreateIndexResponse create(String indexName)
 // 按 Function Builder 创建索引（可携带 mapping、settings）
 CreateIndexResponse create(Function<CreateIndexRequest.Builder, ObjectBuilder<CreateIndexRequest>> fn)
 
-// 删除索引（已存在时静默返回 null；资源不存在时直接删除成功）
+// 删除索引（先判断存在性：不存在时静默返回 null，存在才执行删除——幂等）
 DeleteIndexResponse delete(String indexName)
 ```
 
@@ -278,11 +278,13 @@ List<Article> results = articleSearchService
 ### 6. Upsert 文档
 
 ```java
+Article article = new Article("Java 入门", "active");
+
 UpdateResponse<Article> response = articleSearchService
     .update(new UpdateRequest.Builder<Article, Article>())
     .index("articles")
     .id("doc-001")
-    .upsert()
+    .upsert(article)   // 存在则按 article 部分更新，不存在则插入
     .executor();
 ```
 

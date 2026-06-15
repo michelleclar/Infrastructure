@@ -4,81 +4,62 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.UpdateRequest;
 import co.elastic.clients.elasticsearch.core.UpdateResponse;
 
-import jakarta.annotation.Nullable;
-
 import java.io.IOException;
 
 /**
  * update command
  *
- * @param <T>
- * @param <K>
+ * @param <T> 文档类型（TDocument，用于响应反序列化）
+ * @param <K> 局部更新文档类型（TPartialDocument，即 upsert 写入的文档）
  */
 public class Update<T, K> {
     UpdateRequest.Builder<T, K> builder;
     ElasticsearchClient esClient;
-    T document;
-    K tPartialDocument;
 
-    public Update(
-            ElasticsearchClient esClient, UpdateRequest.Builder<T, K> builder, @Nullable T doc) {
+    public Update(ElasticsearchClient esClient, UpdateRequest.Builder<T, K> builder) {
         this.esClient = esClient;
         this.builder = builder;
-        this.document = doc;
-    }
-
-    public Update(
-            ElasticsearchClient esClient,
-            UpdateRequest.Builder<T, K> builder,
-            @Nullable T doc,
-            @Nullable K tPartialDocument) {
-        this.esClient = esClient;
-        this.builder = builder;
-        this.document = doc;
-        this.tPartialDocument = tPartialDocument;
     }
 
     public Query<T, K> index(String indexName) {
         this.builder.index(indexName);
-        return new Query<>(this, document);
+        return new Query<>(this);
     }
 
     public static class Query<T, K> {
         Update<T, K> update;
-        T doc;
 
-        public Query(Update<T, K> update, T t) {
+        public Query(Update<T, K> update) {
             this.update = update;
-            this.doc = t;
         }
 
         public Action<T, K> id(String value) {
             this.update.builder.id(value);
-            return new Action<>(this.update, doc);
+            return new Action<>(this.update);
         }
     }
 
     public static class Action<T, K> {
         Update<T, K> update;
-        T doc;
 
-        public Action(Update<T, K> update, T t) {
+        public Action(Update<T, K> update) {
             this.update = update;
-            this.doc = t;
         }
 
-        public Executor<T, K> upsert() {
+        /** 以 upsert 语义写入文档：存在则按 doc 部分更新，不存在则按 doc 插入。 */
+        public Executor<T, K> upsert(K doc) {
+            this.update.builder.doc(doc).docAsUpsert(true);
             return new Executor<>(this.update, doc);
         }
     }
 
     public static class Executor<T, K> {
         Update<T, K> update;
-        T doc;
+        K doc;
 
-        public Executor(Update<T, K> update, T t) {
+        public Executor(Update<T, K> update, K doc) {
             this.update = update;
-            this.doc = t;
+            this.doc = doc;
         }
 
         public UpdateResponse<T> executor() {
