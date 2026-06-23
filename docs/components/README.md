@@ -12,6 +12,8 @@
 | `infrastructure-component-http` | 已 include | 独立 HTTP client 抽象与 Apache 实现 |
 | `infrastructure-component-mq-api` | 已 include | MQ producer/consumer/client 抽象 |
 | `infrastructure-component-mq-pulsar` | 已 include | Pulsar MQ API 实现 |
+| `infrastructure-component-workflow-core` | 已 include | 纯 Java 工作流定义、DSL、NodeHandler SPI 与图校验 |
+| `infrastructure-component-workflow-temporal` | 已 include | 基于 Temporal 的工作流运行时适配 |
 | `infrastructure-component-persistence-jooq` | 已 include | jOOQ 持久化上下文与元数据工具 |
 | `infrastructure-component-redis` | 已 include | Vert.x Redis 客户端封装 |
 | `infrastructure-component-rule-engine` | 已 include | 轻量规则引擎 |
@@ -39,6 +41,8 @@
 - [log](modules/log.md)
 - [mq-api](modules/mq-api.md)
 - [mq-pulsar](modules/mq-pulsar.md)
+- [workflow-core](modules/workflow-core.md)
+- [workflow-temporal](modules/workflow-temporal.md)
 - [pdp](modules/pdp.md)
 - [persistence-jooq](modules/persistence-jooq.md)
 - [qdrant-grpc](modules/qdrant-grpc.md)
