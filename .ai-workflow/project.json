@@ -4,7 +4,7 @@
   "stateRoot": "~/.ai-workflow/projects/infrastructure",
   "sourceOfTruth": "external-platform",
   "strictPhaseFlow": true,
-  "activePhaseIndex": 1,
+  "activePhaseIndex": 2,
   "platform": {
     "primary": "youtrack",
     "fallback": "obsidian",
@@ -952,6 +952,40 @@
         "INFRA-38": "Awaiting Initial Acceptance",
         "push": "origin/main@7a352dd"
       }
+    },
+    {
+      "type": "Decision",
+      "ts": "2026-06-23T15:30:00.000Z",
+      "platform": "youtrack",
+      "agentName": "aw-accept",
+      "phase": 1,
+      "title": "Phase 1 final human acceptance complete (INFRA-38)",
+      "decision": "Initial acceptance PASS (INFRA-1/4/5 verified vs acceptance criteria + full offline suite green) then human final acceptance confirmed. INFRA-1/4/5 and INFRA-38 -> Verified. Phase 1 'Reusable Standalone Components' done; Wave 2 graph complete. No next phase defined; deferred INFRA-2/3/6 (DB-tooling) require re-planning (/aw-init or /aw-create) to form the next phase.",
+      "refs": {
+        "parent": "INFRA-38",
+        "children": [
+          "INFRA-1",
+          "INFRA-4",
+          "INFRA-5"
+        ],
+        "state": "Verified",
+        "acceptedBy": "human"
+      }
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-06-23T15:30:00.000Z",
+      "platform": "youtrack",
+      "agentName": "aw-accept",
+      "phase": 1,
+      "title": "Phase 1 acceptance transitions applied",
+      "event": "issues.verified",
+      "data": {
+        "INFRA-1": "Verified",
+        "INFRA-4": "Verified",
+        "INFRA-5": "Verified",
+        "INFRA-38": "Verified"
+      }
     }
   ],
   "phases": [
@@ -967,9 +1001,12 @@
         "INFRA-4",
         "INFRA-5"
       ],
-      "status": "in-progress",
-      "initialAcceptance": null,
-      "finalAcceptance": null
+      "status": "done",
+      "initialAcceptance": "PASS",
+      "finalAcceptance": "PASS",
+      "initialAcceptanceAt": "2026-06-23T15:30:00.000Z",
+      "finalAcceptanceAt": "2026-06-23T15:30:00.000Z",
+      "acceptedBy": "human"
     }
   ],
   "prd": {
@@ -978,8 +1015,8 @@
     "source": "docs/prd-reusable-components.md",
     "document": null
   },
-  "projectStatus": "active",
-  "completedAt": null,
+  "projectStatus": "complete",
+  "completedAt": "2026-06-23T15:30:00.000Z",
   "archivedProjects": [
     {
       "archivedAt": "2026-06-23T13:00:00.000Z",
