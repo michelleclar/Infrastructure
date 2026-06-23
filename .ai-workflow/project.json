@@ -986,6 +986,88 @@
         "INFRA-5": "Verified",
         "INFRA-38": "Verified"
       }
+    },
+    {
+      "type": "AgentTask",
+      "ts": "2026-06-23T11:43:38.000Z",
+      "platform": "youtrack",
+      "agentName": "aw-work",
+      "role": "dev",
+      "runner": "codex-host",
+      "modelTier": "standard",
+      "branch": "codex/infra-database-utils",
+      "items": [
+        "INFRA-2",
+        "INFRA-3",
+        "INFRA-6"
+      ],
+      "scope": "Implement database-tooling utilities inside infrastructure-component-persistence-jooq/src/main/java/org/carl/infrastructure/persistence/utils using package org.carl.infrastructure.persistence.utils. No new Gradle module; no Quarkus, CDI, JAX-RS, MicroProfile Config, Agroal, ER Tool DTO, ER Tool exception, or ER Tool business error code dependency."
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-06-23T11:44:55.000Z",
+      "platform": "youtrack",
+      "agentName": "aw-work",
+      "role": "dev",
+      "event": "issues.transitioned",
+      "refs": [
+        "INFRA-2",
+        "INFRA-3",
+        "INFRA-6"
+      ],
+      "to": "In Progress",
+      "comments": [
+        "7-137",
+        "7-138",
+        "7-139"
+      ]
+    },
+    {
+      "type": "Evidence",
+      "ts": "2026-06-23T12:01:03.000Z",
+      "platform": "youtrack",
+      "agentName": "aw-work",
+      "role": "dev",
+      "workItemIds": [
+        "INFRA-2",
+        "INFRA-3",
+        "INFRA-6"
+      ],
+      "verdict": "PASS",
+      "changes": [
+        "INFRA-2: Added neutral ExternalDatabaseConfig, JDBC URL generation, ExternalJdbcExecutor, connection test, DDL callback execution, timeout and failure wrapping.",
+        "INFRA-3: Added ExternalDatabaseMetadataReader and DatabaseMetadataSnapshot models for schema/table/column/key/index/catalog metadata with exact-name lookup behavior.",
+        "INFRA-6: Added SchemaModel, neutral DDL result types, parser, prechecker, PostgreSQL/MySQL generator, and metadata reverse generator."
+      ],
+      "tests": [
+        "./gradlew :infrastructure-component-persistence-jooq:test --console=plain -> BUILD SUCCESSFUL",
+        "./gradlew test --no-parallel --offline --console=plain -> BUILD SUCCESSFUL in 1m 21s"
+      ],
+      "sourceScan": "No forbidden runtime dependency strings found under infrastructure-component-persistence-jooq/src/main/java/org/carl/infrastructure/persistence/utils."
+    },
+    {
+      "type": "Decision",
+      "ts": "2026-06-23T12:01:03.000Z",
+      "platform": "youtrack",
+      "agentName": "aw-work",
+      "role": "dev",
+      "title": "INFRA-2/3/6 dev implementation complete",
+      "decision": "Move INFRA-2, INFRA-3, and INFRA-6 from Dev to Review after commit and platform comments.",
+      "rationale": "Implementation is contained in the required persistence-jooq utils package, module and full offline tests pass, and source scan confirms no forbidden Quarkus/CDI/JAX-RS/MicroProfile Config/Agroal/ER Tool dependency strings in production utils sources."
+    },
+    {
+      "type": "Handoff",
+      "ts": "2026-06-23T12:01:03.000Z",
+      "platform": "youtrack",
+      "agentName": "aw-work",
+      "from": "dev",
+      "to": "review",
+      "items": [
+        "INFRA-2",
+        "INFRA-3",
+        "INFRA-6"
+      ],
+      "context": "Review the new org.carl.infrastructure.persistence.utils API surface, exact identifier handling, executor lifecycle/timeout cleanup, metadata catalog/schema fallback, and DDL parser/generator MVP coverage."
     }
   ],
   "phases": [
