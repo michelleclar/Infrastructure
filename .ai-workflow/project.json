@@ -936,6 +936,22 @@
         "parent": "INFRA-38",
         "mainAheadOfOrigin": 6
       }
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-06-23T15:00:00.000Z",
+      "platform": "youtrack",
+      "agentName": "aw-work",
+      "phase": 1,
+      "title": "Closeout transitions applied (egress recovered)",
+      "event": "issues.transitioned",
+      "data": {
+        "INFRA-1": "Fixed",
+        "INFRA-4": "Fixed",
+        "INFRA-5": "Fixed",
+        "INFRA-38": "Awaiting Initial Acceptance",
+        "push": "origin/main@7a352dd"
+      }
     }
   ],
   "phases": [
