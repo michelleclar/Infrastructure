@@ -36,6 +36,16 @@ public interface MQConfig {
         /** Pulsar 服务地址 */
         String serviceUrl();
 
+        /**
+         * Pulsar Admin HTTP 服务地址（如 {@code http://host:8080}）。
+         *
+         * <p>可选。仅在使用 Reader 的 {@code topicsPattern}（按正则解析多个 topic）时需要；
+         * 其它场景可不配置。未配置时返回 {@link Optional#empty()}。
+         */
+        default Optional<String> adminUrl() {
+            return Optional.empty();
+        }
+
         /** 认证插件类名 */
         Optional<String> authPluginClassName();
 

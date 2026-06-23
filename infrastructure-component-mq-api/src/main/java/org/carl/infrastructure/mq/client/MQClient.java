@@ -3,6 +3,7 @@ package org.carl.infrastructure.mq.client;
 import org.carl.infrastructure.mq.common.ex.MQClientException;
 import org.carl.infrastructure.mq.consumer.IConsumerBuilder;
 import org.carl.infrastructure.mq.producer.IProducerBuilder;
+import org.carl.infrastructure.mq.reader.IReaderBuilder;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -18,6 +19,10 @@ public interface MQClient extends AutoCloseable {
     IConsumerBuilder<byte[]> newConsumer();
 
     <T> IConsumerBuilder<T> newConsumer(Class<T> clazz);
+
+    IReaderBuilder<byte[]> newReader();
+
+    <T> IReaderBuilder<T> newReader(Class<T> clazz);
 
     @Override
     void close() throws MQClientException;

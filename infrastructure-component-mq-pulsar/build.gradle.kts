@@ -26,6 +26,9 @@ publishing {
 }
 dependencies {
     implementation("org.apache.pulsar:pulsar-client:4.1.2")
+    // pulsar-client pulls only pulsar-client-admin-api (interfaces); the impl
+    // (PulsarAdminBuilderImpl, loaded via DefaultImplementation) lives here.
+    implementation("org.apache.pulsar:pulsar-client-admin:4.1.2")
     api(project(":infrastructure-component-mq-api"))
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))

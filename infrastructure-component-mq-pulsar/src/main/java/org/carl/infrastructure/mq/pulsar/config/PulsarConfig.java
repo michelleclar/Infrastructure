@@ -131,6 +131,7 @@ public class PulsarConfig implements MQConfig {
 
     public static class PulsarClientConfig implements ClientConfig {
         private String serviceUrl = "pulsar://localhost:6650";
+        private String adminUrl;
         private String authPluginClassName;
         private String authParams;
         private String authToken;
@@ -148,6 +149,11 @@ public class PulsarConfig implements MQConfig {
         @Override
         public String serviceUrl() {
             return serviceUrl;
+        }
+
+        @Override
+        public Optional<String> adminUrl() {
+            return Optional.ofNullable(adminUrl);
         }
 
         @Override
@@ -217,6 +223,10 @@ public class PulsarConfig implements MQConfig {
 
         public void setServiceUrl(String serviceUrl) {
             this.serviceUrl = serviceUrl;
+        }
+
+        public void setAdminUrl(String adminUrl) {
+            this.adminUrl = adminUrl;
         }
 
         public void setAuthPluginClassName(String authPluginClassName) {

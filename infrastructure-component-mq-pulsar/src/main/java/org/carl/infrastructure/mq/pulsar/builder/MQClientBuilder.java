@@ -5,6 +5,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import org.apache.pulsar.client.api.ClientBuilder;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.apache.pulsar.client.api.PulsarClientException;
+import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.carl.infrastructure.logging.ILogger;
 import org.carl.infrastructure.logging.LoggerFactory;
 import org.carl.infrastructure.mq.client.MQClient;
@@ -39,8 +40,9 @@ public class MQClientBuilder {
         }
         try {
             PulsarClient pulsarClient = build.build();
+            PulsarAdmin pulsarAdmin = PulsarAdminFactory.create(config.client()).orElse(null);
             PulsarMQClient pulsarMQClient =
-                    new PulsarMQClient(pulsarClient, config.producer(), config.consumer());
+                    new PulsarMQClient(pulsarClient, config.producer(), config.consumer(), pulsarAdmin);
             ResourcesManager.add(
                     config.name().isEmpty() ? UUID.randomUUID().toString() : config.name().get(),
                     pulsarMQClient);
@@ -70,8 +72,9 @@ public class MQClientBuilder {
         }
         try {
             PulsarClient pulsarClient = build.build();
+            PulsarAdmin pulsarAdmin = PulsarAdminFactory.create(config.client()).orElse(null);
             PulsarMQClient pulsarMQClient =
-                    new PulsarMQClient(pulsarClient, config.producer(), config.consumer());
+                    new PulsarMQClient(pulsarClient, config.producer(), config.consumer(), pulsarAdmin);
             ResourcesManager.add(
                     config.name().isEmpty() ? UUID.randomUUID().toString() : config.name().get(),
                     pulsarMQClient);
