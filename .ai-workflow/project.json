@@ -957,13 +957,35 @@
   "postCompletionDefects": {
     "tick": "2026-05-29",
     "resolved": [
-      "INFRA-21","INFRA-22","INFRA-23","INFRA-24","INFRA-25","INFRA-26","INFRA-27",
-      "INFRA-28","INFRA-29","INFRA-30","INFRA-31"
+      "INFRA-21",
+      "INFRA-22",
+      "INFRA-23",
+      "INFRA-24",
+      "INFRA-25",
+      "INFRA-26",
+      "INFRA-27",
+      "INFRA-28",
+      "INFRA-29",
+      "INFRA-30",
+      "INFRA-31"
     ],
-    "alreadyFixedInCode": ["INFRA-21","INFRA-22","INFRA-23","INFRA-24","INFRA-25","INFRA-26","INFRA-27","INFRA-31"],
+    "alreadyFixedInCode": [
+      "INFRA-21",
+      "INFRA-22",
+      "INFRA-23",
+      "INFRA-24",
+      "INFRA-25",
+      "INFRA-26",
+      "INFRA-27",
+      "INFRA-31"
+    ],
     "fixedThisTick": {
       "commit": "a9622e8",
-      "items": ["INFRA-28","INFRA-29","INFRA-30"],
+      "items": [
+        "INFRA-28",
+        "INFRA-29",
+        "INFRA-30"
+      ],
       "changes": [
         "INFRA-30: CacheStd.getCacheContext() returns injected context instead of null",
         "INFRA-29: RedisClientFactory auto-registers JavaTimeModule (WRITE_DATES_AS_TIMESTAMPS=false)",
@@ -972,7 +994,71 @@
     },
     "pendingNewScope": {
       "note": "INFRA-1 to INFRA-6 are Submitted tasks representing new feature scope not in the current PRD. Run /aw-init to define a new project/phase set before dispatching.",
-      "items": ["INFRA-1","INFRA-2","INFRA-3","INFRA-4","INFRA-5","INFRA-6"]
+      "items": [
+        "INFRA-1",
+        "INFRA-2",
+        "INFRA-3",
+        "INFRA-4",
+        "INFRA-5",
+        "INFRA-6"
+      ]
     }
-  }
+  },
+  "postCompletionTicks": [
+    {
+      "tick": "2026-06-23",
+      "context": "Re-verified INFRA-32/33/34/35 against current HEAD; the 2026-05-25 mirror snapshot was stale (same pattern as INFRA-31).",
+      "alreadyFixedInCode": [
+        "INFRA-32",
+        "INFRA-34",
+        "INFRA-35"
+      ],
+      "fixedThisTick": {
+        "commit": "5132f59",
+        "items": [
+          "INFRA-33"
+        ],
+        "changes": [
+          "INFRA-33: CacheService @IfBuildProperty quarkus.cache.enable -> quarkus.plugins.cache.enable; cache/README.md synced"
+        ]
+      },
+      "verification": {
+        "command": "./gradlew :…:user:test :…:approval:test :…:audit:test :…:cache:compileJava",
+        "result": "BUILD SUCCESSFUL",
+        "tests": {
+          "user": "4/4",
+          "approval": "13/13",
+          "audit": "5/5"
+        },
+        "cache": "compileJava passed with new flag"
+      },
+      "resolved": [
+        "INFRA-32",
+        "INFRA-33",
+        "INFRA-34",
+        "INFRA-35"
+      ],
+      "platformSyncPending": {
+        "platform": "youtrack",
+        "reason": "youtrack MCP not connected this session",
+        "action": "apply Done transitions + human-readable comments for INFRA-32/33/34/35 when connected"
+      },
+      "deferredDecisions": [
+        {
+          "item": "INFRA-34",
+          "decision": "legacy infrastructure-component-audit/ dir: remove vs complete pure non-Quarkus core/adapter split per docs/quarkus-decoupling/modules/audit.md"
+        }
+      ],
+      "alsoCommittedThisSession": [
+        {
+          "commit": "74103db",
+          "desc": "feat(mq): Reader API + Pulsar Reader (pre-existing WIP, user-authorized commit)"
+        },
+        {
+          "commit": "098b736",
+          "desc": "docs: component capability guide + workflow-core/temporal module docs"
+        }
+      ]
+    }
+  ]
 }
