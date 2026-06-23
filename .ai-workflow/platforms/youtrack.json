@@ -5,15 +5,61 @@
   "projectShortName": "INFRA",
   "sslVerify": false,
   "phaseMap": {
-    "1": { "acceptanceId": "INFRA-7",  "children": ["INFRA-8",  "INFRA-9",  "INFRA-10"] },
-    "2": { "acceptanceId": "INFRA-11", "children": ["INFRA-12", "INFRA-13"] },
-    "3": { "acceptanceId": "INFRA-14", "children": ["INFRA-15", "INFRA-16"] },
-    "4": { "acceptanceId": "INFRA-17", "children": ["INFRA-18", "INFRA-19", "INFRA-20"] }
+    "1": {
+      "acceptanceId": "INFRA-38",
+      "children": [
+        "INFRA-1",
+        "INFRA-4",
+        "INFRA-5"
+      ]
+    }
   },
   "linearMirror": {
-    "INFRA-7":  "BAC-209", "INFRA-8":  "BAC-213", "INFRA-9":  "BAC-214", "INFRA-10": "BAC-215",
-    "INFRA-11": "BAC-210", "INFRA-12": "BAC-216", "INFRA-13": "BAC-217",
-    "INFRA-14": "BAC-211", "INFRA-15": "BAC-218", "INFRA-16": "BAC-219",
-    "INFRA-17": "BAC-212", "INFRA-18": "BAC-220", "INFRA-19": "BAC-221", "INFRA-20": "BAC-222"
+    "INFRA-7": "BAC-209",
+    "INFRA-8": "BAC-213",
+    "INFRA-9": "BAC-214",
+    "INFRA-10": "BAC-215",
+    "INFRA-11": "BAC-210",
+    "INFRA-12": "BAC-216",
+    "INFRA-13": "BAC-217",
+    "INFRA-14": "BAC-211",
+    "INFRA-15": "BAC-218",
+    "INFRA-16": "BAC-219",
+    "INFRA-17": "BAC-212",
+    "INFRA-18": "BAC-220",
+    "INFRA-19": "BAC-221",
+    "INFRA-20": "BAC-222"
+  },
+  "phaseMapArchived": {
+    "1": {
+      "acceptanceId": "INFRA-7",
+      "children": [
+        "INFRA-8",
+        "INFRA-9",
+        "INFRA-10"
+      ]
+    },
+    "2": {
+      "acceptanceId": "INFRA-11",
+      "children": [
+        "INFRA-12",
+        "INFRA-13"
+      ]
+    },
+    "3": {
+      "acceptanceId": "INFRA-14",
+      "children": [
+        "INFRA-15",
+        "INFRA-16"
+      ]
+    },
+    "4": {
+      "acceptanceId": "INFRA-17",
+      "children": [
+        "INFRA-18",
+        "INFRA-19",
+        "INFRA-20"
+      ]
+    }
   }
 }

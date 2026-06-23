@@ -4,7 +4,7 @@
   "stateRoot": "~/.ai-workflow/projects/infrastructure",
   "sourceOfTruth": "external-platform",
   "strictPhaseFlow": true,
-  "activePhaseIndex": 5,
+  "activePhaseIndex": 1,
   "platform": {
     "primary": "youtrack",
     "fallback": "obsidian",
@@ -855,210 +855,304 @@
       "phases": 4,
       "totalTests": 94,
       "note": "All 4 phases accepted. Infrastructure Components Completion PRD fulfilled."
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-06-23T13:00:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.created",
+      "ref": "INFRA-38",
+      "title": "[Phase 1 Acceptance] Reusable Standalone Components",
+      "labels": [
+        "phase-acceptance",
+        "epic"
+      ]
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-06-23T13:00:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.linked",
+      "ref": "INFRA-38",
+      "children": [
+        "INFRA-1",
+        "INFRA-4",
+        "INFRA-5"
+      ],
+      "linkType": "Subtask"
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-06-23T13:00:00.000Z",
+      "platform": "youtrack",
+      "event": "issue.transitioned",
+      "refs": [
+        "INFRA-1",
+        "INFRA-4",
+        "INFRA-5"
+      ],
+      "to": "Open",
+      "from": "Submitted"
+    },
+    {
+      "type": "Decision",
+      "ts": "2026-06-23T13:00:00.000Z",
+      "title": "aw-init Wave 2 replaced phase graph",
+      "note": "User chose Replace existing graph. New Phase 1 (INFRA-38) with parallel children INFRA-1/4/5. Old completed 4-phase record archived under archivedProjects. INFRA-2/3/6 deferred; INFRA-36/37 untriaged."
     }
   ],
   "phases": [
     {
       "index": 1,
-      "name": "Core Independent Libraries",
-      "content": "Implement `statemachine`, `rule-engine`, and `pdp` standalone modules. Each must expose an Ability interface, have unit tests, and be documented in `doc/AI_MODULE_GUIDE.md`.",
-      "target": "All three modules build, pass tests, and are demonstrable without Quarkus.",
-      "acceptanceIssueId": "INFRA-7",
-      "acceptanceIssueIdentifier": "INFRA-7",
+      "name": "Reusable Standalone Components",
+      "content": "Extract three app-neutral reusable infrastructure modules (removing ER Tool duplication): INFRA-1 web response envelope + exception mapping; INFRA-4 artifact storage; INFRA-5 shared crypto/hash/json/time utilities. Children run in parallel.",
+      "target": "All three modules build, pass tests, expose app-neutral APIs with no ER Tool imports, and can replace the corresponding ER Tool duplication.",
+      "acceptanceIssueId": "INFRA-38",
+      "acceptanceIssueIdentifier": "INFRA-38",
       "childIssueIds": [
-        "INFRA-8",
-        "INFRA-9",
-        "INFRA-10"
+        "INFRA-1",
+        "INFRA-4",
+        "INFRA-5"
       ],
-      "status": "done",
-      "initialAcceptance": "PASS",
-      "initialAcceptanceAt": "2026-05-25T15:30:00.000Z",
-      "finalAcceptance": "PASS",
-      "finalAcceptanceAt": "2026-05-26T00:00:00.000Z",
-      "acceptedBy": "human"
-    },
-    {
-      "index": 2,
-      "name": "AI and gRPC Clients",
-      "content": "Implement `qdrant-grpc` (Qdrant vector DB client) and `embedding-grpc` (Embedding service client) standalone modules. Includes proto definitions, generated stubs, and typed wrappers.",
-      "target": "Both clients connect to their respective services in integration tests; stubs are auto-generated from proto files.",
-      "acceptanceIssueId": "INFRA-11",
-      "acceptanceIssueIdentifier": "INFRA-11",
-      "childIssueIds": [
-        "INFRA-12",
-        "INFRA-13"
-      ],
-      "status": "done",
-      "initialAcceptance": "PASS",
-      "initialAcceptanceAt": "2026-05-26T01:00:00.000Z",
-      "finalAcceptance": "PASS",
-      "finalAcceptanceAt": "2026-05-26T01:30:00.000Z",
-      "acceptedBy": "human"
-    },
-    {
-      "index": 3,
-      "name": "Quarkus Integration Modules",
-      "content": "Implement `broadcast` (Vert.x event bus) and `search` (Elasticsearch full-text search) as Quarkus extensions under `infrastructure-component-quarkus/`. Both follow the conditional bean registration pattern (`quarkus.plugins.<name>.enable`).",
-      "target": "Both extensions register correctly in a Quarkus app; demo wiring in `demo/` passes `./gradlew :demo:build`.",
-      "acceptanceIssueId": "INFRA-14",
-      "acceptanceIssueIdentifier": "INFRA-14",
-      "childIssueIds": [
-        "INFRA-15",
-        "INFRA-16"
-      ],
-      "status": "done",
-      "initialAcceptance": "PASS",
-      "initialAcceptanceAt": "2026-05-26T02:00:00.000Z",
-      "finalAcceptance": "PASS",
-      "finalAcceptanceAt": "2026-05-26T02:30:00.000Z",
-      "acceptedBy": "human"
-    },
-    {
-      "index": 4,
-      "name": "Business Logic Modules",
-      "content": "Implement `approval` (approval workflow), `user` (user management), and `audit` (audit log) as Quarkus integration modules. These may depend on Phase 1 modules (statemachine, rule-engine).",
-      "target": "All three modules pass tests; `audit` captures structured events; `approval` integrates with `statemachine`.",
-      "acceptanceIssueId": "INFRA-17",
-      "acceptanceIssueIdentifier": "INFRA-17",
-      "childIssueIds": [
-        "INFRA-18",
-        "INFRA-19",
-        "INFRA-20"
-      ],
-      "status": "done",
-      "initialAcceptance": "PASS",
-      "initialAcceptanceAt": "2026-05-26T03:30:00.000Z",
-      "tests": 22,
-      "criteria": 15,
-      "finalAcceptance": "PASS",
-      "finalAcceptanceAt": "2026-05-28T01:11:13.431Z",
-      "acceptedBy": "human"
+      "status": "in-progress",
+      "initialAcceptance": null,
+      "finalAcceptance": null
     }
   ],
   "prd": {
-    "title": "Infrastructure Components Completion",
-    "slug": "infrastructure-components-completion",
-    "source": "docs/prd.md",
-    "document": {
-      "id": "180-5",
-      "idReadable": "INFRA-A-2",
-      "title": "[PRD] Infrastructure Components Completion",
-      "slug": "prd-infrastructure-components-completion",
-      "kind": "prd",
-      "url": "https://carlmichelle.youtrack.cloud/articles/INFRA-A-2",
-      "platform": "youtrack",
-      "updatedAt": "2026-05-28T01:06:21.776Z",
-      "status": "uploaded",
-      "obsidianMirror": "/Users/carl/.ai-workflow/projects/infrastructure/obsidian/docs/prd-infrastructure-components-completion.md"
-    }
+    "title": "Infrastructure Reusable Component Extraction (Wave 2)",
+    "slug": "infrastructure-reusable-component-extraction-wave-2",
+    "source": "docs/prd-reusable-components.md",
+    "document": null
   },
-  "projectStatus": "complete",
-  "completedAt": "2026-05-28T01:11:13.431Z",
-  "postCompletionDefects": {
-    "tick": "2026-05-29",
-    "resolved": [
-      "INFRA-21",
-      "INFRA-22",
-      "INFRA-23",
-      "INFRA-24",
-      "INFRA-25",
-      "INFRA-26",
-      "INFRA-27",
-      "INFRA-28",
-      "INFRA-29",
-      "INFRA-30",
-      "INFRA-31"
-    ],
-    "alreadyFixedInCode": [
-      "INFRA-21",
-      "INFRA-22",
-      "INFRA-23",
-      "INFRA-24",
-      "INFRA-25",
-      "INFRA-26",
-      "INFRA-27",
-      "INFRA-31"
-    ],
-    "fixedThisTick": {
-      "commit": "a9622e8",
-      "items": [
-        "INFRA-28",
-        "INFRA-29",
-        "INFRA-30"
-      ],
-      "changes": [
-        "INFRA-30: CacheStd.getCacheContext() returns injected context instead of null",
-        "INFRA-29: RedisClientFactory auto-registers JavaTimeModule (WRITE_DATES_AS_TIMESTAMPS=false)",
-        "INFRA-28: Redis test endpoints moved to TEST_REDIS_URL / TEST_REDIS_SENTINEL_URL env vars; tests skip when vars absent"
-      ]
-    },
-    "pendingNewScope": {
-      "note": "INFRA-1 to INFRA-6 are Submitted tasks representing new feature scope not in the current PRD. Run /aw-init to define a new project/phase set before dispatching.",
-      "items": [
-        "INFRA-1",
-        "INFRA-2",
-        "INFRA-3",
-        "INFRA-4",
-        "INFRA-5",
-        "INFRA-6"
-      ]
-    }
-  },
-  "postCompletionTicks": [
+  "projectStatus": "active",
+  "completedAt": null,
+  "archivedProjects": [
     {
-      "tick": "2026-06-23",
-      "context": "Re-verified INFRA-32/33/34/35 against current HEAD; the 2026-05-25 mirror snapshot was stale (same pattern as INFRA-31).",
-      "alreadyFixedInCode": [
-        "INFRA-32",
-        "INFRA-34",
-        "INFRA-35"
-      ],
-      "fixedThisTick": {
-        "commit": "5132f59",
-        "items": [
-          "INFRA-33"
-        ],
-        "changes": [
-          "INFRA-33: CacheService @IfBuildProperty quarkus.cache.enable -> quarkus.plugins.cache.enable; cache/README.md synced"
-        ]
+      "archivedAt": "2026-06-23T13:00:00.000Z",
+      "reason": "aw-init Wave 2: user chose Replace existing graph",
+      "projectStatus": "complete",
+      "completedAt": "2026-05-28T01:11:13.431Z",
+      "prd": {
+        "title": "Infrastructure Components Completion",
+        "slug": "infrastructure-components-completion",
+        "source": "docs/prd.md",
+        "document": {
+          "id": "180-5",
+          "idReadable": "INFRA-A-2",
+          "title": "[PRD] Infrastructure Components Completion",
+          "slug": "prd-infrastructure-components-completion",
+          "kind": "prd",
+          "url": "https://carlmichelle.youtrack.cloud/articles/INFRA-A-2",
+          "platform": "youtrack",
+          "updatedAt": "2026-05-28T01:06:21.776Z",
+          "status": "uploaded",
+          "obsidianMirror": "/Users/carl/.ai-workflow/projects/infrastructure/obsidian/docs/prd-infrastructure-components-completion.md"
+        }
       },
-      "verification": {
-        "command": "./gradlew :…:user:test :…:approval:test :…:audit:test :…:cache:compileJava",
-        "result": "BUILD SUCCESSFUL",
-        "tests": {
-          "user": "4/4",
-          "approval": "13/13",
-          "audit": "5/5"
-        },
-        "cache": "compileJava passed with new flag"
-      },
-      "resolved": [
-        "INFRA-32",
-        "INFRA-33",
-        "INFRA-34",
-        "INFRA-35"
-      ],
-      "platformSyncPending": {
-        "platform": "youtrack",
-        "reason": "youtrack MCP not connected this session",
-        "action": "apply Done transitions + human-readable comments for INFRA-32/33/34/35 when connected"
-      },
-      "deferredDecisions": [
+      "phases": [
         {
-          "item": "INFRA-34",
-          "decision": "legacy infrastructure-component-audit/ dir: remove vs complete pure non-Quarkus core/adapter split per docs/quarkus-decoupling/modules/audit.md"
+          "index": 1,
+          "name": "Core Independent Libraries",
+          "content": "Implement `statemachine`, `rule-engine`, and `pdp` standalone modules. Each must expose an Ability interface, have unit tests, and be documented in `doc/AI_MODULE_GUIDE.md`.",
+          "target": "All three modules build, pass tests, and are demonstrable without Quarkus.",
+          "acceptanceIssueId": "INFRA-7",
+          "acceptanceIssueIdentifier": "INFRA-7",
+          "childIssueIds": [
+            "INFRA-8",
+            "INFRA-9",
+            "INFRA-10"
+          ],
+          "status": "done",
+          "initialAcceptance": "PASS",
+          "initialAcceptanceAt": "2026-05-25T15:30:00.000Z",
+          "finalAcceptance": "PASS",
+          "finalAcceptanceAt": "2026-05-26T00:00:00.000Z",
+          "acceptedBy": "human"
+        },
+        {
+          "index": 2,
+          "name": "AI and gRPC Clients",
+          "content": "Implement `qdrant-grpc` (Qdrant vector DB client) and `embedding-grpc` (Embedding service client) standalone modules. Includes proto definitions, generated stubs, and typed wrappers.",
+          "target": "Both clients connect to their respective services in integration tests; stubs are auto-generated from proto files.",
+          "acceptanceIssueId": "INFRA-11",
+          "acceptanceIssueIdentifier": "INFRA-11",
+          "childIssueIds": [
+            "INFRA-12",
+            "INFRA-13"
+          ],
+          "status": "done",
+          "initialAcceptance": "PASS",
+          "initialAcceptanceAt": "2026-05-26T01:00:00.000Z",
+          "finalAcceptance": "PASS",
+          "finalAcceptanceAt": "2026-05-26T01:30:00.000Z",
+          "acceptedBy": "human"
+        },
+        {
+          "index": 3,
+          "name": "Quarkus Integration Modules",
+          "content": "Implement `broadcast` (Vert.x event bus) and `search` (Elasticsearch full-text search) as Quarkus extensions under `infrastructure-component-quarkus/`. Both follow the conditional bean registration pattern (`quarkus.plugins.<name>.enable`).",
+          "target": "Both extensions register correctly in a Quarkus app; demo wiring in `demo/` passes `./gradlew :demo:build`.",
+          "acceptanceIssueId": "INFRA-14",
+          "acceptanceIssueIdentifier": "INFRA-14",
+          "childIssueIds": [
+            "INFRA-15",
+            "INFRA-16"
+          ],
+          "status": "done",
+          "initialAcceptance": "PASS",
+          "initialAcceptanceAt": "2026-05-26T02:00:00.000Z",
+          "finalAcceptance": "PASS",
+          "finalAcceptanceAt": "2026-05-26T02:30:00.000Z",
+          "acceptedBy": "human"
+        },
+        {
+          "index": 4,
+          "name": "Business Logic Modules",
+          "content": "Implement `approval` (approval workflow), `user` (user management), and `audit` (audit log) as Quarkus integration modules. These may depend on Phase 1 modules (statemachine, rule-engine).",
+          "target": "All three modules pass tests; `audit` captures structured events; `approval` integrates with `statemachine`.",
+          "acceptanceIssueId": "INFRA-17",
+          "acceptanceIssueIdentifier": "INFRA-17",
+          "childIssueIds": [
+            "INFRA-18",
+            "INFRA-19",
+            "INFRA-20"
+          ],
+          "status": "done",
+          "initialAcceptance": "PASS",
+          "initialAcceptanceAt": "2026-05-26T03:30:00.000Z",
+          "tests": 22,
+          "criteria": 15,
+          "finalAcceptance": "PASS",
+          "finalAcceptanceAt": "2026-05-28T01:11:13.431Z",
+          "acceptedBy": "human"
         }
       ],
-      "alsoCommittedThisSession": [
-        {
-          "commit": "74103db",
-          "desc": "feat(mq): Reader API + Pulsar Reader (pre-existing WIP, user-authorized commit)"
+      "postCompletionDefects": {
+        "tick": "2026-05-29",
+        "resolved": [
+          "INFRA-21",
+          "INFRA-22",
+          "INFRA-23",
+          "INFRA-24",
+          "INFRA-25",
+          "INFRA-26",
+          "INFRA-27",
+          "INFRA-28",
+          "INFRA-29",
+          "INFRA-30",
+          "INFRA-31"
+        ],
+        "alreadyFixedInCode": [
+          "INFRA-21",
+          "INFRA-22",
+          "INFRA-23",
+          "INFRA-24",
+          "INFRA-25",
+          "INFRA-26",
+          "INFRA-27",
+          "INFRA-31"
+        ],
+        "fixedThisTick": {
+          "commit": "a9622e8",
+          "items": [
+            "INFRA-28",
+            "INFRA-29",
+            "INFRA-30"
+          ],
+          "changes": [
+            "INFRA-30: CacheStd.getCacheContext() returns injected context instead of null",
+            "INFRA-29: RedisClientFactory auto-registers JavaTimeModule (WRITE_DATES_AS_TIMESTAMPS=false)",
+            "INFRA-28: Redis test endpoints moved to TEST_REDIS_URL / TEST_REDIS_SENTINEL_URL env vars; tests skip when vars absent"
+          ]
         },
+        "pendingNewScope": {
+          "note": "INFRA-1 to INFRA-6 are Submitted tasks representing new feature scope not in the current PRD. Run /aw-init to define a new project/phase set before dispatching.",
+          "items": [
+            "INFRA-1",
+            "INFRA-2",
+            "INFRA-3",
+            "INFRA-4",
+            "INFRA-5",
+            "INFRA-6"
+          ]
+        }
+      },
+      "postCompletionTicks": [
         {
-          "commit": "098b736",
-          "desc": "docs: component capability guide + workflow-core/temporal module docs"
+          "tick": "2026-06-23",
+          "context": "Re-verified INFRA-32/33/34/35 against current HEAD; the 2026-05-25 mirror snapshot was stale (same pattern as INFRA-31).",
+          "alreadyFixedInCode": [
+            "INFRA-32",
+            "INFRA-34",
+            "INFRA-35"
+          ],
+          "fixedThisTick": {
+            "commit": "5132f59",
+            "items": [
+              "INFRA-33"
+            ],
+            "changes": [
+              "INFRA-33: CacheService @IfBuildProperty quarkus.cache.enable -> quarkus.plugins.cache.enable; cache/README.md synced"
+            ]
+          },
+          "verification": {
+            "command": "./gradlew :…:user:test :…:approval:test :…:audit:test :…:cache:compileJava",
+            "result": "BUILD SUCCESSFUL",
+            "tests": {
+              "user": "4/4",
+              "approval": "13/13",
+              "audit": "5/5"
+            },
+            "cache": "compileJava passed with new flag"
+          },
+          "resolved": [
+            "INFRA-32",
+            "INFRA-33",
+            "INFRA-34",
+            "INFRA-35"
+          ],
+          "platformSyncPending": {
+            "platform": "youtrack",
+            "reason": "youtrack MCP not connected this session",
+            "action": "apply Done transitions + human-readable comments for INFRA-32/33/34/35 when connected"
+          },
+          "deferredDecisions": [
+            {
+              "item": "INFRA-34",
+              "decision": "legacy infrastructure-component-audit/ dir: remove vs complete pure non-Quarkus core/adapter split per docs/quarkus-decoupling/modules/audit.md"
+            }
+          ],
+          "alsoCommittedThisSession": [
+            {
+              "commit": "74103db",
+              "desc": "feat(mq): Reader API + Pulsar Reader (pre-existing WIP, user-authorized commit)"
+            },
+            {
+              "commit": "098b736",
+              "desc": "docs: component capability guide + workflow-core/temporal module docs"
+            }
+          ]
         }
       ]
     }
-  ]
+  ],
+  "newScopeTriage": {
+    "tick": "2026-06-23",
+    "planned": [
+      "INFRA-1",
+      "INFRA-4",
+      "INFRA-5"
+    ],
+    "deferredNeedsReplanning": [
+      "INFRA-2",
+      "INFRA-3",
+      "INFRA-6"
+    ],
+    "untriaged": [
+      "INFRA-36",
+      "INFRA-37"
+    ],
+    "note": "User categorized INFRA-1..6: execute 1/4/5 (Phase 1 / INFRA-38), defer 2/3/6 (database-tooling cluster). INFRA-36/37 discovered during init, not yet triaged."
+  }
 }
