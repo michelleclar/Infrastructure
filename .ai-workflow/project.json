@@ -917,6 +917,25 @@
       "ts": "2026-06-23T04:31:18.000Z",
       "title": "Database tooling scope stays inside persistence-jooq utils",
       "note": "INFRA-2/3/6 must not create a new Gradle module. New low-frequency external database utilities go under infrastructure-component-persistence-jooq/src/main/java/org/carl/infrastructure/persistence/utils using package org.carl.infrastructure.persistence.utils. The scope excludes Quarkus, CDI, JAX-RS, MicroProfile Config, Agroal, ER Tool DTOs, ER Tool exceptions, and ER Tool business error codes."
+    },
+    {
+      "type": "Decision",
+      "ts": "2026-06-23T14:30:01.000Z",
+      "platform": "local",
+      "agentName": "aw-work",
+      "phase": 1,
+      "title": "INFRA-1/4/5 closeout: dev+test PASS, committed + merged; YouTrack/push queued",
+      "decision": "Full offline test suite BUILD SUCCESSFUL (0 failures). Committed ffb858d (INFRA-1 web-api, INFRA-4 artifact-storage, INFRA-5 utils + test-env hardening + INFRA-2/3/6 scope notes), fast-forward merged into main, deleted local branch codex/infra-reusable-components. YouTrack transitions (INFRA-1/4/5->Fixed, INFRA-38) and 'git push origin main' QUEUED — outbound HTTPS TLS-reset this session. Runner: ~/.ai-workflow/projects/infrastructure/runtime/queued-closeout.sh",
+      "refs": {
+        "commit": "ffb858d",
+        "children": [
+          "INFRA-1",
+          "INFRA-4",
+          "INFRA-5"
+        ],
+        "parent": "INFRA-38",
+        "mainAheadOfOrigin": 6
+      }
     }
   ],
   "phases": [
