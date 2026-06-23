@@ -1103,6 +1103,207 @@
       ],
       "pullRequest": "https://github.com/michelleclar/Infrastructure/pull/12",
       "implementationCommit": "64917fa"
+    },
+    {
+      "type": "AgentTask",
+      "ts": "2026-06-23T13:01:43.000Z",
+      "platform": "youtrack",
+      "agentName": "aw-work",
+      "role": "dev",
+      "runner": "multi-agent",
+      "branch": "codex/infra-database-utils",
+      "items": [
+        "INFRA-36",
+        "INFRA-37"
+      ],
+      "subagents": [
+        {
+          "id": "019ef494-8d41-7540-a2f9-f823bcfa55f5",
+          "role": "worker",
+          "workItemId": "INFRA-36",
+          "owns": [
+            "infrastructure-component-persistence-jooq/src/main/java/org/carl/infrastructure/persistence/**",
+            "infrastructure-component-persistence-jooq/src/test/java/org/carl/infrastructure/persistence/**"
+          ]
+        },
+        {
+          "id": "019ef494-d963-7973-93ce-e1929066be9b",
+          "role": "worker",
+          "workItemId": "INFRA-37",
+          "owns": [
+            "infrastructure-component-mq-api/**",
+            "infrastructure-component-mq-pulsar/**"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-06-23T13:01:43.000Z",
+      "platform": "youtrack",
+      "agentName": "aw-work",
+      "role": "dev",
+      "event": "issues.transitioned",
+      "refs": [
+        "INFRA-36",
+        "INFRA-37"
+      ],
+      "to": "In Progress",
+      "comments": [
+        "7-146",
+        "7-147"
+      ]
+    },
+    {
+      "type": "Evidence",
+      "ts": "2026-06-23T16:00:00.000Z",
+      "platform": "youtrack",
+      "agentName": "aw-work",
+      "role": "review",
+      "workItemIds": [
+        "INFRA-2",
+        "INFRA-3",
+        "INFRA-6"
+      ],
+      "verdict": "PASS",
+      "scan": "Full PR #12 diff (org.carl.infrastructure.persistence.utils, +3109).",
+      "findings": [
+        "Identifier quoting (quote() doubles backtick/double-quote) and string escaping (sqlString() doubles single-quote) are correct on injection-relevant paths.",
+        "ExternalJdbcExecutor: short-lived connections, positive-timeout guard, timeout/interrupt close the active connection and cancel the future; daemon cached pool; close() idempotent.",
+        "ExternalDatabaseMetadataReader: catalog/schema fallback, exact JDBC metadata names (no case/format guessing), wasNull-aware int reads.",
+        "Non-blocking notes only: a quoted DEFAULT literal containing 'primary key' can trip the inline-PK substring check; multi-token DEFAULT expressions capture a single token; serial+identity could co-emit on reverse-gen edge cases."
+      ]
+    },
+    {
+      "type": "Evidence",
+      "ts": "2026-06-23T16:00:00.000Z",
+      "platform": "youtrack",
+      "agentName": "aw-work",
+      "role": "test",
+      "workItemIds": [
+        "INFRA-2",
+        "INFRA-3",
+        "INFRA-6"
+      ],
+      "verdict": "PASS",
+      "isolation": "Detached worktree at committed HEAD (7577147), excluding unrelated INFRA-36/37 WIP.",
+      "tests": {
+        "NeutralDdlUtilsTest": "5/5",
+        "ExternalJdbcExecutorTest": "5/5",
+        "ExternalDatabaseMetadataReaderTest": "4/4",
+        "total": "14/14 unit",
+        "integration": "skipped offline (no external DB)",
+        "failures": 0
+      }
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-06-23T16:00:00.000Z",
+      "platform": "github",
+      "agentName": "aw-work",
+      "event": "pull_request.merged",
+      "ref": "https://github.com/michelleclar/Infrastructure/pull/12",
+      "method": "rebase",
+      "mergeCommit": "49cb70c",
+      "branchDeleted": "codex/infra-database-utils"
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-06-23T16:00:00.000Z",
+      "platform": "youtrack",
+      "agentName": "aw-work",
+      "event": "issues.transitioned",
+      "refs": [
+        "INFRA-2",
+        "INFRA-3",
+        "INFRA-6"
+      ],
+      "from": "Awaiting Review",
+      "to": "Fixed",
+      "note": "Review PASS + Test PASS + merged to main (49cb70c). Standalone tasks with no phase-acceptance parent; Fixed is the terminal dev state."
+    },
+    {
+      "type": "Evidence",
+      "ts": "2026-06-23T16:05:00.000Z",
+      "platform": "youtrack",
+      "agentName": "aw-work",
+      "role": "dev",
+      "workItemIds": [
+        "INFRA-36",
+        "INFRA-37"
+      ],
+      "verdict": "PASS",
+      "changes": [
+        "INFRA-36: jOOQ templates SoftDeleteConditions / OptimisticLockUpdates / OptimisticLockUpdateResult under persistence/templates.",
+        "INFRA-37: mq-api neutral source.* model + cdc.debezium.* envelope/parser + SourceAdminException; mq-pulsar PulsarSourceAdmin/ConfigMapper/StatusMapper/SourcesClient; PulsarAdminFactory widened to public + switched to project ILogger."
+      ],
+      "tests": {
+        "PersistenceTemplatesTest": "4/4",
+        "DebeziumEnvelopeParserTest": "4/4",
+        "PulsarSourceAdminTest": "5/5",
+        "failures": 0
+      }
+    },
+    {
+      "type": "Handoff",
+      "ts": "2026-06-23T16:05:00.000Z",
+      "platform": "youtrack",
+      "agentName": "aw-work",
+      "from": "dev",
+      "to": "review",
+      "items": [
+        "INFRA-36",
+        "INFRA-37"
+      ],
+      "context": "Split out of the DB-utils branch onto codex/infra-mq-source-jooq-templates (own PR #13) to keep review scopes clean. Review jOOQ template SQL correctness, Pulsar source admin lifecycle/mapping, and Debezium envelope parsing."
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-06-23T16:05:00.000Z",
+      "platform": "github",
+      "agentName": "aw-work",
+      "event": "pull_request.created",
+      "ref": "https://github.com/michelleclar/Infrastructure/pull/13",
+      "branch": "codex/infra-mq-source-jooq-templates",
+      "base": "main",
+      "headCommit": "e423aa0"
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-06-23T16:05:00.000Z",
+      "platform": "youtrack",
+      "agentName": "aw-work",
+      "event": "issues.transitioned",
+      "refs": [
+        "INFRA-36",
+        "INFRA-37"
+      ],
+      "from": "In Progress",
+      "to": "Awaiting Review",
+      "pullRequest": "https://github.com/michelleclar/Infrastructure/pull/13"
+    },
+    {
+      "type": "Decision",
+      "ts": "2026-06-23T16:10:00.000Z",
+      "platform": "local",
+      "agentName": "aw-work",
+      "title": "Tick: INFRA-2/3/6 merged (Fixed); INFRA-36/37 dispatched to Review on own PR",
+      "decision": "INFRA-2/3/6 (PR #12) Review PASS + Test PASS -> rebase-merged into main (49cb70c) -> Fixed. INFRA-36/37 dev-complete WIP split from the DB-utils branch onto codex/infra-mq-source-jooq-templates (PR #13) per user decision (own branch + own PR) and moved to Awaiting Review.",
+      "rationale": "User chose rebase-merge for PR #12 and a separate branch/PR for INFRA-36/37 to keep review scopes clean. INFRA-2/3/6 have no phase-acceptance parent, so Fixed is terminal. Disjoint file paths (utils vs templates vs mq) made the split conflict-free.",
+      "refs": {
+        "merged": "https://github.com/michelleclar/Infrastructure/pull/12",
+        "mergeCommit": "49cb70c",
+        "newPr": "https://github.com/michelleclar/Infrastructure/pull/13",
+        "fixed": [
+          "INFRA-2",
+          "INFRA-3",
+          "INFRA-6"
+        ],
+        "awaitingReview": [
+          "INFRA-36",
+          "INFRA-37"
+        ]
+      }
     }
   ],
   "phases": [
