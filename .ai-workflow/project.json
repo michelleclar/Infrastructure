@@ -899,6 +899,24 @@
       "ts": "2026-06-23T13:00:00.000Z",
       "title": "aw-init Wave 2 replaced phase graph",
       "note": "User chose Replace existing graph. New Phase 1 (INFRA-38) with parallel children INFRA-1/4/5. Old completed 4-phase record archived under archivedProjects. INFRA-2/3/6 deferred; INFRA-36/37 untriaged."
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-06-23T04:31:18.000Z",
+      "platform": "youtrack",
+      "event": "issue.description.updated",
+      "refs": [
+        "INFRA-2",
+        "INFRA-3",
+        "INFRA-6"
+      ],
+      "summary": "Expanded database-tooling task descriptions with the persistence utils package boundary, detailed scope, dependencies, and acceptance criteria."
+    },
+    {
+      "type": "Decision",
+      "ts": "2026-06-23T04:31:18.000Z",
+      "title": "Database tooling scope stays inside persistence-jooq utils",
+      "note": "INFRA-2/3/6 must not create a new Gradle module. New low-frequency external database utilities go under infrastructure-component-persistence-jooq/src/main/java/org/carl/infrastructure/persistence/utils using package org.carl.infrastructure.persistence.utils. The scope excludes Quarkus, CDI, JAX-RS, MicroProfile Config, Agroal, ER Tool DTOs, ER Tool exceptions, and ER Tool business error codes."
     }
   ],
   "phases": [

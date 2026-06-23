@@ -25,6 +25,11 @@ publishing {
     }
 }
 dependencies {
+    implementation(platform("com.fasterxml.jackson:jackson-bom:2.18.0"))
+    implementation("com.fasterxml.jackson.core:jackson-databind")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    implementation(libs.jooq)
+
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 }

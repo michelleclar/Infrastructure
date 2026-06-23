@@ -9,8 +9,10 @@ import org.carl.infrastructure.mq.pulsar.config.PulsarConfig;
 import org.carl.infrastructure.pulsar.model.TestUser;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+@Disabled("requires live Pulsar broker")
 public class ProducerTest {
     MQClient client;
 

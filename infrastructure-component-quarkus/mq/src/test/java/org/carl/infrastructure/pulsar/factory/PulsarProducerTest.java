@@ -9,12 +9,14 @@ import org.carl.infrastructure.mq.client.MQClient;
 import org.carl.infrastructure.mq.common.ex.ProducerException;
 import org.carl.infrastructure.mq.producer.IProducer;
 import org.carl.infrastructure.pulsar.model.TestUser;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 
 @QuarkusTest
+@Disabled("requires live Pulsar broker")
 class PulsarProducerTest {
     public static final String TOPIC = "testTopic";
 

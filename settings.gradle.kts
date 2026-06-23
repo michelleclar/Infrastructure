@@ -29,6 +29,8 @@ include("infrastructure-component-dto")
 include("infrastructure-component-log")
 include("infrastructure-component-utils")
 include("infrastructure-component-http")
+include("infrastructure-component-web-api")
+include("infrastructure-component-artifact-storage")
 
 include("infrastructure-component-mq-api")
 include("infrastructure-component-mq-pulsar")

@@ -46,15 +46,18 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
 /**
  * Integration test for workflow archival using real PostgreSQL and Temporal.
  *
- * <p>Requirements:
+ * <p>Opt-in requirements:
  *
  * <ul>
- *   <li>PostgreSQL: jdbc:postgresql://180.184.66.147:31432/db (user: root, password: root)
- *   <li>Temporal: 180.184.66.147:31733
+ *   <li>{@code TEMPORAL_TARGET}: Temporal target, for example {@code localhost:7233}
+ *   <li>{@code DB_URL}: PostgreSQL JDBC URL
+ *   <li>{@code DB_USER}: PostgreSQL user
+ *   <li>{@code DB_PASSWORD}: PostgreSQL password
  * </ul>
  *
  * <p>This test:
@@ -66,13 +69,16 @@ import org.junit.jupiter.api.Timeout;
  *   <li>Verifies the workflow data is persisted to PostgreSQL
  * </ol>
  */
+@EnabledIfEnvironmentVariable(named = "TEMPORAL_TARGET", matches = ".+")
+@EnabledIfEnvironmentVariable(named = "DB_URL", matches = ".+")
+@EnabledIfEnvironmentVariable(named = "DB_USER", matches = ".+")
+@EnabledIfEnvironmentVariable(named = "DB_PASSWORD", matches = ".+")
 class DatabaseArchiveIntegrationTest {
 
-    private static final String TEMPORAL_HOST = "180.184.66.147";
-    private static final int TEMPORAL_PORT = 31733;
-    private static final String DB_URL = "jdbc:postgresql://180.184.66.147:31432/db";
-    private static final String DB_USER = "root";
-    private static final String DB_PASSWORD = "root";
+    private static final String TEMPORAL_TARGET = System.getenv("TEMPORAL_TARGET");
+    private static final String DB_URL = System.getenv("DB_URL");
+    private static final String DB_USER = System.getenv("DB_USER");
+    private static final String DB_PASSWORD = System.getenv("DB_PASSWORD");
 
     private static final String TASK_QUEUE = "DATABASE_ARCHIVE_INTEGRATION_TEST";
 
@@ -145,7 +151,7 @@ class DatabaseArchiveIntegrationTest {
         // Connect to remote Temporal server
         WorkflowServiceStubsOptions serviceOptions =
                 WorkflowServiceStubsOptions.newBuilder()
-                        .setTarget(TEMPORAL_HOST + ":" + TEMPORAL_PORT)
+                        .setTarget(TEMPORAL_TARGET)
                         .build();
 
         service = WorkflowServiceStubs.newInstance(serviceOptions);

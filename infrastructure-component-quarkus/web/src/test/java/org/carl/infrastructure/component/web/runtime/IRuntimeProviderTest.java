@@ -15,8 +15,7 @@ class IRuntimeProviderTest {
     void test() {
         given().contentType("application/json")
                 .when()
-                .headers("Authorization", "adsdddddddaadads")
-                .get("/test")
+                .get("/api/test")
                 .then()
                 .statusCode(200)
                 .extract()

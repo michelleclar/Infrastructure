@@ -18,7 +18,7 @@ class ControllerLoggedInterceptorTest {
         given().contentType("application/json")
                 .body(defualt)
                 .when()
-                .post("/test/logger.base/args")
+                .post("/api/test/logger.base/args")
                 .then()
                 .statusCode(200)
                 .extract()

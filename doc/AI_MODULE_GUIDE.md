@@ -31,6 +31,8 @@ infrastructure-component-quarkus/     # Quarkus 集成模块 — 依赖 Quarkus 
 infrastructure-component-dto/         # 数据传输对象基类（无依赖）
 infrastructure-component-log/         # 统一日志接口（无 Quarkus 依赖）
 infrastructure-component-utils/       # 通用工具类（无 Quarkus 依赖）
+infrastructure-component-web-api/     # Web 响应信封与异常映射 API（无 Quarkus 依赖）
+infrastructure-component-artifact-storage/ # Artifact 存储 API 与本地实现（无 Quarkus 依赖）
 infrastructure-component-persistence-jooq/  # JOOQ 数据库操作（无 Quarkus 依赖）
 infrastructure-component-redis/       # Redis 客户端（无 Quarkus 依赖）
 infrastructure-component-mq-api/      # 消息队列抽象接口（无 Quarkus 依赖）

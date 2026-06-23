@@ -11,11 +11,13 @@ import org.carl.infrastructure.mq.consumer.SubscriptionInitialPosition;
 import org.carl.infrastructure.mq.consumer.SubscriptionMode;
 import org.carl.infrastructure.mq.model.Message;
 import org.carl.infrastructure.pulsar.model.TestUser;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.TimeUnit;
 
 @QuarkusTest
+@Disabled("requires live Pulsar broker")
 class PulsarConsumerTest {
     @Inject MQClient client;
 

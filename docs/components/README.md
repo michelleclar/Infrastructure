@@ -10,6 +10,8 @@
 | `infrastructure-component-log` | 已 include | 统一日志接口与 SLF4J/JBoss 适配 |
 | `infrastructure-component-utils` | 已 include | 字符串、集合、脱敏、DAG 等工具 |
 | `infrastructure-component-http` | 已 include | 独立 HTTP client 抽象与 Apache 实现 |
+| `infrastructure-component-web-api` | 已 include | Web 响应信封、请求 ID、验证错误和异常映射纯 Java API |
+| `infrastructure-component-artifact-storage` | 已 include | 应用中立 artifact 存储 API 与本地文件实现 |
 | `infrastructure-component-mq-api` | 已 include | MQ producer/consumer/client 抽象 |
 | `infrastructure-component-mq-pulsar` | 已 include | Pulsar MQ API 实现 |
 | `infrastructure-component-workflow-core` | 已 include | 纯 Java 工作流定义、DSL、NodeHandler SPI 与图校验 |
@@ -38,6 +40,8 @@
 - [dto](modules/dto.md)
 - [embedding-grpc](modules/embedding-grpc.md)
 - [http](modules/http.md)
+- [web-api](modules/web-api.md)
+- [artifact-storage](modules/artifact-storage.md)
 - [log](modules/log.md)
 - [mq-api](modules/mq-api.md)
 - [mq-pulsar](modules/mq-pulsar.md)

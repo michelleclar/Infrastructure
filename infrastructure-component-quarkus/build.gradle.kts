@@ -42,6 +42,7 @@ subprojects {
     tasks.withType<Test>().configureEach {
         useJUnitPlatform()
         systemProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager")
+        systemProperty("quarkus.http.test-port", "0")
     }
     val libs = rootProject.libs
     dependencies {
