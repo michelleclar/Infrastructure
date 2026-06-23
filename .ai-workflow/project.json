@@ -1068,6 +1068,41 @@
         "INFRA-6"
       ],
       "context": "Review the new org.carl.infrastructure.persistence.utils API surface, exact identifier handling, executor lifecycle/timeout cleanup, metadata catalog/schema fallback, and DDL parser/generator MVP coverage."
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-06-23T12:48:54.000Z",
+      "platform": "github",
+      "agentName": "aw-work",
+      "role": "dev",
+      "event": "pull_request.created",
+      "ref": "https://github.com/michelleclar/Infrastructure/pull/12",
+      "branch": "codex/infra-database-utils",
+      "base": "main",
+      "headSha": "64917fad9e24bd17f173706eb257f1d5382f116b",
+      "draft": true
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-06-23T12:48:54.000Z",
+      "platform": "youtrack",
+      "agentName": "aw-work",
+      "role": "dev",
+      "event": "issues.transitioned",
+      "refs": [
+        "INFRA-2",
+        "INFRA-3",
+        "INFRA-6"
+      ],
+      "from": "In Progress",
+      "to": "Awaiting Review",
+      "comments": [
+        "7-140",
+        "7-141",
+        "7-142"
+      ],
+      "pullRequest": "https://github.com/michelleclar/Infrastructure/pull/12",
+      "implementationCommit": "64917fa"
     }
   ],
   "phases": [
