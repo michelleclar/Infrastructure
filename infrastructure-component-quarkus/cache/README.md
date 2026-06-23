@@ -30,12 +30,12 @@ dependencies {
 `CacheService` bean 受编译期属性控制，**默认不激活**，需在 `application.properties` 中显式开启：
 
 ```properties
-quarkus.cache.enable=true
+quarkus.plugins.cache.enable=true
 ```
 
 | 属性 | 类型 | 说明 |
 |------|------|------|
-| `quarkus.cache.enable` | `String` | 设为 `"true"` 时才会将 `CacheService` 注册为 CDI bean |
+| `quarkus.plugins.cache.enable` | `String` | 设为 `"true"` 时才会将 `CacheService` 注册为 CDI bean |
 
 > 这是 `@IfBuildProperty` 构建时开关，**更改后需重新编译**，运行期修改无效。
 
@@ -131,7 +131,7 @@ Uni<Boolean> setExpireAfterWrite(String key, long seconds, Object value)
 
 | 配置键 | 来源 | 说明 |
 |--------|------|------|
-| `quarkus.cache.enable` | `CacheService` `@IfBuildProperty` | 构建时开关，设为 `"true"` 激活 `CacheService` bean |
+| `quarkus.plugins.cache.enable` | `CacheService` `@IfBuildProperty` | 构建时开关，设为 `"true"` 激活 `CacheService` bean |
 | `quarkus.application.name` | `CacheContextProvider` `@ConfigProperty` | Redis key 的应用名前缀，最终拼成 `<prefix>:<key>` |
 
 > **前缀注入路径**：`RemoteCacheContext` 通过 `new` 构造、不是 CDI bean，因此 `prefix`
@@ -218,5 +218,5 @@ public class SessionService extends CacheStd implements ICacheOperations {
 4. **`ICacheOperations` 当前无方法**：该接口目前是空标记接口，具体操作通过
    `getCacheContext().localCacheContext` 和 `getCacheContext().remoteCacheContext` 直接访问。
 
-5. **构建开关变更须重新编译**：`quarkus.cache.enable=true` 是 `@IfBuildProperty` 构建期属性，
+5. **构建开关变更须重新编译**：`quarkus.plugins.cache.enable=true` 是 `@IfBuildProperty` 构建期属性，
    运行时动态修改无效。
