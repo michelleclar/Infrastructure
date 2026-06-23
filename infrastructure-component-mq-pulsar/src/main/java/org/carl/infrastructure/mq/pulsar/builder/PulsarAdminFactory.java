@@ -4,24 +4,24 @@ import org.apache.pulsar.client.api.AuthenticationFactory;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.client.admin.PulsarAdmin;
 import org.apache.pulsar.client.admin.PulsarAdminBuilder;
+import org.carl.infrastructure.logging.ILogger;
+import org.carl.infrastructure.logging.LoggerFactory;
 import org.carl.infrastructure.mq.common.ex.MQClientException;
 import org.carl.infrastructure.mq.config.MQConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
 /**
- * 构建 PulsarAdmin（HTTP 管理 API），仅用于 Reader 的 {@code topicsPattern} 解析。
+ * 构建 PulsarAdmin（HTTP 管理 API），用于 Reader 的 {@code topicsPattern} 解析和 Source 生命周期管理。
  *
  * <p>认证与 TLS 配置与 {@link PulsarClientFactory} 中的 PulsarClient 保持一致。
  * 当 {@link MQConfig.ClientConfig#adminUrl()} 未配置时返回 {@link Optional#empty()}，
  * 此时使用 {@code topicsPattern} 的 Reader 会在创建阶段抛出
  * {@link org.carl.infrastructure.mq.common.ex.ReaderException}。
  */
-final class PulsarAdminFactory {
+public final class PulsarAdminFactory {
 
-    private static final Logger logger = LoggerFactory.getLogger(PulsarAdminFactory.class);
+    private static final ILogger logger = LoggerFactory.getLogger(PulsarAdminFactory.class);
 
     private PulsarAdminFactory() {}
 
@@ -32,7 +32,7 @@ final class PulsarAdminFactory {
      * @return 已构建的 PulsarAdmin，或 empty
      * @throws MQClientException 构建失败
      */
-    static Optional<PulsarAdmin> create(MQConfig.ClientConfig clientConfig) throws MQClientException {
+    public static Optional<PulsarAdmin> create(MQConfig.ClientConfig clientConfig) throws MQClientException {
         if (clientConfig.adminUrl().isEmpty()) {
             return Optional.empty();
         }
