@@ -322,9 +322,9 @@ public final class NeutralDdlUtils {
         for (CheckConstraint check : table.checkConstraints()) {
             String prefix =
                     isBlank(check.name())
-                            ? "check"
-                            : "constraint " + quote(kind, check.name()) + " check";
-            lines.add(prefix + " (" + check.definition() + ")");
+                            ? ""
+                            : "constraint " + quote(kind, check.name()) + " ";
+            lines.add(prefix + renderCheckDefinition(check.definition()));
         }
         ddl.append(String.join(",\n", lines));
         ddl.append("\n)");
@@ -365,6 +365,14 @@ public final class NeutralDdlUtils {
             return rawType + "(" + type.precision() + ")";
         }
         return rawType + "(" + type.precision() + "," + type.scale() + ")";
+    }
+
+    private static String renderCheckDefinition(String definition) {
+        String trimmed = definition.trim();
+        if (trimmed.toLowerCase(Locale.ROOT).startsWith("check")) {
+            return trimmed;
+        }
+        return "check (" + trimmed + ")";
     }
 
     private static void appendComments(

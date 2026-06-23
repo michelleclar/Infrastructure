@@ -265,8 +265,8 @@ public final class ExternalDatabaseMetadataReader {
             Integer precision = readInt(rs, "COLUMN_SIZE");
             Integer scale = readInt(rs, "DECIMAL_DIGITS");
             boolean nullable = rs.getInt("NULLABLE") == DatabaseMetaData.columnNullable;
-            boolean generated = "YES".equals(rs.getString("IS_GENERATEDCOLUMN"));
-            boolean autoIncrement = "YES".equals(rs.getString("IS_AUTOINCREMENT"));
+            boolean generated = "YES".equalsIgnoreCase(rs.getString("IS_GENERATEDCOLUMN"));
+            boolean autoIncrement = "YES".equalsIgnoreCase(rs.getString("IS_AUTOINCREMENT"));
             String defaultValue = rs.getString("COLUMN_DEF");
             NormalizedColumnType type =
                     new NormalizedColumnType(

@@ -133,6 +133,8 @@ class NeutralDdlUtilsTest {
         assertNotNull(result.database());
         assertTrue(result.ddl().contains("create table \"CamelSchema\".\"OrderLine\""));
         assertTrue(result.ddl().contains("create index \"IX_OrderLine_UserID\""));
+        assertTrue(result.ddl().contains("constraint \"CK_OrderLine_ID\" CHECK (\"ID\" > 0)"));
+        assertFalse(result.ddl().contains("check (CHECK"));
     }
 
     @Test
@@ -247,6 +249,6 @@ class NeutralDdlUtilsTest {
                 new PrimaryKeyInfo("PK_OrderLine", List.of("ID")),
                 List.of(),
                 List.of(new IndexInfo("IX_OrderLine_UserID", false, List.of(new IndexColumnInfo("UserID", 1, "A", null)))),
-                List.of());
+                List.of(new DatabaseMetadataSnapshot.CheckConstraintInfo("CK_OrderLine_ID", "CHECK (\"ID\" > 0)")));
     }
 }
