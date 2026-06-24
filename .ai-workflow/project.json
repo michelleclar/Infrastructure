@@ -1304,6 +1304,91 @@
           "INFRA-37"
         ]
       }
+    },
+    {
+      "type": "Evidence",
+      "ts": "2026-06-24T00:30:00.000Z",
+      "platform": "github",
+      "agentName": "aw-work",
+      "role": "review",
+      "workItemIds": [
+        "INFRA-36",
+        "INFRA-37"
+      ],
+      "verdict": "PASS",
+      "method": "3-dimension parallel review (jooq-templates, pulsar-source-admin, debezium-cdc) with adversarial verification of every finding (20 agents).",
+      "blocking": 0,
+      "affirmed": [
+        "jOOQ optimistic-lock: version match in WHERE + increment in SET; affectedRows==0 -> conflict(); soft-delete deleted_at IS NULL; jOOQ DSL API-correct; stateless/thread-safe.",
+        "Pulsar source admin: lifecycle dispatch (file/url, source/instance) correct; config/status mapping faithful with null guards; PulsarAdminFactory visibility/logger change correct + non-breaking.",
+        "Debezium: op-code mapping, MySQL/PostgreSQL source-metadata extraction, null-scalar and timestamp-fallback handling correct and tested."
+      ],
+      "nonBlockingFollowups": [
+        "INFRA-36: withVersionCheckAndIncrement re-sets version (double SET if caller pre-assigns); incrementedVersion accepts any Number (type foot-gun); no pure version-check-without-base-condition overload.",
+        "INFRA-37: coarse exception wrapping (404 not-found indistinguishable; path untested); Debezium tombstone/null-record unhandled (NPE/generic IAE) and before/after row extraction not yet implemented."
+      ]
+    },
+    {
+      "type": "Evidence",
+      "ts": "2026-06-24T00:30:00.000Z",
+      "platform": "youtrack",
+      "agentName": "aw-work",
+      "role": "test",
+      "workItemIds": [
+        "INFRA-36",
+        "INFRA-37"
+      ],
+      "verdict": "PASS",
+      "branch": "codex/infra-mq-source-jooq-templates",
+      "tests": {
+        "PersistenceTemplatesTest": "4/4",
+        "DebeziumEnvelopeParserTest": "4/4",
+        "PulsarSourceAdminTest": "5/5",
+        "failures": 0
+      },
+      "note": "Re-run on the actual PR branch (an earlier run on main did not include the unmerged code; corrected)."
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-06-24T00:33:13.000Z",
+      "platform": "github",
+      "agentName": "aw-work",
+      "event": "pull_request.merged",
+      "ref": "https://github.com/michelleclar/Infrastructure/pull/13",
+      "method": "rebase",
+      "mergeCommit": "dc2f58a",
+      "branchDeleted": "codex/infra-mq-source-jooq-templates"
+    },
+    {
+      "type": "PlatformEvent",
+      "ts": "2026-06-24T00:33:30.000Z",
+      "platform": "youtrack",
+      "agentName": "aw-work",
+      "event": "issues.transitioned",
+      "refs": [
+        "INFRA-36",
+        "INFRA-37"
+      ],
+      "from": "Awaiting Review",
+      "to": "Fixed",
+      "note": "Review PASS (0 blocking) + Test PASS + merged to main (dc2f58a). Standalone tasks with no phase-acceptance parent; Fixed is terminal."
+    },
+    {
+      "type": "Decision",
+      "ts": "2026-06-24T00:35:00.000Z",
+      "platform": "local",
+      "agentName": "aw-work",
+      "title": "Tick: INFRA-36/37 reviewed, merged (Fixed)",
+      "decision": "INFRA-36/37 (PR #13) passed a fan-out review with adversarial verification (0 blocking) and fresh tests on the PR branch (4/4, 4/4, 5/5) -> rebase-merged into main (dc2f58a) -> Fixed, per user instruction to merge on green tests.",
+      "rationale": "User authorized self-merge if tests pass. Review surfaced only non-blocking follow-ups (recorded on INFRA-36/37 comments + Evidence). No phase-acceptance parent, so Fixed is terminal.",
+      "refs": {
+        "merged": "https://github.com/michelleclar/Infrastructure/pull/13",
+        "mergeCommit": "dc2f58a",
+        "fixed": [
+          "INFRA-36",
+          "INFRA-37"
+        ]
+      }
     }
   ],
   "phases": [
