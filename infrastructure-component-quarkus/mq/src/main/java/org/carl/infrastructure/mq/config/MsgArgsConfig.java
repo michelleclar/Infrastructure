@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Pulsar MQ 配置参数
+ * Kafka MQ 配置参数
  *
  * <p>该接口用于将 Quarkus 配置系统中的 application.yaml / properties 绑定为 {@link MQConfig} 的具体实现。
  *
@@ -60,7 +60,7 @@ public interface MsgArgsConfig extends MQConfig {
     interface ClientConfig extends MQConfig.ClientConfig {
 
         /** {@inheritDoc} */
-        @WithDefault("pulsar://localhost:6650")
+        @WithDefault("localhost:9092")
         @WithName("service-url")
         String serviceUrl();
 
@@ -259,7 +259,7 @@ public interface MsgArgsConfig extends MQConfig {
         Duration batchReceiveTimeout();
 
         /** {@inheritDoc} */
-        @WithDefault("LATEST")
+        @WithDefault("Latest")
         @WithName("subscription-initial-position")
         SubscriptionInitialPosition subscriptionInitialPosition();
 
@@ -273,7 +273,7 @@ public interface MsgArgsConfig extends MQConfig {
         boolean readCompacted();
 
         /** {@inheritDoc} */
-        @WithDefault("Exclusive")
+        @WithDefault("EXCLUSIVE")
         @WithName("subscription-type")
         SubscriptionType subscriptionType();
     }
@@ -286,7 +286,7 @@ public interface MsgArgsConfig extends MQConfig {
         boolean enabled();
 
         /** {@inheritDoc} */
-        @WithDefault("persistent://pulsar/system/transaction_coordinator_assign")
+        @WithDefault("transaction-coordinator")
         @WithName("coordinator-topic")
         String coordinatorTopic();
 

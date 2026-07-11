@@ -6,9 +6,9 @@ import jakarta.inject.Inject;
 
 import org.carl.infrastructure.mq.client.MQClient;
 import org.carl.infrastructure.mq.common.ex.MQClientException;
-import org.carl.infrastructure.mq.pulsar.builder.MQClientBuilder;
+import org.carl.infrastructure.mq.kafka.builder.MQClientBuilder;
 
-public class PulsarClientProvide {
+public class KafkaClientProvider {
 
     @Inject MsgArgsConfig msgArgsConfig;
 

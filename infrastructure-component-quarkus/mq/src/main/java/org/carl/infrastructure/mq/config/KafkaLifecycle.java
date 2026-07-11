@@ -13,12 +13,12 @@ import org.carl.infrastructure.mq.client.MQClient;
 import org.carl.infrastructure.mq.common.ex.MQClientException;
 
 @ApplicationScoped
-public class PulsarLifecycle {
+public class KafkaLifecycle {
     @Inject MQClient mqClient;
-    private static final ILogger log = LoggerFactory.getLogger(PulsarLifecycle.class);
+    private static final ILogger log = LoggerFactory.getLogger(KafkaLifecycle.class);
 
     void onStart(@Observes StartupEvent ev) {
-        log.debug("MQ client has been started successfully");
+        log.debug("Kafka MQ client has been started successfully");
     }
 
     void onStop(@Observes ShutdownEvent ev) throws MQClientException {
