@@ -34,6 +34,7 @@ include("infrastructure-component-artifact-storage")
 
 include("infrastructure-component-mq-api")
 include("infrastructure-component-mq-pulsar")
+include("infrastructure-component-mq-kafka")
 
 include("infrastructure-component-workflow-core")
 include("infrastructure-component-workflow-temporal")
