@@ -37,8 +37,6 @@ MQClientBuilder.createClient(MQConfig)
 MQClientBuilder.createClient(MQConfig, OpenTelemetry)
 ```
 
-已创建的 `MQClient` 实例由 `ResourcesManager` 以名称为键管理（`config.name()` 有值时用配置名，否则随机 UUID）。
-
 ---
 
 ## 配置
@@ -239,10 +237,6 @@ consumer.close();
 ```java
 // 释放所有 Producer/Consumer 后关闭 Client
 client.close();
-
-// 或一次性关闭由 ResourcesManager 管理的所有客户端
-import org.carl.infrastructure.mq.pulsar.config.ResourcesManager;
-ResourcesManager.closeAll();
 ```
 
 ---
@@ -273,4 +267,3 @@ org.carl.infrastructure.mq.model.MessageBuilder<T>
 - **autoAck 行为**：`IConsumerBuilder.autoAck(true)` 会在 `MessageListener.received` 正常返回后自动 Ack，异常时自动 nack；默认为 `false`，需在 Listener 内手动调用 `consumer.acknowledge(msg)` / `consumer.negativeAcknowledge(msg)`。
 - **TLS**：serviceUrl 改为 `pulsar+ssl://` 前缀后，TLS 参数（`allowInsecureConnection`、`enableHostnameVerification`、`trustCertsFilePath`）才生效；`PulsarTlsConfig.enabled` 字段本身不触发 TLS，协议前缀才是判断依据（见 `PulsarClientFactory`）。
 - **配置校验**：可在创建客户端前调用 `PulsarConfigValidator.validate(config)` 对配置进行预检，违规配置会打印 warning/error 并在有硬错误时抛 `IllegalArgumentException`。
-- **资源管理**：`ResourcesManager` 以名称为键维护所有已建 `MQClient`，可通过 `ResourcesManager.get(name)` 复用已有实例，`ResourcesManager.remove(name)` 会同时关闭对应 Client。

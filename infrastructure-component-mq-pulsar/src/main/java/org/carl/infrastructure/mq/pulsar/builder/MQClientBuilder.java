@@ -11,10 +11,6 @@ import org.carl.infrastructure.logging.LoggerFactory;
 import org.carl.infrastructure.mq.client.MQClient;
 import org.carl.infrastructure.mq.common.ex.MQClientException;
 import org.carl.infrastructure.mq.config.MQConfig;
-import org.carl.infrastructure.mq.pulsar.config.ResourcesManager;
-
-import java.util.UUID;
-
 public class MQClientBuilder {
 
     private static final ILogger logger = LoggerFactory.getLogger(MQClientBuilder.class);
@@ -41,12 +37,8 @@ public class MQClientBuilder {
         try {
             PulsarClient pulsarClient = build.build();
             PulsarAdmin pulsarAdmin = PulsarAdminFactory.create(config.client()).orElse(null);
-            PulsarMQClient pulsarMQClient =
-                    new PulsarMQClient(pulsarClient, config.producer(), config.consumer(), pulsarAdmin);
-            ResourcesManager.add(
-                    config.name().isEmpty() ? UUID.randomUUID().toString() : config.name().get(),
-                    pulsarMQClient);
-            return pulsarMQClient;
+            return new PulsarMQClient(
+                    pulsarClient, config.producer(), config.consumer(), pulsarAdmin);
         } catch (PulsarClientException e) {
             throw new MQClientException(e);
         }
@@ -73,12 +65,8 @@ public class MQClientBuilder {
         try {
             PulsarClient pulsarClient = build.build();
             PulsarAdmin pulsarAdmin = PulsarAdminFactory.create(config.client()).orElse(null);
-            PulsarMQClient pulsarMQClient =
-                    new PulsarMQClient(pulsarClient, config.producer(), config.consumer(), pulsarAdmin);
-            ResourcesManager.add(
-                    config.name().isEmpty() ? UUID.randomUUID().toString() : config.name().get(),
-                    pulsarMQClient);
-            return pulsarMQClient;
+            return new PulsarMQClient(
+                    pulsarClient, config.producer(), config.consumer(), pulsarAdmin);
         } catch (PulsarClientException e) {
             throw new MQClientException(e);
         }

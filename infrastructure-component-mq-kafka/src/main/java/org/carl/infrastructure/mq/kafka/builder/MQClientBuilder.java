@@ -5,10 +5,6 @@ import org.carl.infrastructure.logging.LoggerFactory;
 import org.carl.infrastructure.mq.client.MQClient;
 import org.carl.infrastructure.mq.common.ex.MQClientException;
 import org.carl.infrastructure.mq.config.MQConfig;
-import org.carl.infrastructure.mq.kafka.config.ResourcesManager;
-
-import java.util.UUID;
-
 public class MQClientBuilder {
 
     private static final ILogger logger = LoggerFactory.getLogger(MQClientBuilder.class);
@@ -20,10 +16,6 @@ public class MQClientBuilder {
                 config.transaction(),
                 config.monitoring());
 
-        KafkaMQClient kafkaMQClient = new KafkaMQClient(config);
-        ResourcesManager.add(
-                config.name().isEmpty() ? UUID.randomUUID().toString() : config.name().get(),
-                kafkaMQClient);
-        return kafkaMQClient;
+        return new KafkaMQClient(config);
     }
 }
