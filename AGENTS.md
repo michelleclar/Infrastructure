@@ -22,7 +22,6 @@
 | Quarkus | discover | Consul + Stork 服务发现 |
 | Quarkus | workflow | Temporal 工作流编排 |
 | Quarkus | metrics | OpenTelemetry 监控 |
-| Quarkus | broadcast | Vert.x 事件总线 |
 | Quarkus | search | Elasticsearch 全文搜索 |
 | 独立库 | dto | Command/Query/Response/PageQuery 基类 |
 | 独立库 | log | 统一日志接口（自动适配 SLF4J/JBoss） |
@@ -63,7 +62,7 @@ Redis/DB 集成测试需要本地服务；环境变量 `JDBC_URL`、`JDBC_USER`�
 
 - `IPersistenceAbility` — 提供对 `IPersistenceOperations` 的访问
 - `IMetadataAbility extends IPersistenceAbility` — 增加 schema 内省（getMainTable、getPK 等）
-- `ILogAbility`、`ISearchAbility`、`IBroadcastAbility` 等同理
+- `ILogAbility`、`ISearchAbility` 等同理
 
 在 context/service 类上实现这些接口，而不是直接依赖注入。
 

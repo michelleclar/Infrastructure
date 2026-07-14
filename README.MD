@@ -19,10 +19,7 @@
 | discover      | 服务发现与负载均衡               | consul, consul-stork                    |
 | workflow      | 工作流编排与执行                | quarkus-temporal                        |
 | metrics       | 应用监控与指标采集               | quarkus-opentelemetry                   |
-| broadcast     | 消息广播与事件总线               | quarkus-vertx                           |
 | search        | 全文搜索                    | quarkus-elasticsearch                   |
-| approval      | 审批流程                    | —                                       |
-| user          | 用户管理                    | —                                       |
 
 ### 独立库模块（无 Quarkus 依赖）
 
@@ -40,7 +37,6 @@
 | pdp              | 策略决策点                                      | 无                           |
 | qdrant-grpc      | Qdrant 向量数据库 gRPC 客户端                      | gRPC                        |
 | embedding-grpc   | Embedding 服务 gRPC 客户端                      | gRPC                        |
-| audit            | 审计日志                                       | —                           |
 
 ---
 
@@ -56,10 +52,7 @@
 - [x] discover
 - [x] workflow
 - [x] metrics
-- [ ] broadcast
 - [ ] search
-- [ ] approval
-- [ ] user
 
 **独立库**
 
@@ -75,7 +68,6 @@
 - [ ] pdp
 - [ ] qdrant-grpc
 - [ ] embedding-grpc
-- [ ] audit
 
 ---
 

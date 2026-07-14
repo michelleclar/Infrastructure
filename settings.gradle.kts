@@ -8,17 +8,13 @@ pluginManagement {
 rootProject.name = "infrastructure"
 //quarkus module
 include("infrastructure-component-quarkus")
-include("infrastructure-component-quarkus:approval")
 include("infrastructure-component-quarkus:mq")
 include("infrastructure-component-quarkus:web")
-include("infrastructure-component-quarkus:user")
 include("infrastructure-component-quarkus:cache")
 include("infrastructure-component-quarkus:search")
 include("infrastructure-component-quarkus:metrics")
 include("infrastructure-component-quarkus:workflow")
 include("infrastructure-component-quarkus:discover")
-include("infrastructure-component-quarkus:broadcast")
-include("infrastructure-component-quarkus:audit")
 include("infrastructure-component-quarkus:persistence")
 include("infrastructure-component-quarkus:authorization")
 include("infrastructure-component-qdrant-grpc")
@@ -41,10 +37,8 @@ include("infrastructure-component-workflow-temporal")
 
 include("infrastructure-component-persistence-jooq")
 include("infrastructure-component-rule-engine")
-include("infrastructure-component-pdp")
 include("infrastructure-component-statemachine")
 include("infrastructure-component-redis")
-// infrastructure-component-audit moved to infrastructure-component-quarkus:audit
 
 // 平台/版本收口 BOM（java-platform）
 include("infrastructure-bom")

@@ -5,7 +5,6 @@ testcontainers = "1.20.4"
 [libraries]
 quarkus-platform-bom = { module = "io.quarkus.platform:quarkus-bom", version.ref = "quarkus" }
 infrastructure-component-authorization = { module = "org.carl:infrastructure-component-authorization", version.ref = "carl" }
-infrastructure-component-broadcast = { module = "org.carl:infrastructure-component-broadcast", version.ref = "carl" }
 infrastructure-component-cache = { module = "org.carl:infrastructure-component-cache", version.ref = "carl" }
 infrastructure-component-quarkus-persistence = { module = "org.carl:infrastructure-component-quarkus-persistence", version.ref = "carl" }
 infrastructure-component-persistence-jooq = { module = "org.carl:infrastructure-component-persistence-jooq", version.ref = "carl" }
@@ -31,7 +30,6 @@ assured = { module = "io.rest-assured:rest-assured", version.ref = "quarkus" }
 [bundles]
 all = [
     'infrastructure-component-authorization',
-    'infrastructure-component-broadcast',
     'infrastructure-component-cache',
     'infrastructure-component-quarkus-persistence',
     'infrastructure-component-search',

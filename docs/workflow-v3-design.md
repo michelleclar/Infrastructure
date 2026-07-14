@@ -855,7 +855,6 @@ assert result.nodeResults().get("approvals").outcome().equals("APPROVED");
 | Spring / Spring Expression Language (SpEL) | 不希望强制业务捆绑 Spring；Jakarta EL 是 JSR 标准 |
 | `infrastructure-component-statemachine` | V1 历史选型，V3 直接基于 Temporal 自带状态机能力；引入会让模块依赖图复杂化 |
 | `infrastructure-component-rule-engine` | rule-engine 的 `Condition<Facts>` 只解决"运行时执行"，不解决字符串表达式解析；用 Jakarta EL 一站解决 |
-| `infrastructure-component-pdp` | PDP 是授权决策（subject/action/resource），跟流程条件评估不是同类问题 |
 | MVEL / JEXL / OGNL / 其它 EL 实现 | Jakarta EL 是 JSR-341 标准，生态最稳；其他实现增加学习成本 |
 
 如未来要重新评估，必须给出"Jakarta EL 不够用"或"已捆绑 Spring 栈反正都要带"的具体证据。

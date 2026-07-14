@@ -40,7 +40,6 @@
 - 将权限接口、领域模型和判断契约迁入 core。
 - 将当前 `UserIdentity` 拆成 core 普通实现和 Quarkus `SecurityIdentity` adapter。
 - 将 FGA/PDP provider 与配置读取留在 Quarkus adapter，或拆成独立 PDP 实现模块。
-- 调整 `user` 模块依赖 core 授权接口，而不是反向耦合 authorization adapter 细节。
 - 增加权限匹配、模块权限和资源权限的 core 单元测试。
 
 ## 验收标准

@@ -18,7 +18,7 @@
 - core 模块可以依赖明确的业务或中间件 SDK，例如 jOOQ、Elasticsearch Java Client、Pulsar Client、Temporal SDK，但不能依赖 Quarkus 对这些 SDK 的封装。
 - Quarkus adapter 负责把 core 能力注册成可注入 Bean，并处理配置、生命周期、事务边界和 Web 暴露。
 - adapter 可以依赖 core，core 不得反向依赖 adapter。
-- 能力接口优先放在 core，例如 `ISearchAbility`、`IAuditAbility`、`IUserIdentity`。只有确实绑定 Quarkus 上下文的接口才留在 adapter。
+- 能力接口优先放在 core，例如 `ISearchAbility`、`IUserIdentity`。只有确实绑定 Quarkus 上下文的接口才留在 adapter。
 - 生成代码仍然遵循现有规则：`src/main/gen/` 禁止手动编辑。
 
 core 层禁用依赖包前缀：
@@ -52,23 +52,19 @@ apply(plugin = "io.quarkus")
 | 优先级 | 模块 | 原因 |
 |--------|------|------|
 | P0 | Quarkus 构建脚本 | 先解除插件无差别 apply，避免 core 模块被 Quarkus 污染 |
-| P1 | `search`、`approval`、`authorization` | 当前混合了较多核心模型、服务或 SDK 封装，拆分收益最高 |
-| P2 | `workflow`、`cache`、`audit` | 已有部分独立能力或可复用模型，需要整理边界 |
-| P3 | `mq`、`persistence`、`discover`、`broadcast`、`web`、`user`、`metrics` | 大体是 adapter 职责，重点做边界确认和少量下沉 |
+| P1 | `search`、`authorization` | 当前混合了较多核心模型、服务或 SDK 封装，拆分收益最高 |
+| P2 | `workflow`、`cache` | 已有部分独立能力或可复用模型，需要整理边界 |
+| P3 | `mq`、`persistence`、`discover`、`web`、`metrics` | 大体是 adapter 职责，重点做边界确认和少量下沉 |
 
 ## 模块说明
 
-- [approval](modules/approval.md)
-- [audit](modules/audit.md)
 - [authorization](modules/authorization.md)
-- [broadcast](modules/broadcast.md)
 - [cache](modules/cache.md)
 - [discover](modules/discover.md)
 - [metrics](modules/metrics.md)
 - [mq](modules/mq.md)
 - [persistence](modules/persistence.md)
 - [search](modules/search.md)
-- [user](modules/user.md)
 - [web](modules/web.md)
 - [workflow](modules/workflow.md)
 

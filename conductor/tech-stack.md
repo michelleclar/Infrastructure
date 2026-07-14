@@ -63,7 +63,6 @@ Quarkus BOM is used as the enforced platform for all dependency versions within 
 | Protocol | OIDC |
 | Provider | Keycloak |
 | Integration | `quarkus-oidc`, `quarkus-keycloak` (`infrastructure-component-quarkus/authorization`) |
-| Policy | `infrastructure-component-pdp` (standalone Policy Decision Point) |
 
 ## Workflow & State
 

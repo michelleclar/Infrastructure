@@ -23,10 +23,7 @@ infrastructure-component-quarkus/     # Quarkus 集成模块 — 依赖 Quarkus 
  ├── discover/                        # 服务发现
  ├── workflow/                        # 工作流 (Temporal)
  ├── metrics/                         # 监控 (OpenTelemetry)
- ├── broadcast/                       # 消息广播
- ├── search/                          # 全文搜索
- ├── approval/                        # 审批流程
- └── user/                            # 用户管理
+ └── search/                          # 全文搜索
 
 infrastructure-component-dto/         # 数据传输对象基类（无依赖）
 infrastructure-component-log/         # 统一日志接口（无 Quarkus 依赖）
@@ -39,10 +36,8 @@ infrastructure-component-mq-api/      # 消息队列抽象接口（无 Quarkus �
 infrastructure-component-mq-pulsar/   # Pulsar 实现（无 Quarkus 依赖）
 infrastructure-component-statemachine/ # 状态机（无依赖）
 infrastructure-component-rule-engine/ # 规则引擎（无依赖）
-infrastructure-component-pdp/         # 策略决策点（无依赖）
 infrastructure-component-qdrant-grpc/ # Qdrant 向量库 gRPC
 infrastructure-component-embedding-grpc/ # Embedding gRPC
-infrastructure-component-audit/       # 审计日志
 ```
 
 > **重要**: 独立库模块**不依赖 Quarkus**，可在任意 Java 项目中使用。
@@ -651,33 +646,6 @@ public interface ITransactionalWorkflow {
 
 ---
 
-### Broadcast — 消息广播（Vert.x EventBus）
-
-**包**: `org.carl.infrastructure.broadcast`
-**依赖**: quarkus-vertx
-**启用**: `quarkus.message.enable=true`
-
-```java
-@Inject
-BroadcastService broadcast;
-
-// 发布（单向）
-broadcast.publish("user.created", userData);
-
-// 请求-响应
-Uni<UserDto> result = broadcast.request("user.fetch", userId, UserDto.class);
-
-// 订阅
-broadcast.subscribe("user.created", UserData.class, data -> {
-    // 处理事件
-});
-
-// 取消订阅
-broadcast.unsubscribe("user.created");
-```
-
----
-
 ### Search — 全文搜索（Elasticsearch）
 
 **包**: `org.carl.infrastructure.search`
@@ -701,65 +669,6 @@ List<User> results = new Search(client, new SearchRequest.Builder())
     .index("users")
     .query(q -> q.term(t -> t.field("status").value("active")))
     .fetchOf(User.class);
-```
-
----
-
-### Approval — 审批流程
-
-**包**: `org.carl.infrastructure.approval`
-
-```java
-@Inject
-ApprovalService approvalService;
-
-// 发起审批
-List<ApprovalNode> nodes = List.of(
-    new ApprovalNode("step1", "manager1"),
-    new ApprovalNode("step2", "director")
-);
-long instanceId = approvalService.startProcess("biz-key-123", nodes);
-
-// 审批通过
-approvalService.approveTask(taskId, "同意");
-
-// 驳回到上一步
-approvalService.backTask(taskId, "需要修改");
-
-// 转交他人
-approvalService.transferTask(taskId, "manager2", "请代为处理");
-
-// 查询待办/已办
-List<ApprovalTask> todo = approvalService.listTodo();
-List<ApprovalDoneItem> done = approvalService.listDone();
-```
-
-审批状态：`IN_PROGRESS`、`APPROVED`、`REJECTED`
-任务状态：`PENDING`、`DONE`、`BACKED`
-
----
-
-### User — 用户管理（Keycloak）
-
-**包**: `org.carl.infrastructure.user`
-**依赖**: quarkus-oidc, quarkus-keycloak
-
-Keycloak 实现了 `AuthProvider`，并缓存用户身份：
-
-```java
-@Inject
-KeycloakAuthProvider authProvider;
-
-// 获取当前用户
-IUserIdentity identity = authProvider.getIdentity();
-boolean isAdmin = identity.hasRole("admin");
-Map<String, Set<Permission>> perms = identity.getPermissions();
-
-// 模块级鉴权
-@Inject
-UserAuthorizationService authService;
-
-boolean canCreate = authService.check(OrderPermission.CREATE);
 ```
 
 ---
@@ -801,7 +710,6 @@ consumer.acknowledge(msg);
 |------|----------|
 | persistence | `quarkus.plugins.persistence.enable=true` |
 | cache | `quarkus.cache.enable=true` |
-| broadcast | `quarkus.message.enable=true` |
 | 其余模块 | 默认启用（无需配置） |
 
 ---
