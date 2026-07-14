@@ -156,6 +156,32 @@ class PersistenceContextAsyncTest {
         }
     }
 
+    @Test
+    void transactionCommitsAllStatementsAndReturnsResult() {
+        int count = context.transactionResult(tx -> {
+            tx.query("insert into %s.book (title, author) values ('Transaction Book', 'Transaction Author')"
+                    .formatted(schemaName)).execute();
+            return tx.fetchOne("select count(*) from %s.book where title = 'Transaction Book'"
+                    .formatted(schemaName)).get(0, Integer.class);
+        });
+
+        assertEquals(1, count);
+    }
+
+    @Test
+    void transactionRollsBackWhenCallbackFails() {
+        assertThrows(RuntimeException.class, () -> context.transaction(tx -> {
+            tx.query("insert into %s.book (title, author) values ('Rollback Book', 'Rollback Author')"
+                    .formatted(schemaName)).execute();
+            throw new IllegalStateException("rollback transaction");
+        }));
+
+        int count = context.get(dsl -> dsl.fetchOne(
+                "select count(*) from %s.book where title = 'Rollback Book'".formatted(schemaName))
+                .get(0, Integer.class));
+        assertEquals(0, count);
+    }
+
     private void execute(String... sqlStatements) throws Exception {
         try (Connection connection = DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPassword);
              Statement statement = connection.createStatement()) {

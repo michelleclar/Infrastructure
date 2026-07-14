@@ -32,6 +32,7 @@ dependencies {
 |---|---|
 | `io.quarkus:quarkus-jdbc-postgresql` | PostgreSQL JDBC 驱动（Quarkus 集成） |
 | `io.quarkus:quarkus-agroal` | Quarkus Agroal 连接池，提供 `AgroalDataSource` CDI bean |
+| `io.quarkus:quarkus-flyway` | Flyway 数据库迁移扩展；迁移默认不在启动时执行 |
 | `infrastructure-component-persistence-jooq`（`api`） | jOOQ 持久化基础层（见上方说明） |
 
 ---
@@ -77,6 +78,17 @@ quarkus.datasource.password=...
 ```
 
 > `DSLContextProvider` 本身不读取任何自定义配置键；上述键由 `quarkus-agroal` 解析。
+
+### 按需执行 Flyway 迁移
+
+持久化模块只提供 Flyway 扩展，不强制应用启动时迁移。消费方需要自动迁移时显式配置：
+
+```properties
+quarkus.flyway.migrate-at-start=true
+quarkus.flyway.locations=db/migration
+```
+
+不配置 `quarkus.flyway.migrate-at-start=true` 时，应用启动不会执行 Flyway 迁移。
 
 ---
 
@@ -240,6 +252,8 @@ public class ProductRepository extends PersistenceStd {
 | `quarkus.datasource.jdbc.url` | `quarkus-agroal` | `String` | — | JDBC 连接 URL |
 | `quarkus.datasource.username` | `quarkus-agroal` | `String` | — | 数据库用户名 |
 | `quarkus.datasource.password` | `quarkus-agroal` | `String` | — | 数据库密码 |
+| `quarkus.flyway.migrate-at-start` | `quarkus-flyway` | `boolean` | `false` | 是否在应用启动时执行迁移 |
+| `quarkus.flyway.locations` | `quarkus-flyway` | `String` | `db/migration` | Flyway 迁移脚本位置 |
 
 > `DSLContextProvider` 不读取除 `AgroalDataSource` 注入以外的任何自定义键；数据源配置键均属于 Quarkus Agroal。
 

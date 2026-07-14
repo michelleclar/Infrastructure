@@ -6,7 +6,9 @@ import org.carl.infrastructure.persistence.engine.runtime.DslContextFactory;
 import org.carl.infrastructure.persistence.function.ConnectionCallable;
 import org.carl.infrastructure.persistence.function.ConnectionRunnable;
 import org.jooq.DSLContext;
+import org.jooq.Configuration;
 import org.jooq.SQLDialect;
+import org.jooq.impl.DSL;
 
 import org.jooq.Query;
 import org.jooq.Record;
@@ -18,6 +20,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.Objects;
 
 /**
  * now look `Decorator` is don't work but if you use update delete insert ,`Decorator` can work only
@@ -42,6 +45,32 @@ public class PersistenceContext {
 
     public void run(Consumer<DSLContext> queryFunction) {
         queryFunction.accept(this.dsl);
+    }
+
+    /**
+     * Execute several jOOQ operations in one local database transaction.
+     *
+     * <p>The callback receives a DSL context backed by jOOQ's transaction-scoped
+     * configuration. If the callback throws, jOOQ rolls the transaction back;
+     * otherwise it commits it.</p>
+     */
+    public void transaction(Consumer<DSLContext> transactionFunction) {
+        Objects.requireNonNull(transactionFunction, "transactionFunction");
+        dsl.transaction(configuration -> transactionFunction.accept(transactionDsl(configuration)));
+    }
+
+    /**
+     * Execute several jOOQ operations in one local database transaction and
+     * return the callback result.
+     */
+    public <T> T transactionResult(Function<DSLContext, T> transactionFunction) {
+        Objects.requireNonNull(transactionFunction, "transactionFunction");
+        return dsl.transactionResult(configuration ->
+                transactionFunction.apply(transactionDsl(configuration)));
+    }
+
+    private static DSLContext transactionDsl(Configuration configuration) {
+        return DSL.using(configuration);
     }
 
     public <T> T connectionResult(ConnectionCallable<T> callable) {

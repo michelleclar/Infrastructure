@@ -86,6 +86,8 @@ quarkus.datasource.password=...
 | `static PersistenceContext create(DataSource)` | 工厂方法，自动检测数据库方言 |
 | `<T> T get(Function<DSLContext, T>)` | 同步查询，返回结果 |
 | `void run(Consumer<DSLContext>)` | 同步执行，不返回结果 |
+| `void transaction(Consumer<DSLContext>)` | 在一个 jOOQ 本地事务中执行多个操作；成功提交，异常回滚 |
+| `<T> T transactionResult(Function<DSLContext, T>)` | 在一个 jOOQ 本地事务中执行多个操作并返回结果 |
 | `<T> T connectionResult(ConnectionCallable<T>)` | 获取原始 `Connection` 并返回结果 |
 | `void connection(ConnectionRunnable)` | 获取原始 `Connection` 执行副作用 |
 | `SQLDialect getDialect()` | 返回当前连接方言 |
@@ -117,6 +119,12 @@ List<String> names = ctx.get(dsl ->
 // 异步查询（返回 CompletionStage）
 ctx.fetchAsync(dsl -> dsl.resultQuery("select * from orders where status = 'PENDING'"))
    .thenAccept(result -> System.out.println("待处理订单数: " + result.size()));
+
+// 多条写操作使用同一个事务
+context.transaction(tx -> {
+    tx.query("insert into orders (id, status) values (1, 'NEW')").execute();
+    tx.query("insert into order_events (order_id, type) values (1, 'CREATED')").execute();
+});
 
 // 原始连接操作
 ctx.connection(conn -> {
@@ -219,7 +227,8 @@ quarkus.log.category."org.carl.infrastructure.persistence.sql".level=TRACE
 
 ## 注意事项
 
-- `PersistenceContext` 不管理事务；需要事务时，在调用方用 `@Transactional` 或手动 `connection()` 管理。
+- `PersistenceContext.transaction(...)` 和 `transactionResult(...)` 使用 jOOQ 的显式本地事务 API；回调正常结束时提交，抛出异常时回滚。
+- Quarkus 应用仍可使用 `@Transactional` 管理 CDI 方法级事务；不要在同一个事务回调中混用不同连接。
 - `DslContextFactory.create(DataSource)` 默认自动检测方言，需在构建时借用一次连接；高并发下确保连接池有空闲连接。
 - `builder.*`、`metadata.DB*`、`ITableCreateAbility` 均已标记 `@Deprecated`，其增量建表逻辑仅支持 PostgreSQL，新项目应通过 Flyway 等迁移工具管理 schema，不应依赖这些类。
 - 模块内置了一条 Flyway 迁移脚本 `src/main/resources/db/migration/V1__workflow_archiving.sql`，用于工作流归档场景（`workflow_instance` + `execution_record` 两张表），由消费方决定是否启用。

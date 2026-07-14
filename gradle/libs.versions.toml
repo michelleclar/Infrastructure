@@ -34,6 +34,8 @@ quarkus-smallrye-context-propagation = { module = "io.quarkus:quarkus-smallrye-c
 quarkus-websocket = { module = "io.quarkus:quarkus-websockets-client", version.ref = "quarkus" }
 quarkus-oidc = { module = "io.quarkus:quarkus-oidc", version.ref = "quarkus" }
 quarkus-keycloak = { module = "io.quarkus:quarkus-keycloak-authorization", version.ref = "quarkus" }
+quarkus-keycloak-admin-rest-client = { module = "io.quarkus:quarkus-keycloak-admin-rest-client", version.ref = "quarkus" }
+quarkus-hibernate-validator = { module = "io.quarkus:quarkus-hibernate-validator", version.ref = "quarkus" }
 xml-bind = { module = "jakarta.xml.bind:jakarta.xml.bind-api", version.ref = "xml" }
 #xml-bind = { module = "io.quarkus:quarkus-jaxb", version.ref = "quarkus" }
 jdbi-core = { module = "org.jdbi:jdbi3-core", version.ref = "jdbi" }
@@ -102,11 +104,13 @@ share = ["quarkus-arc"]
 web = [
     "quarkus-rest",
     "quarkus-jackson",
+    "quarkus-hibernate-validator",
     "quarkus-smallrye-openapi",
     "quarkus-reactive-routes",
     "quarkus-vertx",
     "quarkus-smallrye-fault-tolerance",
-    "quarkus-httpclient"
+    "quarkus-httpclient",
+    "quarkus-health"
 ]
 
 # base bundle
@@ -114,7 +118,7 @@ base = [
     "xml-bind",
 ]
 
-auth = ["quarkus-oidc", "quarkus-keycloak", "openfga"]
+auth = ["quarkus-oidc", "quarkus-keycloak", "quarkus-keycloak-admin-rest-client", "openfga"]
 
 discover = ["stork", "consul", "consul-stork", "consul-client"]
 
@@ -129,7 +133,8 @@ persistence-jooq = [
 
 persistence-quarkus = [
     "quarkus-jdbc-postgresql",
-    "quarkus-agroal"
+    "quarkus-agroal",
+    "quarkus-flyway"
 ]
 
 cache = ["quarkus-cache", "quarkus-redis"]

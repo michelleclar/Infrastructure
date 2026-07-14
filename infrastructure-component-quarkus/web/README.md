@@ -21,6 +21,7 @@ dependencies {
 |---|---|
 | `quarkus-rest` | `io.quarkus:quarkus-rest` |
 | `quarkus-jackson` | `io.quarkus:quarkus-rest-jackson` |
+| `quarkus-hibernate-validator` | `io.quarkus:quarkus-hibernate-validator` |
 | `quarkus-smallrye-openapi` | `io.quarkus:quarkus-smallrye-openapi` |
 | `quarkus-reactive-routes` | `io.quarkus:quarkus-reactive-routes` |
 | `quarkus-vertx` | `io.quarkus:quarkus-vertx` |
@@ -28,6 +29,9 @@ dependencies {
 | `quarkus-httpclient` | `io.quarkus:quarkus-apache-httpclient` |
 
 此外还依赖 `:infrastructure-component-utils`（实现依赖，不传递）。
+
+`quarkus-hibernate-validator` 为 JAX-RS 请求参数和 DTO 上的 Jakarta Validation
+注解提供运行时校验，例如 `@Valid`、`@NotNull`、`@NotBlank` 和 `@Size`。
 
 ---
 
