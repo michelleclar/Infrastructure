@@ -1,12 +1,17 @@
 package org.carl.infrastructure.redis.factory;
 
+import com.fasterxml.jackson.databind.Module;
 import io.vertx.core.net.NetClientOptions;
 import io.vertx.redis.client.RedisClientType;
 import io.vertx.redis.client.RedisOptions;
 import io.vertx.redis.client.RedisRole;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class RedisConfigOptions {
     private final RedisOptions internalOptions;
+    private final List<Module> jacksonModules = new ArrayList<>();
 
     public RedisConfigOptions() {
         this.internalOptions = new RedisOptions();
@@ -83,8 +88,12 @@ public class RedisConfigOptions {
         return this;
     }
 
-    public void registerModules(com.fasterxml.jackson.databind.Module module) {
-        io.vertx.core.json.jackson.DatabindCodec.mapper().registerModule(module);
+    public void registerModules(Module module) {
+        this.jacksonModules.add(module);
+    }
+
+    List<Module> getJacksonModules() {
+        return List.copyOf(jacksonModules);
     }
 
     RedisOptions getActualOptions() {

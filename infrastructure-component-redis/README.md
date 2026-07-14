@@ -45,7 +45,7 @@ dependencies {
 | `setMaxPoolSize(int)` | 连接池最大连接数 |
 | `setMaxPoolWaiting(int)` | 连接池最大等待队列长度 |
 | `setConnectTimeout(int)` | 连接超时（毫秒） |
-| `registerModules(Module)` | 向 Vert.x 全局 Jackson mapper 注册自定义序列化模块 |
+| `registerModules(Module)` | 为当前 Redis 客户端配置自定义 Jackson 序列化模块 |
 
 ---
 
@@ -197,12 +197,12 @@ module.addDeserializer(LocalDateTime.class, new MyLocalDateTimeDeserializer());
 
 RedisConfigOptions options = new RedisConfigOptions()
         .setConnectionString("redis://localhost:6379");
-options.registerModules(module);  // 注册到 Vert.x 全局 Jackson mapper
+options.registerModules(module);  // 仅对使用该 options 创建的 RedisClient 生效
 
 RedisClient client = RedisClientFactory.create(options);
 ```
 
-> **注意**：`registerModules` 修改 Vert.x 进程级全局 `DatabindCodec.mapper()`，对同一 JVM 内所有 Vert.x JSON 操作生效，只需注册一次。
+> **注意**：`registerModules` 不会修改 Vert.x 进程级全局 `DatabindCodec.mapper()`。每组自定义模块由对应的 `RedisClient` 独立持有。
 
 ---
 
@@ -212,7 +212,7 @@ RedisClient client = RedisClientFactory.create(options);
 2. **`keysSync` / `keys` 使用 Redis `KEYS` 命令**（内部追加 `*`），生产环境大数据量时有阻塞风险，建议仅在数据量可控或非关键路径使用。
 3. **同步方法调用 `.join()`**，若在 Vert.x EventLoop 线程上调用会阻塞事件循环；建议在 Worker 线程或非 EventLoop 上下文中使用 Sync 系列方法，异步场景优先使用 `CompletableFuture` 系列。
 4. **分布式锁的 Watchdog** 依赖 Vert.x 定时器，`unlock()` 会自动取消定时器，确保每次业务结束都调用 `unlock()`，避免定时器泄漏。
-5. **`RedisClientFactory.create()` 会自动注册 `JavaTimeModule`**（`LocalDateTime` 等序列化为 ISO 字符串而非时间戳数组），如需自定义时间格式，在 `create` 之后通过 `options.registerModules(...)` 覆盖即可。
+5. **`RedisClientFactory` 的默认 Codec 在类加载时初始化一次**，内置 `JavaTimeModule`（`LocalDateTime` 等序列化为 ISO 字符串而非时间戳数组）。如需自定义时间格式，在调用 `create(options)` 前通过 `options.registerModules(...)` 配置。
 
 ---
 

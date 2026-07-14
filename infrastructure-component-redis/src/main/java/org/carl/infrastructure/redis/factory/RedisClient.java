@@ -5,6 +5,7 @@ import io.vertx.redis.client.Command;
 import io.vertx.redis.client.Redis;
 import io.vertx.redis.client.Request;
 import io.vertx.redis.client.Response;
+import org.carl.infrastructure.redis.codec.RedisValueCodec;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -15,10 +16,12 @@ import java.util.function.Function;
 public class RedisClient implements AutoCloseable {
     private final Redis redis;
     private final io.vertx.core.Vertx vertx;
+    private final RedisValueCodec codec;
 
-    RedisClient(Redis redis, io.vertx.core.Vertx vertx) {
+    RedisClient(Redis redis, io.vertx.core.Vertx vertx, RedisValueCodec codec) {
         this.redis = redis;
         this.vertx = vertx;
+        this.codec = codec;
     }
 
     /**
@@ -375,7 +378,7 @@ public class RedisClient implements AutoCloseable {
         return get(key).thenApply(
                         str -> {
                             if (str == null) return null;
-                            return io.vertx.core.json.Json.decodeValue(str, clazz);
+                            return codec.decode(str, clazz);
                         });
     }
 
@@ -403,11 +406,7 @@ public class RedisClient implements AutoCloseable {
         return get(key).thenApply(
                 str -> {
                     if (str == null) return null;
-                    try {
-                        return io.vertx.core.json.jackson.DatabindCodec.mapper().readValue(str, typeRef);
-                    } catch (java.io.IOException e) {
-                        throw new RuntimeException("Failed to decode redis value for key: " + key, e);
-                    }
+                    return codec.decode(str, typeRef);
                 });
     }
 
@@ -432,7 +431,7 @@ public class RedisClient implements AutoCloseable {
      * @return CompletableFuture
      */
     public <T> CompletableFuture<Response> set(String key, T value) {
-        return set(key, io.vertx.core.json.Json.encode(value));
+        return set(key, codec.encode(value));
     }
 
     /**
@@ -456,7 +455,7 @@ public class RedisClient implements AutoCloseable {
      * @return CompletableFuture
      */
     public <T> CompletableFuture<Response> set(String key, T value, Duration duration) {
-        return set(key, io.vertx.core.json.Json.encode(value), duration);
+        return set(key, codec.encode(value), duration);
     }
 
     /**
@@ -483,11 +482,11 @@ public class RedisClient implements AutoCloseable {
      */
     public <T> CompletableFuture<T> getOrSet(
             String key, T value, Duration duration, Class<T> clazz) {
-        return getOrSet(key, io.vertx.core.json.Json.encode(value), duration)
+        return getOrSet(key, codec.encode(value), duration)
                 .thenApply(
                         str -> {
                             if (str == null) return null;
-                            return io.vertx.core.json.Json.decodeValue(str, clazz);
+                            return codec.decode(str, clazz);
                         });
     }
 
