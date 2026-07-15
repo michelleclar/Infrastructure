@@ -2,7 +2,7 @@
 
 ## 模块定位
 
-`infrastructure-component-dto` 是最底层的数据传输对象基类模块，提供 Command、Query、DTO、Response 和分页请求/响应模型。它不依赖其他组件，适合被所有业务和基础设施模块复用。
+`infra-component-dto` 是最底层的数据传输对象基类模块，提供 Command、Query、DTO、Response 和分页请求/响应模型。它不依赖其他组件，适合被所有业务和基础设施模块复用。
 
 ## 核心能力
 
@@ -40,7 +40,7 @@
 
 ## 测试验收
 
-- `./gradlew :infrastructure-component-dto:test` 通过。
+- `./gradlew :infra-component-dto:test` 通过。
 - dto 模块源码中没有 Quarkus、JAX-RS、Jackson、数据库或 MQ import。
 - 响应包装和分页计算有单元测试覆盖。
 

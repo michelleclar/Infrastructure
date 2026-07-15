@@ -1,6 +1,6 @@
 # Workflow V3 Design
 
-> 适用范围：`infrastructure-component-workflow-core` + `infrastructure-component-workflow-temporal`
+> 适用范围：`infra-component-workflow-core` + `infra-component-workflow-temporal`
 > 状态：本文档反映**已落地的代码现状**（workflow-core 250+ 测试通过，workflow-temporal 端到端 demo 17 通过 / 0 失败），不是 aspirational
 > 关系：取代 `docs/workflow-v2-design.md`；V2 的 POJO 形状被保留，新增 / 调整在每节明示
 
@@ -20,7 +20,7 @@
 
 固化的设计原则。后续修改如违背任一条须显式记录。
 
-1. **业务感知不到 Temporal**：业务只写 `NodeHandler<CONFIG, STATE, EVENT>` 和 `Activity`。`@WorkflowInterface` / `Workflow.await` / `ActivityStub` 等 Temporal API 仅出现在 `infrastructure-component-workflow-temporal` 的 runtime 包内
+1. **业务感知不到 Temporal**：业务只写 `NodeHandler<CONFIG, STATE, EVENT>` 和 `Activity`。`@WorkflowInterface` / `Workflow.await` / `ActivityStub` 等 Temporal API 仅出现在 `infra-component-workflow-temporal` 的 runtime 包内
 2. **两层定位**：JSON 配置层（前端可视化）与 Java 编码层（强类型）共享一个 `WorkflowDefinition` POJO；两层的差异只在"怎么生成 POJO"，不在 POJO 自身
 3. **业务自定义节点零侵入**：新增一个 NodeHandler 不需要修改 `workflow-core` 任何文件
 4. **节点不直接决定下一节点**：节点产 `NodeResult(status, outcome, payload)`，路由由 `EdgeDefinition` 决定
@@ -34,7 +34,7 @@
 ## 2. 模块边界
 
 ```
-infrastructure-component-workflow-core   （纯 Java，0 Temporal 依赖）
+infra-component-workflow-core   （纯 Java，0 Temporal 依赖）
   definition/   不可变 POJO + Jackson 注解
   spi/          SPI 抽象（NodeHandler / NodeExecutionContext / WorkflowEvent / NodeTypes / NodeSpec / ConditionEvaluator / JsonNodeELResolver / ResultsELResolver / NodeHandlerRegistry / DeterminismGuard）
   handlers/     9 个内置 NodeHandler + 配置 record + RuntimeIntents + BuiltInNodeSpecs
@@ -43,7 +43,7 @@ infrastructure-component-workflow-core   （纯 Java，0 Temporal 依赖）
   engine/       平台无关的编排决策（EdgeRouter：起点/路由；NodeConfigCodec：DSL 形状规范化 + 配置解码）——从 Temporal adapter 下沉，可脱离 Temporal 单测
   interceptor/  Hook SPI（WorkflowInterceptor / DeterministicInterceptor / AsyncInterceptor / InterceptorContext / WorkflowInterceptorRegistry）
 
-infrastructure-component-workflow-temporal   （依赖 workflow-core + temporal-sdk + 可选 jOOQ）
+infra-component-workflow-temporal   （依赖 workflow-core + temporal-sdk + 可选 jOOQ）
   runtime/      WorkflowEngine / WorkflowHandle / EngineConfig（业务门面，0 io.temporal）
                 WorkflowInterpreter / RuntimeOps（编排核心 + 副作用端口）
                 GenericWorkflow / GenericWorkflowImpl（Temporal adapter）/ GenericActivity / GenericActivityImpl
@@ -59,7 +59,7 @@ infrastructure-component-workflow-temporal   （依赖 workflow-core + temporal-
 
 ## 3. 核心数据模型（不可变 record）
 
-全部位于 `org.carl.infrastructure.workflow.definition`。Jackson 序列化采用 `@JsonInclude(NON_NULL)`，JSON ↔ POJO 双向同构。
+全部位于 `org.carl.infra.workflow.definition`。Jackson 序列化采用 `@JsonInclude(NON_NULL)`，JSON ↔ POJO 双向同构。
 
 ### 3.1 WorkflowDefinition
 
@@ -221,7 +221,7 @@ interface AsyncInterceptor extends WorkflowInterceptor { /* 同样 7 个 hook */
 
 ## 5. RuntimeIntents 协议
 
-`org.carl.infrastructure.workflow.handlers.RuntimeIntents` 是 **handler ↔ runtime 之间的字符串键约定**——`NodeResult.payload` 用这些 key 携带"我想让 runtime 帮我做什么"。
+`org.carl.infra.workflow.handlers.RuntimeIntents` 是 **handler ↔ runtime 之间的字符串键约定**——`NodeResult.payload` 用这些 key 携带"我想让 runtime 帮我做什么"。
 
 | 常量 | key | 值类型 | 触发条件 |
 |------|-----|--------|----------|
@@ -853,8 +853,8 @@ assert result.nodeResults().get("approvals").outcome().equals("APPROVED");
 | 依赖 | 不引入原因 |
 |------|----------|
 | Spring / Spring Expression Language (SpEL) | 不希望强制业务捆绑 Spring；Jakarta EL 是 JSR 标准 |
-| `infrastructure-component-statemachine` | V1 历史选型，V3 直接基于 Temporal 自带状态机能力；引入会让模块依赖图复杂化 |
-| `infrastructure-component-rule-engine` | rule-engine 的 `Condition<Facts>` 只解决"运行时执行"，不解决字符串表达式解析；用 Jakarta EL 一站解决 |
+| `infra-component-statemachine` | V1 历史选型，V3 直接基于 Temporal 自带状态机能力；引入会让模块依赖图复杂化 |
+| `infra-component-rule-engine` | rule-engine 的 `Condition<Facts>` 只解决"运行时执行"，不解决字符串表达式解析；用 Jakarta EL 一站解决 |
 | MVEL / JEXL / OGNL / 其它 EL 实现 | Jakarta EL 是 JSR-341 标准，生态最稳；其他实现增加学习成本 |
 
 如未来要重新评估，必须给出"Jakarta EL 不够用"或"已捆绑 Spring 栈反正都要带"的具体证据。

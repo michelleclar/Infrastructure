@@ -14,7 +14,7 @@ import org.carl.client.dto.query.DictSearchQ;
 import org.carl.client.dto.query.PointsQ;
 import org.carl.component.dto.EntityResponse;
 import org.carl.component.dto.MultiEntityResponse;
-import org.carl.infrastructure.component.web.annotations.ControllerLogged;
+import org.carl.infra.component.web.annotations.ControllerLogged;
 
 @Path("/embedding")
 @ControllerLogged

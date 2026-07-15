@@ -10,7 +10,7 @@ import org.carl.client.api.IRecommendServer;
 import org.carl.client.dto.clientobject.ScoredPointCO;
 import org.carl.client.dto.query.RecommendationQ;
 import org.carl.component.dto.MultiEntityResponse;
-import org.carl.infrastructure.component.web.annotations.ControllerLogged;
+import org.carl.infra.component.web.annotations.ControllerLogged;
 
 @Path("/recommend")
 @ControllerLogged

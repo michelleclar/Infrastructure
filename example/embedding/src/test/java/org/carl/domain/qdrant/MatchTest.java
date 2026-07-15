@@ -1,6 +1,6 @@
 package org.carl.domain.qdrant;
 
-import static org.carl.infrastructure.component.web.config.JSON.JSON;
+import static org.carl.infra.component.web.config.JSON.JSON;
 
 import org.carl.domain.qdrant.filter.condition.Match;
 import org.junit.jupiter.api.Test;

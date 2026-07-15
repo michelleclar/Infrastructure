@@ -8,7 +8,7 @@ import io.temporal.activity.ActivityOptions;
 import io.temporal.common.RetryOptions;
 import io.temporal.workflow.Workflow;
 
-import org.carl.infrastructure.statemachine.Action;
+import org.carl.infra.statemachine.Action;
 
 import java.time.Duration;
 import java.util.function.Consumer;

@@ -2,7 +2,7 @@
 
 ## 模块定位
 
-`infrastructure-component-statemachine` 是独立状态机组件，提供状态、事件、上下文、transition、action、condition、builder DSL 和运行时执行能力。
+`infra-component-statemachine` 是独立状态机组件，提供状态、事件、上下文、transition、action、condition、builder DSL 和运行时执行能力。
 
 ## 核心能力
 
@@ -40,7 +40,7 @@
 
 ## 测试验收
 
-- `./gradlew :infrastructure-component-statemachine:test` 通过。
+- `./gradlew :infra-component-statemachine:test` 通过。
 - 外部迁移、内部迁移、并行迁移、条件失败、action chain 有测试覆盖。
 - 源码中没有 Quarkus、CDI、JAX-RS、MicroProfile Config import。
 

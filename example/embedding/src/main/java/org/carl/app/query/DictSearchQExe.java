@@ -17,7 +17,7 @@ import org.carl.components.factory.QueryFactory;
 import org.carl.domain.gateway.IQdrantGateway;
 import org.carl.domain.qdrant.PointsQuery;
 import org.carl.domain.qdrant.VectorCollection;
-import org.carl.infrastructure.convertor.ScoredPointConvertor;
+import org.carl.infra.convertor.ScoredPointConvertor;
 import org.carl.utils.Assert;
 
 @ApplicationScoped

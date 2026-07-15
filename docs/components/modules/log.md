@@ -2,7 +2,7 @@
 
 ## 模块定位
 
-`infrastructure-component-log` 是统一日志抽象模块，屏蔽 SLF4J 与 JBoss Logging 的差异。仓库规范要求业务和组件统一使用 `ILogger`，禁止直接依赖 SLF4J/JBoss Logger。
+`infra-component-log` 是统一日志抽象模块，屏蔽 SLF4J 与 JBoss Logging 的差异。仓库规范要求业务和组件统一使用 `ILogger`，禁止直接依赖 SLF4J/JBoss Logger。
 
 ## 核心能力
 
@@ -38,7 +38,7 @@
 
 ## 测试验收
 
-- `./gradlew :infrastructure-component-log:test` 通过。
+- `./gradlew :infra-component-log:test` 通过。
 - SLF4J 与 JBoss adapter 都有基本调用测试。
 - 仓库源码中新增日志使用应优先调用 `LoggerFactory.getLogger(...)`。
 

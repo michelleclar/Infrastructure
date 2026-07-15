@@ -2,7 +2,7 @@
 
 ## 模块定位
 
-`infrastructure-component-artifact-storage` 是应用中立 artifact 存储组件，提供存储接口、写入请求、元数据模型和本地文件 provider。
+`infra-component-artifact-storage` 是应用中立 artifact 存储组件，提供存储接口、写入请求、元数据模型和本地文件 provider。
 
 ## 核心能力
 
@@ -19,7 +19,7 @@
 
 ## 测试验收
 
-- `./gradlew :infrastructure-component-artifact-storage:test` 通过。
+- `./gradlew :infra-component-artifact-storage:test` 通过。
 - 本地 provider 防止路径穿越。
 - 保存内容时创建父目录并写入 metadata sidecar。
 - metadata lookup 返回 content type 和 byte size。

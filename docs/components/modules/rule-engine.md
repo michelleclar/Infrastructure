@@ -2,7 +2,7 @@
 
 ## 模块定位
 
-`infrastructure-component-rule-engine` 是轻量规则引擎组件，提供规则、条件、动作、事实集合、组合规则和默认执行器。
+`infra-component-rule-engine` 是轻量规则引擎组件，提供规则、条件、动作、事实集合、组合规则和默认执行器。
 
 ## 核心能力
 
@@ -38,7 +38,7 @@
 
 ## 测试验收
 
-- `./gradlew :infrastructure-component-rule-engine:test` 通过。
+- `./gradlew :infra-component-rule-engine:test` 通过。
 - all/any/composite/default rule 的命中和未命中路径有测试。
 - 源码中没有 Quarkus、CDI、JAX-RS、MicroProfile Config import。
 

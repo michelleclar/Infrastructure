@@ -7,7 +7,7 @@ tasks.named("jandex") {
     enabled = false
 }
 subprojects {
-    if (name == "infrastructure-bom") {
+    if (name == "infra-bom") {
         // java-platform 与 java/java-library 互斥，单独处理、跳过下方 java 相关配置
         group = "org.carl"
         version = "1.0-BATE-SNAPSHOT"
@@ -72,8 +72,8 @@ subprojects {
     }
     dependencies {
         // 为所有子项目添加日志模块依赖,但排除 log 模块自己
-        if (project.name != "infrastructure-component-log") {
-            implementation(project(":infrastructure-component-log"))
+        if (project.name != "infra-component-log") {
+            implementation(project(":infra-component-log"))
         }
     }
 }

@@ -2,7 +2,7 @@
 
 ## 模块定位
 
-`infrastructure-component-qdrant-grpc` 提供 Qdrant gRPC client、points/collections client 和大量 request factory。当前模块同时包含 Quarkus provider，因此不是纯粹的独立 client 模块。
+`infra-component-qdrant-grpc` 提供 Qdrant gRPC client、points/collections client 和大量 request factory。当前模块同时包含 Quarkus provider，因此不是纯粹的独立 client 模块。
 
 ## 核心能力
 
@@ -41,7 +41,7 @@
 
 ## 测试验收
 
-- `./gradlew :infrastructure-component-qdrant-grpc:test` 通过。
+- `./gradlew :infra-component-qdrant-grpc:test` 通过。
 - protobuf 生成任务稳定运行。
 - 如果拆分 adapter，core client 源码中没有 Quarkus、CDI、MicroProfile Config import。
 - factory 方法有单元测试覆盖常用请求构造。
@@ -52,6 +52,6 @@
 
 **如何使用**：当前 Quarkus 场景可配置 `quarkus.qdrant.host`、`quarkus.qdrant.port`，由 `QdrantGrpcClientProvider` 生产 client；直接使用时手动创建 Vert.x 和 `SocketAddress` 后实例化 `QdrantGrpcClient`。构造请求时使用 `VectorFactory`、`PointStructFactory`、`ConditionFactory`、`QueryFactory` 等。
 
-**当前依赖了什么**：`api(libs.quarkus.grpc)`、`implementation(project(":infrastructure-component-utils"))`，测试依赖 JUnit 和 `io.vertx:vertx-junit5`，并使用 protobuf 插件。
+**当前依赖了什么**：`api(libs.quarkus.grpc)`、`implementation(project(":infra-component-utils"))`，测试依赖 JUnit 和 `io.vertx:vertx-junit5`，并使用 protobuf 插件。
 
 **需要注意什么**：当前模块混入 Quarkus provider，不是纯 client。审查时要把 `QdrantGrpcClientProvider` 迁到 adapter，并检查 factory 是否泄漏过多生成类型给业务层。

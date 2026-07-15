@@ -2,13 +2,13 @@
 
 ## Project Overview
 
-多模块 Gradle 基础设施组件库（**库，非可运行应用**），Java 21，包名 `org.carl.infrastructure.*`。
+多模块 Gradle 基础设施组件库（**库，非可运行应用**），Java 21，包名 `org.carl.infra.*`。
 为基于 Quarkus 的微服务提供可复用的通用能力。详细 API 用法见 `doc/AI_MODULE_GUIDE.md`。
 
 模块分两类：
 
-- **Quarkus 集成模块** — `infrastructure-component-quarkus/<submodule>/`，依赖 Quarkus 框架，通过 `quarkus.plugins.<name>.enable` 属性条件注册 Bean
-- **独立库模块** — `infrastructure-component-*/` 顶层目录，不依赖 Quarkus，可在任意 Java 项目中使用
+- **Quarkus 集成模块** — `infra-component-quarkus/<submodule>/`，依赖 Quarkus 框架，通过 `quarkus.plugins.<name>.enable` 属性条件注册 Bean
+- **独立库模块** — `infra-component-*/` 顶层目录，不依赖 Quarkus，可在任意 Java 项目中使用
 
 主要模块：
 
@@ -38,7 +38,7 @@
 ```bash
 ./gradlew build                                         # 构建全部
 ./gradlew test                                          # 测试全部
-./gradlew :infrastructure-component-redis:test          # 测试单模块
+./gradlew :infra-component-redis:test          # 测试单模块
 ./gradlew :demo:build                                   # 构建 demo
 ```
 
@@ -68,7 +68,7 @@ Redis/DB 集成测试需要本地服务；环境变量 `JDBC_URL`、`JDBC_USER`�
 
 ### PersistenceContext
 
-jOOQ 的核心封装，位于 `infrastructure-component-persistence-jooq`：
+jOOQ 的核心封装，位于 `infra-component-persistence-jooq`：
 
 - 查询（有返回值）：`ctx.get(dsl -> dsl.selectFrom(TABLE).fetch())`
 - 变更（无返回值）：`ctx.run(dsl -> dsl.insertInto(TABLE).values(...).execute())`
@@ -76,14 +76,14 @@ jOOQ 的核心封装，位于 `infrastructure-component-persistence-jooq`：
 
 ### 生成代码
 
-jOOQ 从 PostgreSQL schema 生成 DAO 和 Record 类（生成配置见 `infrastructure-component-quarkus/workflow/`）。`src/main/gen/` 下的文件禁止手动编辑。
+jOOQ 从 PostgreSQL schema 生成 DAO 和 Record 类（生成配置见 `infra-component-quarkus/workflow/`）。`src/main/gen/` 下的文件禁止手动编辑。
 
 ## Coding Style
 
 - 4 空格缩进，LF 换行，UTF-8（见 `.editorconfig`）
 - Java 21 toolchain
-- 包名 `org.carl.infrastructure.*`，类名 PascalCase，测试类 `*Test.java`
-- **日志统一使用 `ILogger`**（`org.carl.infrastructure.logging`），禁止直接使用 SLF4J/JBoss Logger
+- 包名 `org.carl.infra.*`，类名 PascalCase，测试类 `*Test.java`
+- **日志统一使用 `ILogger`**（`org.carl.infra.logging`），禁止直接使用 SLF4J/JBoss Logger
 - 测试放于 `src/test/java`，与生产代码同包路径
 
 ## Commit
@@ -119,4 +119,4 @@ jOOQ 从 PostgreSQL schema 生成 DAO 和 Record 类（生成配置见 `infrastr
 - Quarkus/Keycloak 配置：`doc/Quarkus.md`
 - 环境变量模板：`resources/env/`
 - 详细 API 使用示例：`doc/AI_MODULE_GUIDE.md`
-- 发布坐标：`org.carl:infrastructure-component-{module}:1.0-BATE`（Aliyun Maven）
+- 发布坐标：`org.carl:infra-component-{module}:1.0-BATE`（Aliyun Maven）

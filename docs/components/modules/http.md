@@ -2,7 +2,7 @@
 
 ## 模块定位
 
-`infrastructure-component-http` 是独立 HTTP client 组件，提供统一请求/响应模型、拦截器上下文和 Apache async HTTP 实现。
+`infra-component-http` 是独立 HTTP client 组件，提供统一请求/响应模型、拦截器上下文和 Apache async HTTP 实现。
 
 ## 核心能力
 
@@ -40,7 +40,7 @@
 
 ## 测试验收
 
-- `./gradlew :infrastructure-component-http:test` 通过。
+- `./gradlew :infra-component-http:test` 通过。
 - 请求构造、响应解析、拦截器链和异常路径有测试覆盖。
 - 模块源码中没有 Quarkus、CDI、JAX-RS import。
 

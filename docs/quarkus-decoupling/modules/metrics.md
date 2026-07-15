@@ -2,7 +2,7 @@
 
 ## 当前定位
 
-`infrastructure-component-quarkus:metrics` 目前几乎没有业务源码，适合作为 Quarkus OpenTelemetry、Micrometer 或 SmallRye Metrics 的 adapter 占位模块。
+`infra-component-quarkus:metrics` 目前几乎没有业务源码，适合作为 Quarkus OpenTelemetry、Micrometer 或 SmallRye Metrics 的 adapter 占位模块。
 
 ## 是否需要独立 core
 
@@ -10,7 +10,7 @@
 
 ## 建议独立模块名
 
-可选：`infrastructure-component-metrics-api`
+可选：`infra-component-metrics-api`
 
 ## Quarkus adapter 应保留内容
 
@@ -39,7 +39,7 @@
 
 ## 验收标准
 
-- `./gradlew :infrastructure-component-quarkus:metrics:test` 通过。
+- `./gradlew :infra-component-quarkus:metrics:test` 通过。
 - metrics adapter 不承载业务指标计算规则。
 - 若新增 metrics api，其源码中没有 Quarkus、CDI、MicroProfile Config import。
 
@@ -47,7 +47,7 @@
 
 **解决的问题**：作为 Quarkus 指标和链路追踪能力的接入点，统一承载 OpenTelemetry、Micrometer 或 SmallRye Metrics 的依赖和配置。
 
-**如何使用**：依赖 `infrastructure-component-quarkus:metrics` 后，通过 Quarkus 原生 metrics/tracing 配置启用 exporter、采样、resource attributes 等能力。当前模块源码较少，更像依赖聚合和未来扩展占位。
+**如何使用**：依赖 `infra-component-quarkus:metrics` 后，通过 Quarkus 原生 metrics/tracing 配置启用 exporter、采样、resource attributes 等能力。当前模块源码较少，更像依赖聚合和未来扩展占位。
 
 **当前依赖**：`implementation(libs.bundles.metrics)`。
 

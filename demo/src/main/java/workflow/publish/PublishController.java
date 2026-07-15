@@ -7,8 +7,8 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 
-import org.carl.infrastructure.component.web.annotations.ControllerLogged;
-import org.carl.infrastructure.workflow.build.TXWorkflowBuilder;
+import org.carl.infra.component.web.annotations.ControllerLogged;
+import org.carl.infra.workflow.build.TXWorkflowBuilder;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.jboss.logging.Logger;
 

@@ -1,6 +1,6 @@
 # Quarkus 适配层解耦说明
 
-本文档用于约束 `infrastructure-component-quarkus/*` 的职责边界。目标是让 Quarkus 子模块只承担框架适配和装配职责，组件核心能力下沉到可独立复用的 `infrastructure-component-*` 模块。
+本文档用于约束 `infra-component-quarkus/*` 的职责边界。目标是让 Quarkus 子模块只承担框架适配和装配职责，组件核心能力下沉到可独立复用的 `infra-component-*` 模块。
 
 本次文档只定义拆分原则和任务清单，不直接移动源码。
 
@@ -8,8 +8,8 @@
 
 | 层级 | 模块形态 | 职责 |
 |------|----------|------|
-| 独立组件层 | `infrastructure-component-{name}` | core、api、implementation，可被任意 Java 项目使用，不依赖 Quarkus |
-| Quarkus 适配层 | `infrastructure-component-quarkus:{name}` | CDI Bean、ConfigMapping、生命周期事件、JAX-RS、事务装配、Quarkus 扩展 API 适配 |
+| 独立组件层 | `infra-component-{name}` | core、api、implementation，可被任意 Java 项目使用，不依赖 Quarkus |
+| Quarkus 适配层 | `infra-component-quarkus:{name}` | CDI Bean、ConfigMapping、生命周期事件、JAX-RS、事务装配、Quarkus 扩展 API 适配 |
 | 示例层 | `demo/` | 作为 Quarkus 应用示例，只演示接线方式 |
 
 ## 统一拆分原则
@@ -34,7 +34,7 @@ io.smallrye.config.*
 
 ## P0 构建拆分任务
 
-当前 `infrastructure-component-quarkus/build.gradle.kts` 的 `subprojects` 中仍然对所有子项目执行：
+当前 `infra-component-quarkus/build.gradle.kts` 的 `subprojects` 中仍然对所有子项目执行：
 
 ```kotlin
 apply(plugin = "io.quarkus")
@@ -44,8 +44,8 @@ apply(plugin = "io.quarkus")
 
 - 父工程只保留通用发布、测试和依赖约束。
 - 只有真正的 Quarkus adapter 子模块显式应用 `io.quarkus`。
-- 后续新增的 `infrastructure-component-{name}` core 模块不得继承 Quarkus 插件、Quarkus BOM 或 Quarkus 测试配置。
-- 对每个迁出的 core 模块补充单模块测试任务，例如 `./gradlew :infrastructure-component-search:test`。
+- 后续新增的 `infra-component-{name}` core 模块不得继承 Quarkus 插件、Quarkus BOM 或 Quarkus 测试配置。
+- 对每个迁出的 core 模块补充单模块测试任务，例如 `./gradlew :infra-component-search:test`。
 
 ## 优先级
 
@@ -70,10 +70,10 @@ apply(plugin = "io.quarkus")
 
 ## 总体验收标准
 
-- README 链接覆盖全部 13 个 `infrastructure-component-quarkus` 子模块。
+- README 链接覆盖全部 13 个 `infra-component-quarkus` 子模块。
 - 每个模块文档包含当前定位、是否需要独立 core、建议独立模块名、adapter 保留内容、迁出内容、依赖边界、拆分任务清单和验收标准。
 - 每个模块文档的“模块审查补充”用于逐模块过代码：先看该模块解决的问题、如何使用、当前依赖和注意事项，再决定是否需要拆 core 或修边界。
 - 后续进入实现阶段时，每个拆分任务至少通过：
-  - 独立 core 模块：`./gradlew :infrastructure-component-{name}:test`
-  - Quarkus adapter 模块：`./gradlew :infrastructure-component-quarkus:{name}:test`
+  - 独立 core 模块：`./gradlew :infra-component-{name}:test`
+  - Quarkus adapter 模块：`./gradlew :infra-component-quarkus:{name}:test`
   - core 源码中搜索不到禁用 import 前缀。

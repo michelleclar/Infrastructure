@@ -1,0 +1,69 @@
+package org.carl.infra.workflow.handlers;
+
+import org.carl.infra.workflow.definition.NodeResult;
+import org.carl.infra.workflow.definition.NodeStatus;
+import org.carl.infra.workflow.spi.NodeExecutionContext;
+import org.carl.infra.workflow.spi.NodeHandler;
+import org.carl.infra.workflow.spi.NodeTypes;
+import org.carl.infra.workflow.spi.WorkflowEvent;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+/**
+ * Built-in handler for {@code timerTask} nodes.
+ *
+ * <p>Suspends execution until the runtime fires the timer (via {@value #FIRED_EVENT}) or an
+ * explicit cancellation arrives (via {@value #CANCEL_EVENT}). The duration is communicated to the
+ * runtime through {@link RuntimeIntents#DURATION} in the {@code run} result payload; the handler
+ * itself never starts a timer — that is the runtime's responsibility.
+ */
+public final class TimerTaskHandler implements NodeHandler<TimerTaskConfig, Object, Object> {
+
+    /** Internal event delivered when the timer fires. */
+    public static final String FIRED_EVENT = "_timerFired";
+
+    /** Internal cancel event. */
+    public static final String CANCEL_EVENT = "_cancel";
+
+    @Override
+    public String type() {
+        return NodeTypes.TIMER_TASK;
+    }
+
+    @Override
+    public Class<TimerTaskConfig> configType() {
+        return TimerTaskConfig.class;
+    }
+
+    @Override
+    public NodeResult run(NodeExecutionContext ctx, TimerTaskConfig config) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        if (config != null && config.duration() != null) {
+            payload.put(RuntimeIntents.DURATION, config.duration());
+        }
+        return new NodeResult(NodeStatus.WAITING, null, payload, null);
+    }
+
+    @Override
+    public boolean canAccept(NodeExecutionContext ctx, WorkflowEvent ev, TimerTaskConfig cfg) {
+        if (ev == null) {
+            return false;
+        }
+        return FIRED_EVENT.equals(ev.name()) || CANCEL_EVENT.equals(ev.name());
+    }
+
+    @Override
+    public NodeResult onEvent(NodeExecutionContext ctx, WorkflowEvent ev, TimerTaskConfig cfg) {
+        if (ev == null) {
+            return NodeResult.waiting();
+        }
+        if (FIRED_EVENT.equals(ev.name())) {
+            return NodeResult.completed("TRIGGERED");
+        }
+        if (CANCEL_EVENT.equals(ev.name())) {
+            return NodeResult.completed("CANCELLED");
+        }
+        return NodeResult.waiting();
+    }
+}

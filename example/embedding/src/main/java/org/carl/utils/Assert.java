@@ -1,7 +1,7 @@
 package org.carl.utils;
 
-import org.carl.infrastructure.component.web.config.exception.BizException;
-import org.carl.infrastructure.utils.FieldsUtils;
+import org.carl.infra.component.web.config.exception.BizException;
+import org.carl.infra.utils.FieldsUtils;
 
 import java.util.Collection;
 import java.util.List;

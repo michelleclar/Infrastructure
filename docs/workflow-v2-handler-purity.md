@@ -1,7 +1,7 @@
 # Workflow V2 — NodeHandler Purity Contract
 
 `NodeHandler` is the open SPI plug-point in workflow v2. Built-in handlers ship with the
-infrastructure module; business teams will write their own. This note explains why a custom
+infra module; business teams will write their own. This note explains why a custom
 handler must be deterministic, what that excludes, how to do IO safely, and how to verify it.
 
 ## Why purity matters
@@ -91,7 +91,7 @@ registry.register(new MyServiceHandler()); // always checked; throws on violatio
 ```
 
 Built-in handlers bypass the scan via `registerBuiltIn()`, which is the trusted path reserved
-for handlers shipped with the infrastructure module.
+for handlers shipped with the infra module.
 
 `NodeHandlerRegistry.strict()` and `isStrict()` are kept only for backward compatibility;
 `isStrict()` always returns `true`.

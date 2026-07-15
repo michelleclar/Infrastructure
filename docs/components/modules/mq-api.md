@@ -2,7 +2,7 @@
 
 ## 模块定位
 
-`infrastructure-component-mq-api` 是消息队列抽象层，定义 client、producer、consumer、message、processor、transaction 和异常模型，不绑定具体 MQ 产品。
+`infra-component-mq-api` 是消息队列抽象层，定义 client、producer、consumer、message、processor、transaction 和异常模型，不绑定具体 MQ 产品。
 
 ## 核心能力
 
@@ -41,7 +41,7 @@
 
 ## 测试验收
 
-- `./gradlew :infrastructure-component-mq-api:test` 通过。
+- `./gradlew :infra-component-mq-api:test` 通过。
 - mq-api 源码中没有 Pulsar、Quarkus、CDI import。
 - producer/consumer/message builder 的契约有单元测试或接口兼容测试。
 

@@ -1,10 +1,10 @@
 package workflow.publish;
 
-import org.carl.infrastructure.statemachine.Action;
-import org.carl.infrastructure.statemachine.Condition;
-import org.carl.infrastructure.statemachine.StateMachine;
-import org.carl.infrastructure.statemachine.builder.StateMachineBuilder;
-import org.carl.infrastructure.statemachine.builder.StateMachineBuilderFactory;
+import org.carl.infra.statemachine.Action;
+import org.carl.infra.statemachine.Condition;
+import org.carl.infra.statemachine.StateMachine;
+import org.carl.infra.statemachine.builder.StateMachineBuilder;
+import org.carl.infra.statemachine.builder.StateMachineBuilderFactory;
 
 import workflow.model.ContentPublishingContext;
 import workflow.model.ContentPublishingEventEnum;

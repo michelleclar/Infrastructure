@@ -2,7 +2,7 @@
 
 ## 当前定位
 
-`infrastructure-component-quarkus:discover` 当前核心代码是 `ServiceLifecycle`，通过 Quarkus 启停事件、Vert.x Consul client 和配置项完成服务注册与注销。它本质上是 Quarkus 生命周期 adapter。
+`infra-component-quarkus:discover` 当前核心代码是 `ServiceLifecycle`，通过 Quarkus 启停事件、Vert.x Consul client 和配置项完成服务注册与注销。它本质上是 Quarkus 生命周期 adapter。
 
 ## 是否需要独立 core
 
@@ -10,7 +10,7 @@
 
 ## 建议独立模块名
 
-可选：`infrastructure-component-discover-api`
+可选：`infra-component-discover-api`
 
 仅在需要复用服务注册模型或支持多种注册中心时创建。
 
@@ -42,7 +42,7 @@
 
 ## 验收标准
 
-- `./gradlew :infrastructure-component-quarkus:discover:test` 通过。
+- `./gradlew :infra-component-quarkus:discover:test` 通过。
 - discover 模块中的新增代码仍然只处理 Quarkus 生命周期和 Consul adapter。
 - 若新增 api 模块，其源码中没有 Quarkus、Vert.x、MicroProfile Config import。
 
@@ -50,7 +50,7 @@
 
 **解决的问题**：在 Quarkus 应用启动时把服务注册到 Consul，在关闭时注销，解决服务发现和健康检查接入问题。
 
-**如何使用**：依赖 `infrastructure-component-quarkus:discover`，配置 `consul.host`、`consul.port`、`quarkus.application.name`、`quarkus.http.port`。应用启动后 `ServiceLifecycle` 监听 `StartupEvent` 完成注册，关闭时监听 `ShutdownEvent` 注销。
+**如何使用**：依赖 `infra-component-quarkus:discover`，配置 `consul.host`、`consul.port`、`quarkus.application.name`、`quarkus.http.port`。应用启动后 `ServiceLifecycle` 监听 `StartupEvent` 完成注册，关闭时监听 `ShutdownEvent` 注销。
 
 **当前依赖**：`implementation(libs.bundles.discover)`，源码使用 Quarkus lifecycle、Vert.x Consul client、MicroProfile Config。
 

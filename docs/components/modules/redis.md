@@ -2,7 +2,7 @@
 
 ## 模块定位
 
-`infrastructure-component-redis` 是基于 Vert.x Redis client 的独立 Redis 封装，提供异步和同步 API、泛型序列化支持、基础 key 操作和连接配置。
+`infra-component-redis` 是基于 Vert.x Redis client 的独立 Redis 封装，提供异步和同步 API、泛型序列化支持、基础 key 操作和连接配置。
 
 ## 核心能力
 
@@ -40,7 +40,7 @@
 
 ## 测试验收
 
-- `./gradlew :infrastructure-component-redis:test` 通过。
+- `./gradlew :infra-component-redis:test` 通过。
 - Redis 集成测试在无本地 Redis 时应可跳过或明确失败原因。
 - 源码中没有 Quarkus、CDI、MicroProfile Config import。
 

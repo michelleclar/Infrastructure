@@ -2,7 +2,7 @@
 
 ## 模块定位
 
-`infrastructure-component-utils` 是通用工具组件，提供字符串、集合、字段反射、URL 解析、日志辅助、脱敏算法、基础数据结构、加密/hash、JSONB/Jackson、UTC 时间和分页归一化工具。
+`infra-component-utils` 是通用工具组件，提供字符串、集合、字段反射、URL 解析、日志辅助、脱敏算法、基础数据结构、加密/hash、JSONB/Jackson、UTC 时间和分页归一化工具。
 
 ## 核心能力
 
@@ -45,7 +45,7 @@
 
 ## 测试验收
 
-- `./gradlew :infrastructure-component-utils:test` 通过。
+- `./gradlew :infra-component-utils:test` 通过。
 - 字符串、集合、脱敏、DAG、AES-GCM、SHA-256、JSONB、UTC 时间和分页工具有边界用例测试。
 - 源码中没有 Quarkus、CDI、JAX-RS、MicroProfile Config import。
 

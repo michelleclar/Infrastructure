@@ -2,7 +2,7 @@
 
 ## 当前定位
 
-`infrastructure-component-quarkus:search` 当前包含 Elasticsearch context、provider、ability、查询构建、mapping 构建、action 封装和 Quarkus Bean 注册。大量能力与 Quarkus 无关，应作为独立搜索组件。
+`infra-component-quarkus:search` 当前包含 Elasticsearch context、provider、ability、查询构建、mapping 构建、action 封装和 Quarkus Bean 注册。大量能力与 Quarkus 无关，应作为独立搜索组件。
 
 ## 是否需要独立 core
 
@@ -10,12 +10,12 @@
 
 ## 建议独立模块名
 
-`infrastructure-component-search`
+`infra-component-search`
 
 如果未来需要多搜索引擎，可进一步拆分：
 
-- `infrastructure-component-search-api`
-- `infrastructure-component-search-elasticsearch`
+- `infra-component-search-api`
+- `infra-component-search-elasticsearch`
 
 ## Quarkus adapter 应保留内容
 
@@ -42,7 +42,7 @@
 
 ## 拆分任务清单
 
-- 创建 `infrastructure-component-search`。
+- 创建 `infra-component-search`。
 - 迁出 ES context、operation、provider、query builder、action 封装和工具类。
 - 将 Quarkus search 改为只生产 `ESContext` 并注册能力 Bean。
 - 评估 `ISearchAbility` 是否应保持 ES 类型暴露，或拆出更通用的 search api。
@@ -50,8 +50,8 @@
 
 ## 验收标准
 
-- `./gradlew :infrastructure-component-search:test` 通过。
-- `./gradlew :infrastructure-component-quarkus:search:test` 通过。
+- `./gradlew :infra-component-search:test` 通过。
+- `./gradlew :infra-component-quarkus:search:test` 通过。
 - search core 源码中没有 Quarkus、CDI、JAX-RS、MicroProfile Config import。
 - Quarkus search 中不再保留查询构建和 ES action 业务封装。
 
@@ -59,7 +59,7 @@
 
 **解决的问题**：封装 Elasticsearch client、index/search/get/update/delete action 和查询/mapping 构建能力，给业务提供统一搜索操作入口。
 
-**如何使用**：在 Quarkus 应用中依赖 `infrastructure-component-quarkus:search`，配置 `quarkus.plugins.search.enable=true`，并按 Quarkus Elasticsearch client 方式配置连接。业务侧通过 `ISearchAbility`、`IESOperations` 或 `ESContext` 执行 ES action。
+**如何使用**：在 Quarkus 应用中依赖 `infra-component-quarkus:search`，配置 `quarkus.plugins.search.enable=true`，并按 Quarkus Elasticsearch client 方式配置连接。业务侧通过 `ISearchAbility`、`IESOperations` 或 `ESContext` 执行 ES action。
 
 **当前依赖**：`implementation(libs.bundles.search)`；源码使用 Elasticsearch Java Client、CDI 和 `@IfBuildProperty`。
 

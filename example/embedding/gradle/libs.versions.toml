@@ -4,16 +4,16 @@ carl = '1.0-BATE'
 testcontainers = "1.20.4"
 [libraries]
 quarkus-platform-bom = { module = "io.quarkus.platform:quarkus-bom", version.ref = "quarkus" }
-infrastructure-component-authorization = { module = "org.carl:infrastructure-component-authorization", version.ref = "carl" }
-infrastructure-component-cache = { module = "org.carl:infrastructure-component-cache", version.ref = "carl" }
-infrastructure-component-quarkus-persistence = { module = "org.carl:infrastructure-component-quarkus-persistence", version.ref = "carl" }
-infrastructure-component-persistence-jooq = { module = "org.carl:infrastructure-component-persistence-jooq", version.ref = "carl" }
-infrastructure-component-search = { module = "org.carl:infrastructure-component-search", version.ref = "carl" }
-infrastructure-component-web = { module = "org.carl:infrastructure-component-web", version.ref = "carl" }
-infrastructure-component-dto= { module = "org.carl:infrastructure-component-dto", version.ref = "carl" }
-infrastructure-component-qdrant-grpc = { module = "org.carl:infrastructure-component-qdrant-grpc", version.ref = "carl" }
-infrastructure-component-embedding-grpc = { module = "org.carl:infrastructure-component-embedding-grpc", version.ref = "carl" }
-infrastructure-component-utils = { module = "org.carl:infrastructure-component-utils", version.ref = "carl" }
+infra-component-authorization = { module = "org.carl:infra-component-authorization", version.ref = "carl" }
+infra-component-cache = { module = "org.carl:infra-component-cache", version.ref = "carl" }
+infra-component-quarkus-persistence = { module = "org.carl:infra-component-quarkus-persistence", version.ref = "carl" }
+infra-component-persistence-jooq = { module = "org.carl:infra-component-persistence-jooq", version.ref = "carl" }
+infra-component-search = { module = "org.carl:infra-component-search", version.ref = "carl" }
+infra-component-web = { module = "org.carl:infra-component-web", version.ref = "carl" }
+infra-component-dto= { module = "org.carl:infra-component-dto", version.ref = "carl" }
+infra-component-qdrant-grpc = { module = "org.carl:infra-component-qdrant-grpc", version.ref = "carl" }
+infra-component-embedding-grpc = { module = "org.carl:infra-component-embedding-grpc", version.ref = "carl" }
+infra-component-utils = { module = "org.carl:infra-component-utils", version.ref = "carl" }
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 testcontainers-consul = { module = "org.testcontainers:consul", version.ref = "testcontainers" }
@@ -29,11 +29,11 @@ assured = { module = "io.rest-assured:rest-assured", version.ref = "quarkus" }
 
 [bundles]
 all = [
-    'infrastructure-component-authorization',
-    'infrastructure-component-cache',
-    'infrastructure-component-quarkus-persistence',
-    'infrastructure-component-search',
-    'infrastructure-component-web',
+    'infra-component-authorization',
+    'infra-component-cache',
+    'infra-component-quarkus-persistence',
+    'infra-component-search',
+    'infra-component-web',
 ]
 
 

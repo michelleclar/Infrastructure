@@ -2,7 +2,7 @@
 
 ## 模块定位
 
-`infrastructure-component-workflow-temporal` 是基于 Temporal 的配置驱动工作流运行时。它解释执行 `workflow-core` 生成的 `WorkflowDefinition`，提供通用 `GenericWorkflowImpl`、`WorkflowEngine` 门面、worker setup、业务 Activity 注册、signal、查询、归档和示例。
+`infra-component-workflow-temporal` 是基于 Temporal 的配置驱动工作流运行时。它解释执行 `workflow-core` 生成的 `WorkflowDefinition`，提供通用 `GenericWorkflowImpl`、`WorkflowEngine` 门面、worker setup、业务 Activity 注册、signal、查询、归档和示例。
 
 ## 核心能力
 
@@ -46,7 +46,7 @@
 
 ## 测试验收
 
-- `./gradlew :infrastructure-component-workflow-temporal:test` 通过。
+- `./gradlew :infra-component-workflow-temporal:test` 通过。
 - 本地测试使用 Temporal `TestWorkflowEnvironment`。
 - 远端真实 Temporal 测试使用 `TEMPORAL_TARGET`。
 - 请假审批、taskGroup、ANY 短路、嵌套会签、回环、子工作流、Saga 补偿、条件路由、interceptor 等场景有测试示例。
@@ -55,8 +55,8 @@
 
 **为了解决什么**：把可序列化流程定义真正跑在 Temporal 上，统一 worker、Activity、signal、状态推进、拦截器和归档能力。
 
-**如何使用**：依赖 `infrastructure-component-workflow-temporal`，注册 `BuiltInHandlers` 和业务 `BusinessActivityRegistry`，通过 `WorkflowEngine` 启动 worker 和流程，使用 `WorkflowHandle#signal(...)` 推进等待节点。
+**如何使用**：依赖 `infra-component-workflow-temporal`，注册 `BuiltInHandlers` 和业务 `BusinessActivityRegistry`，通过 `WorkflowEngine` 启动 worker 和流程，使用 `WorkflowHandle#signal(...)` 推进等待节点。
 
-**当前依赖了什么**：`api(libs.temporal.sdk)`、`implementation(project(":infrastructure-component-log"))`、`implementation(project(":infrastructure-component-persistence-jooq"))`、`implementation(project(":infrastructure-component-workflow-core"))`。
+**当前依赖了什么**：`api(libs.temporal.sdk)`、`implementation(project(":infra-component-log"))`、`implementation(project(":infra-component-persistence-jooq"))`、`implementation(project(":infra-component-workflow-core"))`。
 
 **需要注意什么**：Temporal replay 对确定性非常敏感。不要在 handler 中直接访问外部系统；外部调用必须通过 Activity。运行前确认 Temporal target、namespace、taskQueue 与 worker 配置一致。

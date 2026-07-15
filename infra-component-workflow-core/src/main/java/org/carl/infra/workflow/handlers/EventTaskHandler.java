@@ -1,0 +1,77 @@
+package org.carl.infra.workflow.handlers;
+
+import org.carl.infra.workflow.definition.NodeResult;
+import org.carl.infra.workflow.definition.NodeStatus;
+import org.carl.infra.workflow.spi.NodeExecutionContext;
+import org.carl.infra.workflow.spi.NodeHandler;
+import org.carl.infra.workflow.spi.NodeTypes;
+import org.carl.infra.workflow.spi.WorkflowEvent;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+/**
+ * Built-in handler for {@code eventTask} nodes.
+ *
+ * <p>Suspends execution until the runtime delivers the named event (or a {@value #TIMEOUT_EVENT}).
+ * Unlike {@code approvalTask}, this handler carries no {@code decision} field — the sole outcome
+ * on a successful signal is {@code "RECEIVED"}.
+ */
+public final class EventTaskHandler implements NodeHandler<EventTaskConfig, Object, Object> {
+
+    /** Internal timeout event delivered by the runtime. */
+    public static final String TIMEOUT_EVENT = "_timeout";
+
+    @Override
+    public String type() {
+        return NodeTypes.EVENT_TASK;
+    }
+
+    @Override
+    public Class<EventTaskConfig> configType() {
+        return EventTaskConfig.class;
+    }
+
+    @Override
+    public NodeResult run(NodeExecutionContext ctx, EventTaskConfig config) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        if (config != null) {
+            if (config.awaitEvent() != null) {
+                payload.put(RuntimeIntents.AWAIT_EVENT, config.awaitEvent());
+            }
+            if (config.timeoutDuration() != null) {
+                payload.put(RuntimeIntents.TIMEOUT_DURATION, config.timeoutDuration());
+            }
+        }
+        return new NodeResult(NodeStatus.WAITING, null, payload, null);
+    }
+
+    @Override
+    public boolean canAccept(
+            NodeExecutionContext ctx, WorkflowEvent event, EventTaskConfig config) {
+        if (event == null) {
+            return false;
+        }
+        // Timeout is checked first — same priority rule as approval/user task handlers.
+        if (TIMEOUT_EVENT.equals(event.name())) {
+            return true;
+        }
+        return config != null
+                && config.awaitEvent() != null
+                && config.awaitEvent().equals(event.name());
+    }
+
+    @Override
+    public NodeResult onEvent(NodeExecutionContext ctx, WorkflowEvent event, EventTaskConfig cfg) {
+        if (event == null) {
+            return NodeResult.waiting();
+        }
+        if (TIMEOUT_EVENT.equals(event.name())) {
+            return NodeResult.completed("TIMEOUT");
+        }
+        if (cfg != null && cfg.awaitEvent() != null && cfg.awaitEvent().equals(event.name())) {
+            return NodeResult.completed("RECEIVED");
+        }
+        return NodeResult.waiting();
+    }
+}

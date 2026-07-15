@@ -8,13 +8,13 @@
 ## 项目概况
 
 - **构建系统**: Gradle (Kotlin DSL)，Java 21
-- **基础包名**: `org.carl.infrastructure.*`
+- **基础包名**: `org.carl.infra.*`
 - **仓库地址**: Aliyun Maven
 
 ### 架构分层
 
 ```
-infrastructure-component-quarkus/     # Quarkus 集成模块 — 依赖 Quarkus 框架
+infra-component-quarkus/     # Quarkus 集成模块 — 依赖 Quarkus 框架
  ├── authorization/                   # OIDC/Keycloak 认证
  ├── web/                             # RESTful 服务
  ├── persistence/                     # 数据持久化（Quarkus 集成）
@@ -25,23 +25,23 @@ infrastructure-component-quarkus/     # Quarkus 集成模块 — 依赖 Quarkus 
  ├── metrics/                         # 监控 (OpenTelemetry)
  └── search/                          # 全文搜索
 
-infrastructure-component-dto/         # 数据传输对象基类（无依赖）
-infrastructure-component-log/         # 统一日志接口（无 Quarkus 依赖）
-infrastructure-component-utils/       # 通用工具类（无 Quarkus 依赖）
-infrastructure-component-web-api/     # Web 响应信封与异常映射 API（无 Quarkus 依赖）
-infrastructure-component-artifact-storage/ # Artifact 存储 API 与本地实现（无 Quarkus 依赖）
-infrastructure-component-persistence-jooq/  # JOOQ 数据库操作（无 Quarkus 依赖）
-infrastructure-component-redis/       # Redis 客户端（无 Quarkus 依赖）
-infrastructure-component-mq-api/      # 消息队列抽象接口（无 Quarkus 依赖）
-infrastructure-component-mq-pulsar/   # Pulsar 实现（无 Quarkus 依赖）
-infrastructure-component-statemachine/ # 状态机（无依赖）
-infrastructure-component-rule-engine/ # 规则引擎（无依赖）
-infrastructure-component-qdrant-grpc/ # Qdrant 向量库 gRPC
-infrastructure-component-embedding-grpc/ # Embedding gRPC
+infra-component-dto/         # 数据传输对象基类（无依赖）
+infra-component-log/         # 统一日志接口（无 Quarkus 依赖）
+infra-component-utils/       # 通用工具类（无 Quarkus 依赖）
+infra-component-web-api/     # Web 响应信封与异常映射 API（无 Quarkus 依赖）
+infra-component-artifact-storage/ # Artifact 存储 API 与本地实现（无 Quarkus 依赖）
+infra-component-persistence-jooq/  # JOOQ 数据库操作（无 Quarkus 依赖）
+infra-component-redis/       # Redis 客户端（无 Quarkus 依赖）
+infra-component-mq-api/      # 消息队列抽象接口（无 Quarkus 依赖）
+infra-component-mq-pulsar/   # Pulsar 实现（无 Quarkus 依赖）
+infra-component-statemachine/ # 状态机（无依赖）
+infra-component-rule-engine/ # 规则引擎（无依赖）
+infra-component-qdrant-grpc/ # Qdrant 向量库 gRPC
+infra-component-embedding-grpc/ # Embedding gRPC
 ```
 
 > **重要**: 独立库模块**不依赖 Quarkus**，可在任意 Java 项目中使用。
-> 只有 `infrastructure-component-quarkus/` 下的模块才依赖 Quarkus 框架。
+> 只有 `infra-component-quarkus/` 下的模块才依赖 Quarkus 框架。
 
 ---
 
@@ -49,7 +49,7 @@ infrastructure-component-embedding-grpc/ # Embedding gRPC
 
 ### 1. DTO — 数据传输对象
 
-**包**: `org.carl.infrastructure.dto`
+**包**: `org.carl.infra.dto`
 **依赖**: 无
 
 #### 基类体系
@@ -99,7 +99,7 @@ public class UserQuery extends PageQuery {
 
 ### 2. Log — 统一日志
 
-**包**: `org.carl.infrastructure.logging`
+**包**: `org.carl.infra.logging`
 **依赖**: SLF4J, JBoss Logging
 
 #### 核心 API
@@ -130,7 +130,7 @@ if (logger.isDebugEnabled()) { ... }
 
 ### 3. Persistence (JOOQ) — 数据库操作
 
-**包**: `org.carl.infrastructure.persistence`
+**包**: `org.carl.infra.persistence`
 **依赖**: JOOQ, PostgreSQL
 
 #### 核心 API
@@ -185,7 +185,7 @@ public class UserRepository implements IPersistenceOperations {
 
 ### 4. Redis — 缓存与分布式锁
 
-**包**: `org.carl.infrastructure.redis.factory`
+**包**: `org.carl.infra.redis.factory`
 **依赖**: Vert.x Redis
 
 #### 创建客户端
@@ -294,8 +294,8 @@ CompletableFuture<List<String>> keys = client.keys("user:*");
 
 ### 5. MQ (Message Queue) — 消息队列
 
-**抽象接口包**: `org.carl.infrastructure.mq`（`infrastructure-component-mq-api`，无依赖）
-**Pulsar 实现**: `infrastructure-component-mq-pulsar`（依赖 Apache Pulsar）
+**抽象接口包**: `org.carl.infra.mq`（`infra-component-mq-api`，无依赖）
+**Pulsar 实现**: `infra-component-mq-pulsar`（依赖 Apache Pulsar）
 
 #### IProducer — 消息生产者
 
@@ -363,7 +363,7 @@ MessageBuilder.<Order>create()
 #### 使用约定
 
 - 消息体统一使用泛型 `IProducer<T>`
-- Pulsar 是当前唯一实现（`infrastructure-component-mq-pulsar`）
+- Pulsar 是当前唯一实现（`infra-component-mq-pulsar`）
 - 所有消息确认必须显式调用 `acknowledge`
 - MQ API 模块本身无依赖，可与任意 MQ 实现对接
 
@@ -371,7 +371,7 @@ MessageBuilder.<Order>create()
 
 ### 6. StateMachine — 状态机
 
-**包**: `org.carl.infrastructure.statemachine`
+**包**: `org.carl.infra.statemachine`
 **依赖**: 无
 
 #### 构建状态机
@@ -415,7 +415,7 @@ machine.generatePlantUML();     // 生成 PlantUML 图
 
 ### 7. RuleEngine — 规则引擎
 
-**包**: `org.carl.infrastructure.ruleengine`
+**包**: `org.carl.infra.ruleengine`
 **依赖**: 无
 
 ```java
@@ -438,7 +438,7 @@ engine.fire(rule, facts);
 
 ### 8. Utils — 工具类
 
-**包**: `org.carl.infrastructure.utils`
+**包**: `org.carl.infra.utils`
 **依赖**: Guava, commons-collections4
 
 | 类 | 用途 |
@@ -455,7 +455,7 @@ engine.fire(rule, facts);
 
 ## Quarkus 集成模块
 
-以下模块位于 `infrastructure-component-quarkus/` 下，**依赖 Quarkus 框架**，
+以下模块位于 `infra-component-quarkus/` 下，**依赖 Quarkus 框架**，
 作为 Quarkus 扩展使用。每个模块通过 `@IfBuildProperty` 条件注册 Bean，
 启用属性见各模块说明。
 
@@ -463,7 +463,7 @@ engine.fire(rule, facts);
 
 ### Authorization — 认证授权
 
-**包**: `org.carl.infrastructure.authorization`
+**包**: `org.carl.infra.authorization`
 **依赖**: quarkus-oidc, quarkus-keycloak
 
 #### 核心接口
@@ -520,7 +520,7 @@ boolean canView = authService.check(OrderPermission.VIEW);
 
 ### Web — RESTful 服务层
 
-**包**: `org.carl.infrastructure.web`
+**包**: `org.carl.infra.web`
 **依赖**: quarkus-rest, quarkus-jackson
 
 #### 配置
@@ -550,11 +550,11 @@ public class OrderController { ... }
 
 ### Persistence — 数据持久化（Quarkus 集成）
 
-**包**: `org.carl.infrastructure.persistence`
+**包**: `org.carl.infra.persistence`
 **依赖**: quarkus-jdbc-postgresql, quarkus-agroal
 **启用**: `quarkus.plugins.persistence.enable=true`
 
-底层使用 `infrastructure-component-persistence-jooq`，在 Quarkus 容器中通过 CDI 暴露：
+底层使用 `infra-component-persistence-jooq`，在 Quarkus 容器中通过 CDI 暴露：
 
 ```java
 // 注入方式 1：直接注入 DSLContext
@@ -577,7 +577,7 @@ ctx.run(dsl -> dsl.insertInto(USERS).values(...).execute());
 
 ### Cache — 缓存
 
-**包**: `org.carl.infrastructure.cache`
+**包**: `org.carl.infra.cache`
 **依赖**: quarkus-cache, quarkus-redis
 **启用**: `quarkus.cache.enable=true`
 
@@ -598,7 +598,7 @@ CacheContext ctx = cacheService.getCacheContext();
 
 ### Discover — 服务发现
 
-**包**: `org.carl.infrastructure.discover`
+**包**: `org.carl.infra.discover`
 **依赖**: consul, consul-stork
 
 应用启停时自动注册/注销到 Consul，无需手动调用：
@@ -617,7 +617,7 @@ quarkus.consul-config.properties-value-keys=config/${quarkus.application.name}
 
 ### Workflow — 工作流（Temporal）
 
-**包**: `org.carl.infrastructure.workflow`
+**包**: `org.carl.infra.workflow`
 **依赖**: quarkus-temporal
 
 将状态机与 Temporal 绑定，实现持久化、可重试的状态流转：
@@ -648,7 +648,7 @@ public interface ITransactionalWorkflow {
 
 ### Search — 全文搜索（Elasticsearch）
 
-**包**: `org.carl.infrastructure.search`
+**包**: `org.carl.infra.search`
 **依赖**: quarkus-elasticsearch
 
 ```java
@@ -675,7 +675,7 @@ List<User> results = new Search(client, new SearchRequest.Builder())
 
 ### MQ — 消息队列（Quarkus 集成）
 
-**包**: `org.carl.infrastructure.mq`
+**包**: `org.carl.infra.mq`
 **依赖**: quarkus-pulsar
 
 Quarkus 应用启停时自动管理 `MQClient` 生命周期：
@@ -719,14 +719,14 @@ consumer.acknowledge(msg);
 ### 包命名
 
 ```
-org.carl.infrastructure.{模块名}.{子包}
+org.carl.infra.{模块名}.{子包}
 ```
 
 例如:
-- `org.carl.infrastructure.dto`
-- `org.carl.infrastructure.persistence.core`
-- `org.carl.infrastructure.redis.factory`
-- `org.carl.infrastructure.mq`
+- `org.carl.infra.dto`
+- `org.carl.infra.persistence.core`
+- `org.carl.infra.redis.factory`
+- `org.carl.infra.mq`
 
 ### 代码风格
 
@@ -766,10 +766,10 @@ PersistenceContext persistenceContext;
 ### 场景 1：新增一个 Repository（独立库）
 
 ```java
-package org.carl.infrastructure.xxx.repository;
+package org.carl.infra.xxx.repository;
 
-import org.carl.infrastructure.persistence.IPersistenceOperations;
-import org.carl.infrastructure.persistence.core.PersistenceContext;
+import org.carl.infra.persistence.IPersistenceOperations;
+import org.carl.infra.persistence.core.PersistenceContext;
 
 public class OrderRepository implements IPersistenceOperations {
 
@@ -873,5 +873,5 @@ import static org.junit.jupiter.api.Assertions.*;
 
 ```bash
 ./gradlew test                                          # 测试全部
-./gradlew :infrastructure-component-redis:test           # 测试单模块
+./gradlew :infra-component-redis:test           # 测试单模块
 ```

@@ -2,7 +2,7 @@
 
 ## 模块定位
 
-`infrastructure-component-web-api` 是纯 Java Web API 支撑组件，提供响应信封、请求 ID、验证错误、业务异常、404 异常、兜底异常映射和可替换的响应适配接口。
+`infra-component-web-api` 是纯 Java Web API 支撑组件，提供响应信封、请求 ID、验证错误、业务异常、404 异常、兜底异常映射和可替换的响应适配接口。
 
 ## 核心能力
 
@@ -22,6 +22,6 @@
 
 ## 测试验收
 
-- `./gradlew :infrastructure-component-web-api:test` 通过。
+- `./gradlew :infra-component-web-api:test` 通过。
 - 覆盖业务错误、验证错误、404 和 fallback 500。
 - 覆盖自定义 `ResponseEnvelopeAdapter`，证明应用可保持既有响应结构。

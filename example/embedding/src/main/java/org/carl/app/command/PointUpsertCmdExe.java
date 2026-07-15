@@ -8,7 +8,7 @@ import jakarta.inject.Inject;
 import org.carl.client.dto.cmd.PointUpsertCmd;
 import org.carl.component.dto.EntityResponse;
 import org.carl.domain.gateway.IQdrantGateway;
-import org.carl.infrastructure.common.exception.QdrantException;
+import org.carl.infra.common.exception.QdrantException;
 import org.carl.utils.Assert;
 
 @ApplicationScoped

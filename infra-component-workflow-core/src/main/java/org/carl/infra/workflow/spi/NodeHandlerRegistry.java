@@ -1,0 +1,117 @@
+package org.carl.infra.workflow.spi;
+
+import java.util.Collections;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+/**
+ * Thread-safe registry of {@link NodeHandler}s keyed by {@link NodeHandler#type()}.
+ *
+ * <p>Lookup semantics:
+ *
+ * <ul>
+ *   <li>{@link #register(NodeHandler)}: always calls {@link DeterminismGuard#assertPure(Class)}
+ *       before storing the handler. Use {@link #registerBuiltIn(NodeHandler)} to bypass the guard
+ *       for trusted built-in handlers.
+ *   <li>{@link #registerBuiltIn(NodeHandler)}: trusted path — skips the determinism guard. Used by
+ *       {@link org.carl.infra.workflow.handlers.BuiltInHandlers}.
+ *   <li>{@link #lookup(String)}: throws {@link IllegalArgumentException} if absent.
+ *   <li>{@link #find(String)}: returns {@link Optional#empty()} if absent.
+ * </ul>
+ *
+ * <p>The {@link #strict()} method is retained for backward compatibility but is now a no-op: {@link
+ * #register(NodeHandler)} is always strict.
+ */
+public final class NodeHandlerRegistry {
+
+    private final ConcurrentMap<String, NodeHandler<?, ?, ?>> handlers = new ConcurrentHashMap<>();
+
+    /**
+     * No-op retained for backward compatibility. {@link #register(NodeHandler)} is always strict —
+     * it unconditionally calls {@link DeterminismGuard#assertPure(Class)}. Calling this method has
+     * no effect.
+     *
+     * @return this registry for chaining.
+     */
+    public NodeHandlerRegistry strict() {
+        return this;
+    }
+
+    /**
+     * Always returns {@code true}: the registry is always strict.
+     *
+     * @return {@code true}
+     */
+    public boolean isStrict() {
+        return true;
+    }
+
+    /**
+     * Register a user-provided handler. Always calls {@link DeterminismGuard#assertPure(Class)}
+     * before storing. Throws {@link IllegalStateException} if the guard finds violations or if the
+     * type is already registered.
+     */
+    @SuppressWarnings("unchecked")
+    public void register(NodeHandler<?, ?, ?> handler) {
+        Objects.requireNonNull(handler, "handler");
+        String type = validateType(handler);
+        DeterminismGuard.assertPure((Class<? extends NodeHandler<?, ?, ?>>) handler.getClass());
+        putHandler(type, handler);
+    }
+
+    /**
+     * Trusted path for built-in handlers. Skips the {@link DeterminismGuard} scan. Throws {@link
+     * IllegalStateException} if the type is already registered.
+     */
+    public void registerBuiltIn(NodeHandler<?, ?, ?> handler) {
+        Objects.requireNonNull(handler, "handler");
+        String type = validateType(handler);
+        putHandler(type, handler);
+    }
+
+    /**
+     * Returns the handler for {@code type}.
+     *
+     * @throws IllegalArgumentException if no handler is registered for the given type
+     */
+    public NodeHandler<?, ?, ?> lookup(String type) {
+        Objects.requireNonNull(type, "type");
+        NodeHandler<?, ?, ?> handler = handlers.get(type);
+        if (handler == null) {
+            throw new IllegalArgumentException("No NodeHandler registered for type: " + type);
+        }
+        return handler;
+    }
+
+    /** Returns the handler for {@code type}, or {@link Optional#empty()} if absent. */
+    public Optional<NodeHandler<?, ?, ?>> find(String type) {
+        if (type == null) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(handlers.get(type));
+    }
+
+    /** Returns an unmodifiable snapshot of all currently registered type strings. */
+    public Set<String> registeredTypes() {
+        return Collections.unmodifiableSet(handlers.keySet());
+    }
+
+    private static String validateType(NodeHandler<?, ?, ?> handler) {
+        String type = handler.type();
+        Objects.requireNonNull(type, "handler.type()");
+        if (type.isBlank()) {
+            throw new IllegalArgumentException("handler.type() must not be blank");
+        }
+        return type;
+    }
+
+    private void putHandler(String type, NodeHandler<?, ?, ?> handler) {
+        NodeHandler<?, ?, ?> previous = handlers.putIfAbsent(type, handler);
+        if (previous != null) {
+            throw new IllegalStateException("NodeHandler already registered for type: " + type);
+        }
+    }
+}

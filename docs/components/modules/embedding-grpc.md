@@ -2,7 +2,7 @@
 
 ## 模块定位
 
-`infrastructure-component-embedding-grpc` 提供 embedding 服务的 Vert.x gRPC client、能力接口和 Quarkus provider。它当前是“gRPC client + Quarkus 装配”混合模块。
+`infra-component-embedding-grpc` 提供 embedding 服务的 Vert.x gRPC client、能力接口和 Quarkus provider。它当前是“gRPC client + Quarkus 装配”混合模块。
 
 ## 核心能力
 
@@ -38,7 +38,7 @@
 
 ## 测试验收
 
-- `./gradlew :infrastructure-component-embedding-grpc:test` 通过。
+- `./gradlew :infra-component-embedding-grpc:test` 通过。
 - protobuf 生成任务能稳定运行。
 - 若拆分 provider，core client 源码中没有 Quarkus、CDI、MicroProfile Config import。
 

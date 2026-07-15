@@ -15,11 +15,11 @@ import io.temporal.serviceclient.WorkflowServiceStubs;
 import io.temporal.serviceclient.WorkflowServiceStubsOptions;
 import io.temporal.worker.Worker;
 import io.temporal.worker.WorkerFactory;
-import org.carl.infrastructure.workflow.runtime.WorkerSetup;
-import org.carl.infrastructure.workflow.spi.NodeHandlerRegistry;
-import org.carl.infrastructure.workflow.handlers.BuiltInHandlers;
-import org.carl.infrastructure.workflow.runtime.HandlerHolder;
-import org.carl.infrastructure.workflow.runtime.BusinessActivityRegistry;
+import org.carl.infra.workflow.runtime.WorkerSetup;
+import org.carl.infra.workflow.spi.NodeHandlerRegistry;
+import org.carl.infra.workflow.handlers.BuiltInHandlers;
+import org.carl.infra.workflow.runtime.HandlerHolder;
+import org.carl.infra.workflow.runtime.BusinessActivityRegistry;
 
 public class WorkflowServer {
 
@@ -69,9 +69,9 @@ public class WorkflowServer {
 使用简洁的 FlowDef DSL 语法：
 
 ```java
-import org.carl.infrastructure.workflow.dsl.Flow;
-import org.carl.infrastructure.workflow.dsl.FlowDef;
-import static org.carl.infrastructure.workflow.dsl.Dsl.*;
+import org.carl.infra.workflow.dsl.Flow;
+import org.carl.infra.workflow.dsl.FlowDef;
+import static org.carl.infra.workflow.dsl.Dsl.*;
 
 // 定义请假流程
 FlowDef flow = Flow.define("leave", "请假流程");
@@ -109,8 +109,8 @@ WorkflowDefinition leaveWorkflow = flow.build();
 ```java
 import io.temporal.client.WorkflowClient;
 import io.temporal.client.WorkflowOptions;
-import org.carl.infrastructure.workflow.runtime.GenericWorkflow;
-import org.carl.infrastructure.workflow.runtime.WorkflowInput;
+import org.carl.infra.workflow.runtime.GenericWorkflow;
+import org.carl.infra.workflow.runtime.WorkflowInput;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -234,7 +234,7 @@ String requestId = requestResult.payload().get("requestId");
 ### 完整的请假流程
 
 ```java
-import static org.carl.infrastructure.workflow.dsl.Dsl.*;
+import static org.carl.infra.workflow.dsl.Dsl.*;
 
 public class LeaveWorkflowExample {
 
@@ -419,7 +419,7 @@ testEnv.sleep(Duration.ofHours(25));  // 模拟超时
 ```properties
 handlers=java.util.logging.ConsoleHandler
 .level=INFO
-org.carl.infrastructure.workflow.level=FINEST
+org.carl.infra.workflow.level=FINEST
 io.temporal.level=WARNING
 ```
 

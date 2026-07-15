@@ -9,7 +9,7 @@ import org.carl.client.dto.clientobject.ScoredPointCO;
 import org.carl.client.dto.query.RecommendationQ;
 import org.carl.component.dto.MultiEntityResponse;
 import org.carl.domain.gateway.IQdrantGateway;
-import org.carl.infrastructure.convertor.ScoredPointConvertor;
+import org.carl.infra.convertor.ScoredPointConvertor;
 import org.carl.utils.Assert;
 
 @ApplicationScoped

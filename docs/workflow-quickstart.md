@@ -5,12 +5,12 @@
 ### 第一步：启动 Worker
 
 **方式1：在 IDEA 中运行**
-- 打开 `infrastructure-component-workflow-temporal/src/test/java/org/carl/infrastructure/workflow/example/QuickStartWorker.java`
+- 打开 `infra-component-workflow-temporal/src/test/java/org/carl/infra/workflow/example/QuickStartWorker.java`
 - 右键点击，选择 "Run 'QuickStartWorker.main()'"
 
 **方式2：使用 Gradle**
 ```bash
-./gradlew :infrastructure-component-workflow-temporal:test --tests QuickStartWorker
+./gradlew :infra-component-workflow-temporal:test --tests QuickStartWorker
 ```
 
 Worker 会启动并监听工作流任务，保持运行状态。
@@ -18,12 +18,12 @@ Worker 会启动并监听工作流任务，保持运行状态。
 ### 第二步：启动客户端
 
 **方式1：在 IDEA 中运行**
-- 打开 `infrastructure-component-workflow-temporal/src/test/java/org/carl/infrastructure/workflow/example/QuickStartClient.java`
+- 打开 `infra-component-workflow-temporal/src/test/java/org/carl/infra/workflow/example/QuickStartClient.java`
 - 右键点击，选择 "Run 'QuickStartClient.main()'"
 
 **方式2：使用 Gradle**
 ```bash
-./gradlew :infrastructure-component-workflow-temporal:test --tests QuickStartClient
+./gradlew :infra-component-workflow-temporal:test --tests QuickStartClient
 ```
 
 客户端会自动：
@@ -49,8 +49,8 @@ ORDER BY started_at DESC;
 ### 场景1：请假审批流程
 
 ```java
-import static org.carl.infrastructure.workflow.dsl.BuiltInNodes.*;
-import static org.carl.infrastructure.workflow.dsl.Dsl.*;
+import static org.carl.infra.workflow.dsl.BuiltInNodes.*;
+import static org.carl.infra.workflow.dsl.Dsl.*;
 
 // 定义工作流（简洁语法）
 FlowDef flow = Flow.define("leave", "请假流程");
@@ -73,8 +73,8 @@ WorkflowDefinition leaveWorkflow = flow.build();
 ### 场景2：订单处理流程
 
 ```java
-import static org.carl.infrastructure.workflow.dsl.BuiltInNodes.*;
-import static org.carl.infrastructure.workflow.dsl.Dsl.*;
+import static org.carl.infra.workflow.dsl.BuiltInNodes.*;
+import static org.carl.infra.workflow.dsl.Dsl.*;
 
 FlowDef flow = Flow.define("order", "订单流程");
 flow.start("createOrder");
@@ -97,8 +97,8 @@ WorkflowDefinition orderWorkflow = flow.build();
 ### 场景3：会签流程
 
 ```java
-import static org.carl.infrastructure.workflow.dsl.BuiltInNodes.*;
-import static org.carl.infrastructure.workflow.dsl.Dsl.*;
+import static org.carl.infra.workflow.dsl.BuiltInNodes.*;
+import static org.carl.infra.workflow.dsl.Dsl.*;
 
 FlowDef flow = Flow.define("approval", "会签流程");
 flow.start("submitRequest");
@@ -220,8 +220,8 @@ registry.register("riskyOperation", input -> {
 ### 3. 超时设置
 
 ```java
-import org.carl.infrastructure.workflow.handlers.ApprovalTaskConfig;
-import org.carl.infrastructure.workflow.handlers.BuiltInNodeSpecs;
+import org.carl.infra.workflow.handlers.ApprovalTaskConfig;
+import org.carl.infra.workflow.handlers.BuiltInNodeSpecs;
 
 flow.node("approval", b -> b.config(
     BuiltInNodeSpecs.APPROVAL_TASK,

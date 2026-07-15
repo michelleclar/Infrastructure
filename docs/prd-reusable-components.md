@@ -2,11 +2,11 @@
 
 ## Background
 
-Several app-neutral capabilities are currently duplicated inside the **ER Tool** application. This PRD extracts them into reusable `org.carl.infrastructure.*` modules so applications depend on infrastructure instead of re-implementing them.
+Several app-neutral capabilities are currently duplicated inside the **ER Tool** application. This PRD extracts them into reusable `org.carl.infra.*` modules so applications depend on infra instead of re-implementing them.
 
 ## Goal
 
-Deliver reusable, app-neutral infrastructure components with tests and documentation, removing ER Tool duplication.
+Deliver reusable, app-neutral infra components with tests and documentation, removing ER Tool duplication.
 
 ## Scope
 

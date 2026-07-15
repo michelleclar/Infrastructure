@@ -7,7 +7,7 @@
 
 ---
 
-### Quarkus 集成模块 (`infrastructure-component-quarkus/`)
+### Quarkus 集成模块 (`infra-component-quarkus/`)
 
 | 组件            | 功能                      | 核心依赖                                    |
 |---------------|-------------------------|-----------------------------------------|
@@ -76,7 +76,7 @@
 ```bash
 ./gradlew build                                         # 构建全部
 ./gradlew test                                          # 测试全部
-./gradlew :infrastructure-component-redis:test          # 测试单模块
+./gradlew :infra-component-redis:test          # 测试单模块
 ```
 
 ### Native 构建

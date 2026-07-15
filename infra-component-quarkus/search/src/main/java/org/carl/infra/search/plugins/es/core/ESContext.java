@@ -1,0 +1,13 @@
+package org.carl.infra.search.plugins.es.core;
+
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+
+public class ESContext {
+    ElasticsearchClient client;
+
+    public ESContext(ElasticsearchClient client) {
+        this.client = client;
+    }
+
+    public ElasticsearchClient getClient() { return client; }
+}

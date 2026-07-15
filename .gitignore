@@ -42,8 +42,8 @@ bin/
 /temp/
 **/log/
 !oidc/log
-!infrastructure/src/main/resources/composev2/docker-compose.yml
-/infrastructure/src/main/resources/composev2/
+!infra/src/main/resources/composev2/docker-compose.yml
+/infra/src/main/resources/composev2/
 /oidc/vendor
 
 
@@ -54,7 +54,6 @@ bin/
 **/generated/
 /.kiro/
 /.qoder/
-/infrastructure-component/workflow/src/main/gen/
+/infra-component/workflow/src/main/gen/
 /.qoderignore
-/.linear-autopilot/
 /.claude/

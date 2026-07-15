@@ -2,7 +2,7 @@
 
 ## 背景
 
-当前 `infrastructure-component-workflow-temporal` 更接近“事件驱动状态机 + Temporal 持久化”：
+当前 `infra-component-workflow-temporal` 更接近“事件驱动状态机 + Temporal 持久化”：
 
 ```java
 flow.from(A).to(B).on(EVENT).perform(activity);
@@ -551,4 +551,4 @@ flow.approval(APPROVAL_STATE).expr(...).onApproved(...).onRejected(...);
 2. 页面配置中的表达式语言使用什么方案：简单模板表达式、MVEL、JEXL、SpEL，还是自研最小表达式。
 3. `serviceTask` 如何注册业务 activity：字符串名称注册，还是 Java bean/class 引用。
 4. 子任务是否需要独立生命周期和审计表，还是作为主流程 runtime 的嵌套记录。
-5. V2 是否直接放在 `infrastructure-component-workflow-temporal`，还是先拆出不依赖 Temporal 的 workflow core 模块。
+5. V2 是否直接放在 `infra-component-workflow-temporal`，还是先拆出不依赖 Temporal 的 workflow core 模块。
