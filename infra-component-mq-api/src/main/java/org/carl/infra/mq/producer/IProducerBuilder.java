@@ -9,6 +9,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public interface IProducerBuilder<T> {
+
+    /** Apply one explicit provider-specific option. */
+    IProducerBuilder<T> option(ProducerOption option);
     @Deprecated
     IProducer<T> create() throws ProducerException;
 

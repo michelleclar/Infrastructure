@@ -9,6 +9,8 @@ rootProject.name = "infra"
 //quarkus module
 include("infra-component-quarkus")
 include("infra-component-quarkus:mq")
+include("infra-component-quarkus:mq-kafka")
+include("infra-component-quarkus:mq-pulsar")
 include("infra-component-quarkus:web")
 include("infra-component-quarkus:cache")
 include("infra-component-quarkus:search")

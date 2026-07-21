@@ -45,6 +45,10 @@ public class MQClientBuilder {
     }
 
     public static MQClient createClient(MQConfig config) throws MQClientException {
+        return createPulsarClient(config);
+    }
+
+    static MQClient createPulsarClient(MQConfig config) throws MQClientException {
 
         logger.debug(
                 "Creating Pulsar client with args: \n client: [{}] transaction: [{}] monitor: [{}]",

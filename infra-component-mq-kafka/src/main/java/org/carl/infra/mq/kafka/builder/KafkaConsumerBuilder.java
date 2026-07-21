@@ -3,6 +3,7 @@ package org.carl.infra.mq.kafka.builder;
 import org.carl.infra.logging.ILogger;
 import org.carl.infra.logging.LoggerFactory;
 import org.carl.infra.mq.common.ex.ConsumerException;
+import org.carl.infra.mq.common.ex.UnsupportedMQCapabilityException;
 import org.carl.infra.mq.config.MQConfig;
 import org.carl.infra.mq.consumer.*;
 import org.carl.infra.mq.kafka.config.KafkaConfig;
@@ -45,7 +46,13 @@ public class KafkaConsumerBuilder<T> implements IConsumerBuilder<T> {
         this.client = client;
         this.clazz = clazz;
         this.consumerConfig = copyConsumerConfig(consumerConfig);
+        validateConfig();
         this.autoAck = this.consumerConfig.autoAck();
+    }
+
+    @Override
+    public IConsumerBuilder<T> option(ConsumerOption option) {
+        throw unsupported("consumer option", option);
     }
 
     private KafkaConfig.KafkaConsumerConfig copyConsumerConfig(MQConfig.ConsumerConfig source) {
@@ -114,6 +121,7 @@ public class KafkaConsumerBuilder<T> implements IConsumerBuilder<T> {
     @Override
     public IConsumerBuilder<T> conf(Consumer<MQConfig.ConsumerConfig> config) {
         config.accept(this.consumerConfig);
+        validateConfig();
         return this;
     }
 
@@ -135,6 +143,7 @@ public class KafkaConsumerBuilder<T> implements IConsumerBuilder<T> {
         this.consumerConfig.setPriority(copy.priority());
         this.consumerConfig.setReadCompacted(copy.readCompacted());
         this.consumerConfig.setSubscriptionType(copy.subscriptionType());
+        validateConfig();
         return this;
     }
 
@@ -217,40 +226,45 @@ public class KafkaConsumerBuilder<T> implements IConsumerBuilder<T> {
 
     @Override
     public IConsumerBuilder<T> subscriptionProperties(Map<String, String> subscriptionProperties) {
-        return this;
+        throw unsupported("subscription properties", subscriptionProperties);
     }
 
     @Override
     public IConsumerBuilder<T> ackTimeout(long ackTimeout, TimeUnit timeUnit) {
-        this.consumerConfig.setAckTimeout(Duration.ofMillis(timeUnit.toMillis(ackTimeout)));
-        return this;
+        throw unsupported("ack timeout", Duration.ofMillis(timeUnit.toMillis(ackTimeout)));
     }
 
     @Override
     public IConsumerBuilder<T> isAckReceiptEnabled(boolean isAckReceiptEnabled) {
-        return this;
+        throw unsupported("ack receipt", isAckReceiptEnabled);
     }
 
     @Override
     public IConsumerBuilder<T> ackTimeoutTickTime(long tickTime, TimeUnit timeUnit) {
-        this.consumerConfig.setAckTimeoutTickTime(Duration.ofMillis(timeUnit.toMillis(tickTime)));
-        return this;
+        throw unsupported("ack timeout tick time", Duration.ofMillis(timeUnit.toMillis(tickTime)));
     }
 
     @Override
     public IConsumerBuilder<T> negativeAckRedeliveryDelay(long redeliveryDelay, TimeUnit timeUnit) {
-        this.consumerConfig.setNegativeAckRedeliveryDelay(Duration.ofMillis(timeUnit.toMillis(redeliveryDelay)));
-        return this;
+        throw unsupported(
+                "negative ack redelivery delay",
+                Duration.ofMillis(timeUnit.toMillis(redeliveryDelay)));
     }
 
     @Override
     public IConsumerBuilder<T> subscriptionType(SubscriptionType subscriptionType) {
-        this.consumerConfig.setSubscriptionType(subscriptionType);
+        if (subscriptionType != SubscriptionTypes.LOAD_BALANCED) {
+            throw unsupported("subscription type", subscriptionType);
+        }
+        this.consumerConfig.setSubscriptionType(SubscriptionTypes.LOAD_BALANCED);
         return this;
     }
 
     @Override
     public IConsumerBuilder<T> subscriptionMode(SubscriptionMode subscriptionMode) {
+        if (subscriptionMode != SubscriptionModes.DURABLE) {
+            throw unsupported("subscription mode", subscriptionMode);
+        }
         return this;
     }
 
@@ -262,38 +276,39 @@ public class KafkaConsumerBuilder<T> implements IConsumerBuilder<T> {
 
     @Override
     public IConsumerBuilder<T> defaultCryptoKeyReader(String privateKey) {
-        return this;
+        throw unsupported("consumer payload decryption", privateKey);
     }
 
     @Override
     public IConsumerBuilder<T> defaultCryptoKeyReader(Map<String, String> privateKeys) {
-        return this;
+        throw unsupported("consumer payload decryption", privateKeys);
     }
 
     @Override
     public IConsumerBuilder<T> receiverQueueSize(int receiverQueueSize) {
-        this.consumerConfig.setReceiverQueueSize(receiverQueueSize);
-        return this;
+        throw unsupported("receiver queue size", receiverQueueSize);
     }
 
     @Override
     public IConsumerBuilder<T> acknowledgmentGroupTime(long delay, TimeUnit unit) {
-        return this;
+        throw unsupported("acknowledgment group time", Duration.ofMillis(unit.toMillis(delay)));
     }
 
     @Override
     public IConsumerBuilder<T> maxAcknowledgmentGroupSize(int messageNum) {
-        return this;
+        throw unsupported("maximum acknowledgment group size", messageNum);
     }
 
     @Override
     public IConsumerBuilder<T> replicateSubscriptionState(boolean replicateSubscriptionState) {
-        return this;
+        throw unsupported("subscription state replication", replicateSubscriptionState);
     }
 
     @Override
     public IConsumerBuilder<T> maxTotalReceiverQueueSizeAcrossPartitions(int maxTotalReceiverQueueSizeAcrossPartitions) {
-        return this;
+        throw unsupported(
+                "maximum receiver queue size across partitions",
+                maxTotalReceiverQueueSizeAcrossPartitions);
     }
 
     @Override
@@ -304,24 +319,22 @@ public class KafkaConsumerBuilder<T> implements IConsumerBuilder<T> {
 
     @Override
     public IConsumerBuilder<T> readCompacted(boolean readCompacted) {
-        this.consumerConfig.setReadCompacted(readCompacted);
-        return this;
+        throw unsupported("read compacted", readCompacted);
     }
 
     @Override
     public IConsumerBuilder<T> patternAutoDiscoveryPeriod(int periodInMinutes) {
-        return this;
+        throw unsupported("pattern auto discovery period", Duration.ofMinutes(periodInMinutes));
     }
 
     @Override
     public IConsumerBuilder<T> patternAutoDiscoveryPeriod(int interval, TimeUnit unit) {
-        return this;
+        throw unsupported("pattern auto discovery period", Duration.ofMillis(unit.toMillis(interval)));
     }
 
     @Override
     public IConsumerBuilder<T> priorityLevel(int priorityLevel) {
-        this.consumerConfig.setPriority(priorityLevel);
-        return this;
+        throw unsupported("consumer priority", priorityLevel);
     }
 
     @Override
@@ -346,47 +359,50 @@ public class KafkaConsumerBuilder<T> implements IConsumerBuilder<T> {
 
     @Override
     public IConsumerBuilder<T> autoUpdatePartitions(boolean autoUpdate) {
-        return this;
+        throw unsupported("partition auto update switch", autoUpdate);
     }
 
     @Override
     public IConsumerBuilder<T> autoUpdatePartitionsInterval(int interval, TimeUnit unit) {
-        return this;
+        throw unsupported("partition auto update interval", Duration.ofMillis(unit.toMillis(interval)));
     }
 
     @Override
     public IConsumerBuilder<T> startMessageIdInclusive() {
-        return this;
+        throw unsupported("inclusive initial message id", true);
     }
 
     @Override
     public IConsumerBuilder<T> enableRetry(boolean retryEnable) {
-        return this;
+        throw unsupported("broker retry subscription", retryEnable);
     }
 
     @Override
     public IConsumerBuilder<T> enableBatchIndexAcknowledgment(boolean batchIndexAcknowledgmentEnabled) {
-        return this;
+        throw unsupported("batch index acknowledgment", batchIndexAcknowledgmentEnabled);
     }
 
     @Override
     public IConsumerBuilder<T> maxPendingChunkedMessage(int maxPendingChunkedMessage) {
-        return this;
+        throw unsupported("maximum pending chunked messages", maxPendingChunkedMessage);
     }
 
     @Override
     public IConsumerBuilder<T> autoAckOldestChunkedMessageOnQueueFull(boolean autoAckOldestChunkedMessageOnQueueFull) {
-        return this;
+        throw unsupported(
+                "auto ack oldest chunked message on queue full",
+                autoAckOldestChunkedMessageOnQueueFull);
     }
 
     @Override
     public IConsumerBuilder<T> expireTimeOfIncompleteChunkedMessage(long duration, TimeUnit unit) {
-        return this;
+        throw unsupported(
+                "incomplete chunked message expiry", Duration.ofMillis(unit.toMillis(duration)));
     }
 
     @Override
     public IConsumerBuilder<T> poolMessages(boolean poolMessages) {
-        return this;
+        throw unsupported("pooled messages", poolMessages);
     }
 
     @Override
@@ -397,7 +413,17 @@ public class KafkaConsumerBuilder<T> implements IConsumerBuilder<T> {
 
     @Override
     public IConsumerBuilder<T> autoScaledReceiverQueueSizeEnabled(boolean enabled) {
-        return this;
+        throw unsupported("auto-scaled receiver queue", enabled);
+    }
+
+    private UnsupportedMQCapabilityException unsupported(String capability, Object value) {
+        return new UnsupportedMQCapabilityException("kafka", capability, value);
+    }
+
+    private void validateConfig() {
+        if (consumerConfig.subscriptionType() != SubscriptionTypes.LOAD_BALANCED) {
+            throw unsupported("configured subscription type", consumerConfig.subscriptionType());
+        }
     }
 
     private Map<String, Object> buildConsumerProperties() {

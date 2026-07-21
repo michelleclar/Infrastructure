@@ -2,6 +2,8 @@ package org.carl.infra.mq.kafka.builder;
 
 import org.carl.infra.mq.model.Message;
 import org.carl.infra.mq.model.MessageBuilder;
+import org.carl.infra.mq.model.MessageOption;
+import org.carl.infra.mq.common.ex.UnsupportedMQCapabilityException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,6 +22,11 @@ public class KafkaMessageBuilder<T> implements MessageBuilder<T> {
 
     public KafkaMessageBuilder(T value) {
         this.value = value;
+    }
+
+    @Override
+    public MessageBuilder<T> option(MessageOption option) {
+        throw new UnsupportedMQCapabilityException("kafka", "message option", option);
     }
 
     @Override

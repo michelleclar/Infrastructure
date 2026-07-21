@@ -6,7 +6,7 @@
 
 ## 核心能力
 
-- `MQClient` 和 `IClientBuilder`。
+- `MQClient`、`MQClientFactory` 和 `MQClientProvider`。
 - `IProducer`、`IProducerBuilder`、producer stats 与发送结果。
 - `IConsumer`、`IConsumerBuilder`、message listener、consumer stats。
 - `Message`、`MessageBuilder`。
@@ -29,14 +29,14 @@
 
 ## 典型使用场景
 
-- 业务代码只依赖 MQ 抽象，不关心底层 Pulsar 实现。
+- 业务代码只依赖 MQ 抽象，不关心底层 Kafka/Pulsar 实现。
 - 测试中用 fake producer/consumer 替换真实 MQ。
 - Quarkus mq adapter 根据配置创建具体 MQ client。
 
 ## 维护事项
 
-- `MQClient.builder()` 当前返回 `null`，后续应明确是保留 SPI 入口还是删除。
-- API 层新增能力时要确认 Pulsar 实现能落地，避免抽象空转。
+- `MQClient.builder()` 是已废弃的历史入口；统一使用 `MQClientFactory.create(MQConfig)`。
+- API 层新增能力时要确认 Kafka 和 Pulsar 都能落地，无法等价映射时必须明确能力边界。
 - 异常类型应稳定，减少实现层异常向业务泄漏。
 
 ## 测试验收
@@ -49,8 +49,8 @@
 
 **为了解决什么**：让业务只面向 MQ 抽象编程，不直接绑定 Pulsar、Kafka 或 Quarkus。
 
-**如何使用**：业务代码接收 `MQClient`，通过 `newProducer()` 或 `newConsumer()` 创建 producer/consumer，再用 `IProducer.sendMessage(...)` 发送消息或用 consumer listener 处理消息。具体 client 由 `mq-pulsar` 或 Quarkus mq adapter 创建。
+**如何使用**：业务代码接收 `MQClient`；普通 Java/Spring 装配层调用 `MQClientFactory.create(config)`。运行时二选一引入 `mq-kafka` 或 `mq-pulsar`；Quarkus 应用二选一引入对应 Quarkus Provider 集成模块。
 
 **当前依赖了什么**：无生产依赖，测试只依赖 JUnit。
 
-**需要注意什么**：`MQClient.builder()` 当前返回 `null`，审查时要决定删除、实现 SPI，或改由具体实现 builder 提供。API 层不要引入 Pulsar 专有枚举和异常。
+**需要注意什么**：运行时没有 Provider 或同时存在多个 Provider 都会明确失败。API 层不要继续加入具体产品专属枚举和配置。

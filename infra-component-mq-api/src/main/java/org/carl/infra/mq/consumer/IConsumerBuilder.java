@@ -17,6 +17,9 @@ import java.util.regex.Pattern;
  */
 public interface IConsumerBuilder<T> extends Cloneable {
 
+    /** Apply one explicit provider-specific option. */
+    IConsumerBuilder<T> option(ConsumerOption option);
+
     IConsumerBuilder<T> autoAck(boolean flag);
 
     /**
@@ -28,7 +31,7 @@ public interface IConsumerBuilder<T> extends Cloneable {
      * <pre>{@code
      * ConsumerBuilder<String> builder = client.newConsumer(Schema.STRING)
      *         .subscriptionName("my-subscription-name")
-     *         .subscriptionType(SubscriptionType.Shared)
+     *         .subscriptionType(SubscriptionTypes.LOAD_BALANCED)
      *         .receiverQueueSize(10);
      *
      * Consumer<String> consumer1 = builder.clone().topic("my-topic-1").subscribe();

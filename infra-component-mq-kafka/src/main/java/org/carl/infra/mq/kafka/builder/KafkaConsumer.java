@@ -9,6 +9,7 @@ import org.apache.kafka.common.TopicPartition;
 import org.carl.infra.logging.ILogger;
 import org.carl.infra.logging.LoggerFactory;
 import org.carl.infra.mq.common.ex.ConsumerException;
+import org.carl.infra.mq.common.ex.UnsupportedMQCapabilityException;
 import org.carl.infra.mq.config.MQConfig;
 import org.carl.infra.mq.consumer.ConsumerStats;
 import org.carl.infra.mq.consumer.IConsumer;
@@ -402,7 +403,7 @@ public class KafkaConsumer<T> implements IConsumer<T>, AutoCloseable {
 
     @Override
     public ConsumerStats getStats() {
-        return null;
+        throw new UnsupportedMQCapabilityException("kafka", "legacy consumer statistics", "getStats");
     }
 
     @Override

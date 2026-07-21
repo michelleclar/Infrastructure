@@ -1,6 +1,6 @@
 # infra-component-mq-pulsar
 
-> `infra-component-mq-api` SPI 的 Apache Pulsar 实现。通过 `MQClientBuilder` 创建 `MQClient`，业务代码只面向 SPI 接口编程，不直接依赖任何 Pulsar 原生 API。
+> `infra-component-mq-api` SPI 的 Apache Pulsar 实现。实现通过 Java SPI 注册，应用装配层使用公共 `MQClientFactory` 创建 `MQClient`，业务代码不直接依赖 Pulsar 原生 API。
 
 ---
 
@@ -33,9 +33,12 @@ dependencies {
 入口工厂：
 
 ```
+MQClientFactory.create(MQConfig)
 MQClientBuilder.createClient(MQConfig)
 MQClientBuilder.createClient(MQConfig, OpenTelemetry)
 ```
+
+`MQClientBuilder` 作为兼容入口保留；新代码使用 `MQClientFactory`。运行时 classpath 中不得同时出现另一个 MQ Provider。
 
 ---
 
@@ -115,7 +118,7 @@ MQConfig config = new PulsarConfig("pulsar://localhost:6650",
 | `batchReceiveMaxMessages` | `100` | 批量接收最大消息数 |
 | `batchReceiveTimeout` | `100ms` | 批量接收等待超时 |
 | `subscriptionInitialPosition` | `Latest` | 订阅初始位置（`Latest` / `Earliest`） |
-| `subscriptionType` | `EXCLUSIVE` | 订阅类型（`EXCLUSIVE` / `SHARED` / `FAILOVER` / `KEY_SHARED`） |
+| `subscriptionType` | `LOAD_BALANCED` | 公共负载均衡订阅语义；Pulsar 原生类型通过能力对象显式配置 |
 | `priority` | `0` | 消费者优先级 |
 | `readCompacted` | `false` | 是否读压缩 Topic |
 | `autoAck` | `false` | 是否在 MessageListener 中自动 Ack |
@@ -155,13 +158,33 @@ MQConfig config = new PulsarConfig("pulsar://localhost:6650",
 
 ```java
 import org.carl.infra.mq.client.MQClient;
+import org.carl.infra.mq.client.MQClientFactory;
 import org.carl.infra.mq.common.ex.MQClientException;
 import org.carl.infra.mq.config.MQConfig;
-import org.carl.infra.mq.pulsar.builder.MQClientBuilder;
 import org.carl.infra.mq.pulsar.config.PulsarConfig;
 
 MQConfig config = new PulsarConfig("pulsar://localhost:6650");
-MQClient client = MQClientBuilder.createClient(config);
+MQClient client = MQClientFactory.create(config);
+```
+
+公共订阅能力保持与 Kafka 相同的调用形式：
+
+```java
+client.newConsumer(MyOrder.class)
+        .subscriptionName("orders")
+        .subscriptionType(SubscriptionTypes.LOAD_BALANCED)
+        .subscribe("persistent://public/default/orders");
+```
+
+Pulsar 原生能力仍使用同一个 `subscriptionType` 方法：
+
+```java
+client.newConsumer(MyOrder.class)
+        .subscriptionName("orders-by-key")
+        .subscriptionType(PulsarSubscriptionTypes.KEY_SHARED)
+        .option(PulsarConsumerOptions.configure(
+                nativeBuilder -> nativeBuilder.receiverQueueSize(500)))
+        .subscribe("persistent://public/default/orders");
 ```
 
 ### 2. 发送消息（泛型对象，AVRO Schema）

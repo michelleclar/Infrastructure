@@ -7,7 +7,7 @@
 ## 核心能力
 
 - `PulsarMQClient`：`MQClient` 实现。
-- `MQClientBuilder`、`PulsarClientFactory`。
+- `PulsarMQClientProvider`、兼容入口 `MQClientBuilder`、`PulsarClientFactory`。
 - `PulsarProducer`、`PulsarProducerBuilder`。
 - `PulsarConsumer`、`PulsarConsumerBuilder`。
 - `PulsarMessageBuilder`。
@@ -23,7 +23,8 @@
 
 ## 对外 API
 
-- `MQClientBuilder` 创建 Pulsar MQ client。
+- `MQClientFactory` 通过 Java SPI 发现 Pulsar Provider 并创建 client。
+- `MQClientBuilder` 作为兼容入口保留。
 - producer/consumer builder 兼容 mq-api。
 - `PulsarConfig` 描述 Pulsar 连接、producer、consumer、TLS、transaction 等配置。
 
@@ -49,7 +50,7 @@
 
 **为了解决什么**：把 `mq-api` 的 producer、consumer、client 抽象落到 Apache Pulsar，实现消息收发、订阅、批量、压缩、事务等 Pulsar 能力。
 
-**如何使用**：直接使用时构造 `PulsarConfig`，通过 `MQClientBuilder` 或 `PulsarClientFactory` 创建 `MQClient`。Quarkus 应用通常不直接使用本模块 builder，而是通过 `infra-component-quarkus:mq` 的 `msg.*` 配置创建。
+**如何使用**：普通 Java/Spring 装配层构造 `PulsarConfig` 并调用公共 `MQClientFactory`。Quarkus 应用引入 `infra-component-quarkus:mq-pulsar`，业务直接注入 `MQClient`。
 
 **当前依赖了什么**：`org.apache.pulsar:pulsar-client:4.1.2`，并 `api(project(":infra-component-mq-api"))`。
 

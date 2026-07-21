@@ -13,6 +13,7 @@
 | `infra-component-web-api` | 已 include | Web 响应信封、请求 ID、验证错误和异常映射纯 Java API |
 | `infra-component-artifact-storage` | 已 include | 应用中立 artifact 存储 API 与本地文件实现 |
 | `infra-component-mq-api` | 已 include | MQ producer/consumer/client 抽象 |
+| `infra-component-mq-kafka` | 已 include | Kafka MQ API 实现 |
 | `infra-component-mq-pulsar` | 已 include | Pulsar MQ API 实现 |
 | `infra-component-workflow-core` | 已 include | 纯 Java 工作流定义、DSL、NodeHandler SPI 与图校验 |
 | `infra-component-workflow-temporal` | 已 include | 基于 Temporal 的工作流运行时适配 |
@@ -29,7 +30,7 @@
 - 独立组件如需要框架接线，应拆成 core 与 adapter，adapter 放入 `infra-component-quarkus/<name>` 或明确命名的框架模块。
 - `dto`、`utils`、`log` 是底层基础模块，不应反向依赖业务型组件。
 - `mq-api`、`rule-engine`、`statemachine` 属于抽象或纯逻辑组件，优先保持无框架依赖。
-- `mq-pulsar`、`redis`、`persistence-jooq`、`qdrant-grpc`、`embedding-grpc` 可以依赖对应中间件 SDK，但不应混入 Quarkus/CDI 配置读取。
+- `mq-kafka`、`mq-pulsar`、`redis`、`persistence-jooq`、`qdrant-grpc`、`embedding-grpc` 可以依赖对应中间件 SDK，但不应混入 Quarkus/CDI 配置读取。
 - 所有组件对外暴露的异常、配置和能力接口应稳定，避免让上层业务依赖实现类细节。
 
 ## 文档链接
@@ -41,6 +42,7 @@
 - [artifact-storage](modules/artifact-storage.md)
 - [log](modules/log.md)
 - [mq-api](modules/mq-api.md)
+- [mq-kafka](modules/mq-kafka.md)
 - [mq-pulsar](modules/mq-pulsar.md)
 - [workflow-core](modules/workflow-core.md)
 - [workflow-temporal](modules/workflow-temporal.md)

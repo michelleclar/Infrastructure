@@ -9,8 +9,12 @@ import java.util.concurrent.CompletableFuture;
 
 public interface MQClient extends AutoCloseable {
 
+    /**
+     * @deprecated This entry point was never implemented. Use {@link MQClientFactory#create}.
+     */
+    @Deprecated(forRemoval = true)
     static IClientBuilder builder() {
-        return null;
+        throw new UnsupportedOperationException("Use MQClientFactory.create(MQConfig)");
     }
     IProducerBuilder<byte[]> newProducer();
 

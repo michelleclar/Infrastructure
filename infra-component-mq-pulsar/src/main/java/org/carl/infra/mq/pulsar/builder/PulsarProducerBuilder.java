@@ -6,6 +6,11 @@ import org.carl.infra.logging.LoggerFactory;
 import org.carl.infra.mq.common.ex.ProducerException;
 import org.carl.infra.mq.config.MQConfig;
 import org.carl.infra.mq.producer.*;
+import org.carl.infra.mq.common.ex.UnsupportedMQCapabilityException;
+import org.carl.infra.mq.pulsar.producer.PulsarHashingSchemes;
+import org.carl.infra.mq.pulsar.producer.PulsarMessageRoutingModes;
+import org.carl.infra.mq.pulsar.producer.PulsarProducerAccessModes;
+import org.carl.infra.mq.pulsar.producer.PulsarProducerOptions;
 import org.carl.infra.mq.producer.CompressionType;
 import org.carl.infra.mq.producer.HashingScheme;
 import org.carl.infra.mq.producer.MessageRoutingMode;
@@ -37,10 +42,25 @@ class PulsarProducerBuilder<T> implements IProducerBuilder<T> {
 
     public PulsarProducerBuilder(
             PulsarClient client, Schema<T> schema, MQConfig.ProducerConfig producerConfig) {
+        this(client, schema, producerConfig, client.newProducer(schema));
+        applyConfig();
+    }
+
+    private PulsarProducerBuilder(
+            PulsarClient client,
+            Schema<T> schema,
+            MQConfig.ProducerConfig producerConfig,
+            ProducerBuilder<T> producerBuilder) {
         this.pulsarClient = client;
         this.schema = schema;
-        this.producerBuilder = pulsarClient.newProducer(schema);
+        this.producerBuilder = producerBuilder;
         this.producerConfig = producerConfig;
+    }
+
+    @Override
+    public IProducerBuilder<T> option(ProducerOption option) {
+        PulsarProducerOptions.apply(option, producerBuilder);
+        return this;
     }
 
     @Override
@@ -81,18 +101,21 @@ class PulsarProducerBuilder<T> implements IProducerBuilder<T> {
     @Override
     public IProducerBuilder<T> conf(Consumer<MQConfig.ProducerConfig> config) {
         config.accept(this.producerConfig);
+        applyConfig();
         return this;
     }
 
     @Override
     public IProducerBuilder<T> overiteConf(MQConfig.ProducerConfig config) {
         this.producerConfig = config;
+        applyConfig();
         return this;
     }
 
     @Override
     public IProducerBuilder<T> clone() {
-        return new PulsarProducerBuilder<>(pulsarClient, schema, producerConfig);
+        return new PulsarProducerBuilder<>(
+                pulsarClient, schema, producerConfig, producerBuilder.clone());
     }
 
     @Override
@@ -109,15 +132,18 @@ class PulsarProducerBuilder<T> implements IProducerBuilder<T> {
 
     @Override
     public IProducerBuilder<T> accessMode(ProducerAccessMode accessMode) {
-        var mode =
-                switch (accessMode) {
-                    case Shared -> org.apache.pulsar.client.api.ProducerAccessMode.Shared;
-                    case Exclusive -> org.apache.pulsar.client.api.ProducerAccessMode.Exclusive;
-                    case ExclusiveWithFencing ->
-                            org.apache.pulsar.client.api.ProducerAccessMode.ExclusiveWithFencing;
-                    case WaitForExclusive ->
-                            org.apache.pulsar.client.api.ProducerAccessMode.WaitForExclusive;
-                };
+        final org.apache.pulsar.client.api.ProducerAccessMode mode;
+        if (accessMode == ProducerAccessModes.SHARED) {
+            mode = org.apache.pulsar.client.api.ProducerAccessMode.Shared;
+        } else if (accessMode == PulsarProducerAccessModes.EXCLUSIVE) {
+            mode = org.apache.pulsar.client.api.ProducerAccessMode.Exclusive;
+        } else if (accessMode == PulsarProducerAccessModes.EXCLUSIVE_WITH_FENCING) {
+            mode = org.apache.pulsar.client.api.ProducerAccessMode.ExclusiveWithFencing;
+        } else if (accessMode == PulsarProducerAccessModes.WAIT_FOR_EXCLUSIVE) {
+            mode = org.apache.pulsar.client.api.ProducerAccessMode.WaitForExclusive;
+        } else {
+            throw new UnsupportedMQCapabilityException("pulsar", "producer access mode", accessMode);
+        }
         this.producerBuilder.accessMode(mode);
         return this;
     }
@@ -142,28 +168,31 @@ class PulsarProducerBuilder<T> implements IProducerBuilder<T> {
 
     @Override
     public IProducerBuilder<T> messageRoutingMode(MessageRoutingMode messageRoutingMode) {
-        var type =
-                switch (messageRoutingMode) {
-                    case RoundRobinPartition ->
-                            org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition;
-                    case CustomPartition ->
-                            org.apache.pulsar.client.api.MessageRoutingMode.CustomPartition;
-                    case SinglePartition ->
-                            org.apache.pulsar.client.api.MessageRoutingMode.SinglePartition;
-                };
+        final org.apache.pulsar.client.api.MessageRoutingMode type;
+        if (messageRoutingMode == PulsarMessageRoutingModes.ROUND_ROBIN_PARTITION) {
+            type = org.apache.pulsar.client.api.MessageRoutingMode.RoundRobinPartition;
+        } else if (messageRoutingMode == PulsarMessageRoutingModes.CUSTOM_PARTITION) {
+            type = org.apache.pulsar.client.api.MessageRoutingMode.CustomPartition;
+        } else if (messageRoutingMode == PulsarMessageRoutingModes.SINGLE_PARTITION) {
+            type = org.apache.pulsar.client.api.MessageRoutingMode.SinglePartition;
+        } else {
+            throw new UnsupportedMQCapabilityException(
+                    "pulsar", "message routing mode", messageRoutingMode);
+        }
         this.producerBuilder.messageRoutingMode(type);
         return this;
     }
 
     @Override
     public IProducerBuilder<T> hashingScheme(HashingScheme hashingScheme) {
-        var type =
-                switch (hashingScheme) {
-                    case JavaStringHash ->
-                            org.apache.pulsar.client.api.HashingScheme.JavaStringHash;
-                    case Murmur3_32Hash ->
-                            org.apache.pulsar.client.api.HashingScheme.Murmur3_32Hash;
-                };
+        final org.apache.pulsar.client.api.HashingScheme type;
+        if (hashingScheme == PulsarHashingSchemes.JAVA_STRING_HASH) {
+            type = org.apache.pulsar.client.api.HashingScheme.JavaStringHash;
+        } else if (hashingScheme == PulsarHashingSchemes.MURMUR3_32_HASH) {
+            type = org.apache.pulsar.client.api.HashingScheme.Murmur3_32Hash;
+        } else {
+            throw new UnsupportedMQCapabilityException("pulsar", "hashing scheme", hashingScheme);
+        }
         this.producerBuilder.hashingScheme(type);
         return this;
     }
@@ -265,5 +294,29 @@ class PulsarProducerBuilder<T> implements IProducerBuilder<T> {
             boolean lazyStartPartitionedProducers) {
         this.producerBuilder.enableLazyStartPartitionedProducers(lazyStartPartitionedProducers);
         return this;
+    }
+
+    private void applyConfig() {
+        if (producerConfig == null) {
+            return;
+        }
+        if (producerConfig.sendTimeout() != null) {
+            producerBuilder.sendTimeout(
+                    Math.toIntExact(producerConfig.sendTimeout().toMillis()), TimeUnit.MILLISECONDS);
+        }
+        producerBuilder.enableBatching(producerConfig.batchingEnabled());
+        producerBuilder.batchingMaxMessages(producerConfig.batchingMaxMessages());
+        if (producerConfig.batchingMaxPublishDelay() != null) {
+            producerBuilder.batchingMaxPublishDelay(
+                    producerConfig.batchingMaxPublishDelay().toMillis(), TimeUnit.MILLISECONDS);
+        }
+        producerBuilder.batchingMaxBytes(producerConfig.batchingMaxBytes());
+        producerBuilder.maxPendingMessages(producerConfig.maxPendingMessages());
+        producerBuilder.blockIfQueueFull(Boolean.parseBoolean(producerConfig.blockIfQueueFull()));
+        if (producerConfig.compressionType() != null) {
+            compressionType(producerConfig.compressionType());
+        }
+        producerBuilder.enableChunking(producerConfig.chunkingEnabled());
+        producerBuilder.chunkMaxMessageSize(producerConfig.chunkMaxMessageSize());
     }
 }

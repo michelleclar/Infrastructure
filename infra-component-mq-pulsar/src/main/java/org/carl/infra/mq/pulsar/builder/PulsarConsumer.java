@@ -5,6 +5,7 @@ import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.PulsarClientException;
 import org.apache.pulsar.shade.net.jcip.annotations.NotThreadSafe;
 import org.carl.infra.mq.common.ex.ConsumerException;
+import org.carl.infra.mq.common.ex.UnsupportedMQCapabilityException;
 import org.carl.infra.mq.consumer.ConsumerStats;
 import org.carl.infra.mq.consumer.IConsumer;
 import org.carl.infra.mq.model.Message;
@@ -105,6 +106,7 @@ record PulsarConsumer<T>(Consumer<T> consumer) implements IConsumer<T>, AutoClos
     public void negativeAcknowledge(org.carl.infra.mq.model.Message<T> message) {
         if (message.getSourceMessage() instanceof org.apache.pulsar.client.api.Message<?> msg) {
             consumer.negativeAcknowledge(msg);
+            return;
         }
         throw new RuntimeException("message type error,not instance Message");
     }
@@ -131,7 +133,7 @@ record PulsarConsumer<T>(Consumer<T> consumer) implements IConsumer<T>, AutoClos
     @Override
     public void seek(String messageId) throws ConsumerException {
         try {
-            consumer.seek(MessageId.fromByteArray(messageId.getBytes()));
+            consumer.seek(PulsarMessageIdCodec.decode(messageId));
         } catch (IOException e) {
             throw new ConsumerException(e);
         }
@@ -139,12 +141,13 @@ record PulsarConsumer<T>(Consumer<T> consumer) implements IConsumer<T>, AutoClos
 
     @Override
     public ConsumerStats getStats() {
-        return null;
+        throw new UnsupportedMQCapabilityException(
+                "pulsar", "legacy common consumer statistics", "getStats");
     }
 
     @Override
     public boolean isConnected() {
-        return !consumer.isConnected();
+        return consumer.isConnected();
     }
 
     @Override

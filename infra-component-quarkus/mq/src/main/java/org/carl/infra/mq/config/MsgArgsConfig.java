@@ -3,6 +3,7 @@ package org.carl.infra.mq.config;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 import io.smallrye.config.WithName;
+import io.smallrye.config.WithConverter;
 
 import org.carl.infra.mq.consumer.SubscriptionInitialPosition;
 import org.carl.infra.mq.consumer.SubscriptionType;
@@ -13,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Kafka MQ 配置参数
+ * MQ 公共配置参数
  *
  * <p>该接口用于将 Quarkus 配置系统中的 application.yaml / properties 绑定为 {@link MQConfig} 的具体实现。
  *
@@ -60,7 +61,6 @@ public interface MsgArgsConfig extends MQConfig {
     interface ClientConfig extends MQConfig.ClientConfig {
 
         /** {@inheritDoc} */
-        @WithDefault("localhost:9092")
         @WithName("service-url")
         String serviceUrl();
 
@@ -273,8 +273,9 @@ public interface MsgArgsConfig extends MQConfig {
         boolean readCompacted();
 
         /** {@inheritDoc} */
-        @WithDefault("EXCLUSIVE")
+        @WithDefault("LOAD_BALANCED")
         @WithName("subscription-type")
+        @WithConverter(SubscriptionTypeConverter.class)
         SubscriptionType subscriptionType();
     }
 

@@ -34,6 +34,7 @@ infra-component-persistence-jooq/  # JOOQ 数据库操作（无 Quarkus 依赖�
 infra-component-redis/       # Redis 客户端（无 Quarkus 依赖）
 infra-component-mq-api/      # 消息队列抽象接口（无 Quarkus 依赖）
 infra-component-mq-pulsar/   # Pulsar 实现（无 Quarkus 依赖）
+infra-component-mq-kafka/    # Kafka 实现（无 Quarkus 依赖）
 infra-component-statemachine/ # 状态机（无依赖）
 infra-component-rule-engine/ # 规则引擎（无依赖）
 infra-component-qdrant-grpc/ # Qdrant 向量库 gRPC
@@ -295,7 +296,7 @@ CompletableFuture<List<String>> keys = client.keys("user:*");
 ### 5. MQ (Message Queue) — 消息队列
 
 **抽象接口包**: `org.carl.infra.mq`（`infra-component-mq-api`，无依赖）
-**Pulsar 实现**: `infra-component-mq-pulsar`（依赖 Apache Pulsar）
+**实现模块**: `infra-component-mq-pulsar`（Apache Pulsar）或 `infra-component-mq-kafka`（Apache Kafka），运行时二选一
 
 #### IProducer — 消息生产者
 
@@ -363,7 +364,8 @@ MessageBuilder.<Order>create()
 #### 使用约定
 
 - 消息体统一使用泛型 `IProducer<T>`
-- Pulsar 是当前唯一实现（`infra-component-mq-pulsar`）
+- 业务代码只依赖 `MQClient`；普通 Java/Spring 通过 `MQClientFactory` 创建客户端
+- Kafka 与 Pulsar Provider 运行时二选一，不得同时引入
 - 所有消息确认必须显式调用 `acknowledge`
 - MQ API 模块本身无依赖，可与任意 MQ 实现对接
 

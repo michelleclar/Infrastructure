@@ -3,6 +3,7 @@ package org.carl.infra.mq.pulsar.config;
 import org.carl.infra.mq.config.MQConfig;
 import org.carl.infra.mq.consumer.SubscriptionInitialPosition;
 import org.carl.infra.mq.consumer.SubscriptionType;
+import org.carl.infra.mq.consumer.SubscriptionTypes;
 import org.carl.infra.mq.producer.CompressionType;
 
 import java.time.Duration;
@@ -443,7 +444,7 @@ public class PulsarConfig implements MQConfig {
                 SubscriptionInitialPosition.Latest;
         private int priority = 0;
         private boolean readCompacted = false;
-        private SubscriptionType subscriptionType = SubscriptionType.EXCLUSIVE;
+        private SubscriptionType subscriptionType = SubscriptionTypes.LOAD_BALANCED;
         private boolean autoAck = false;
 
         @Override

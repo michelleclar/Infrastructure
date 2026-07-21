@@ -18,11 +18,16 @@ dependencies {
         api(libs.quarkus.platform.bom)
         // 约束消费方实际使用的 org.carl 组件（artifactId 以当前 infra 发布产物为准）
         api("org.carl:infra-component-dto:${version}")
+        api("org.carl:infra-component-mq-api:${version}")
+        api("org.carl:infra-component-mq-kafka:${version}")
+        api("org.carl:infra-component-mq-pulsar:${version}")
         api("org.carl:infra-component-quarkus-authorization:${version}")
         api("org.carl:infra-component-quarkus-persistence:${version}")
         api("org.carl:infra-component-utils:${version}")
         api("org.carl:infra-component-quarkus-web:${version}")
         api("org.carl:infra-component-quarkus-mq:${version}")
+        api("org.carl:infra-component-quarkus-mq-kafka:${version}")
+        api("org.carl:infra-component-quarkus-mq-pulsar:${version}")
         api("org.carl:infra-component-quarkus-cache:${version}")
         api("org.carl:infra-component-quarkus-search:${version}")
         // 注意：不约束 postgresql —— 现状下其版本已被 enforced quarkus-bom 实际接管，

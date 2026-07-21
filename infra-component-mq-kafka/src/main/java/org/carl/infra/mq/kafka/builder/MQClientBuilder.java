@@ -5,6 +5,7 @@ import org.carl.infra.logging.LoggerFactory;
 import org.carl.infra.mq.client.MQClient;
 import org.carl.infra.mq.common.ex.MQClientException;
 import org.carl.infra.mq.config.MQConfig;
+import org.carl.infra.mq.kafka.KafkaMQClientProvider;
 public class MQClientBuilder {
 
     private static final ILogger logger = LoggerFactory.getLogger(MQClientBuilder.class);
@@ -16,6 +17,6 @@ public class MQClientBuilder {
                 config.transaction(),
                 config.monitoring());
 
-        return new KafkaMQClient(config);
+        return new KafkaMQClientProvider().create(config);
     }
 }

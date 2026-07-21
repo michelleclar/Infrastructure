@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.carl.infra.mq.common.ex.ProducerException;
+import org.carl.infra.mq.common.ex.UnsupportedMQCapabilityException;
 import org.carl.infra.mq.config.MQConfig;
 import org.carl.infra.mq.model.Message;
 import org.carl.infra.mq.model.MessageBuilder;
@@ -11,6 +12,7 @@ import org.carl.infra.mq.producer.IProducer;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -171,17 +173,83 @@ public class KafkaProducer<T> implements IProducer<T> {
 
     @Override
     public void sendMessages(List<MessageBuilder<T>> messages) {
-        throw new UnsupportedOperationException("Batch send not supported yet");
+        sendMessagesAsync(messages).join();
     }
 
     @Override
     public void sendMessages(List<MessageBuilder<T>> messages, BatchSendCallback<T> callback) {
-        throw new UnsupportedOperationException("Batch send not supported yet");
+        sendMessagesAsync(messages)
+                .whenComplete(
+                        (results, error) -> {
+                            if (error != null) {
+                                callback.onFailure(error);
+                                return;
+                            }
+                            long successCount = results.stream().filter(SendResult::isSuccess).count();
+                            if (successCount == results.size()) {
+                                callback.onSuccess(results);
+                            } else if (successCount == 0) {
+                                callback.onFailure(
+                                        new ProducerException("All messages in the batch failed"));
+                            } else {
+                                callback.onPartialSuccess(results);
+                            }
+                        });
     }
 
     @Override
     public CompletableFuture<List<SendResult<T>>> sendMessagesAsync(List<MessageBuilder<T>> messages) {
-        return CompletableFuture.failedFuture(new UnsupportedOperationException("Batch send not supported yet"));
+        List<CompletableFuture<SendResult<T>>> futures = new ArrayList<>(messages.size());
+        for (MessageBuilder<T> message : messages) {
+            if (message.hasDeliverAfter()
+                    || message.hasDeliverAt()
+                    || message.hasSequenceId()
+                    || message.isReplicationDisabled()) {
+                futures.add(
+                        CompletableFuture.completedFuture(
+                                wrapperFailure(
+                                        new UnsupportedMQCapabilityException(
+                                                "kafka",
+                                                "provider-specific batch message metadata",
+                                                message),
+                                        message.build())));
+                continue;
+            }
+            try {
+                futures.add(
+                        sendMessageAsync(
+                                message.getValue(),
+                                builder -> copyPortableMetadata(message, builder))
+                                .handle(
+                                        (result, error) ->
+                                                error == null
+                                                        ? result
+                                                        : wrapperFailure(error, message.build())));
+            } catch (ProducerException error) {
+                futures.add(
+                        CompletableFuture.completedFuture(
+                                wrapperFailure(error, message.build())));
+            }
+        }
+        return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new))
+                .thenApply(ignored -> futures.stream().map(CompletableFuture::join).toList());
+    }
+
+    private void copyPortableMetadata(
+            MessageBuilder<T> source, MessageBuilder<T> destination) {
+        String sourceTopic = source.build().getTopic();
+        if (sourceTopic != null) {
+            destination.topic(sourceTopic);
+        }
+        if (source.hasKey()) {
+            destination.key(source.getKey());
+        }
+        if (source.hasProperties()) {
+            destination.properties(source.getProperties());
+        }
+        if (source.hasEventTime()) {
+            destination.eventTime(source.getEventTime());
+        }
     }
 
     @Override
@@ -227,7 +295,7 @@ public class KafkaProducer<T> implements IProducer<T> {
     @Override
     @Deprecated
     public ProducerStats getStats() {
-        return null;
+        throw new UnsupportedMQCapabilityException("kafka", "legacy producer statistics", "getStats");
     }
 
     @Override
@@ -298,6 +366,25 @@ public class KafkaProducer<T> implements IProducer<T> {
             @Override
             public String getErrorMessage() {
                 return "";
+            }
+        };
+    }
+
+    private SendResult<T> wrapperFailure(Throwable error, Message<T> message) {
+        return new SendResult<>() {
+            @Override
+            public Message<T> getMessage() {
+                return message;
+            }
+
+            @Override
+            public boolean isSuccess() {
+                return false;
+            }
+
+            @Override
+            public String getErrorMessage() {
+                return error.getMessage();
             }
         };
     }

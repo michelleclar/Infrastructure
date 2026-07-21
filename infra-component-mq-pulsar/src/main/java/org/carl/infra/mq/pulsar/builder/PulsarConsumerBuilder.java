@@ -10,8 +10,16 @@ import org.carl.infra.mq.consumer.IConsumerBuilder;
 import org.carl.infra.mq.consumer.SubscriptionInitialPosition;
 import org.carl.infra.mq.consumer.SubscriptionMode;
 import org.carl.infra.mq.consumer.SubscriptionType;
+import org.carl.infra.mq.consumer.SubscriptionModes;
+import org.carl.infra.mq.consumer.SubscriptionTypes;
+import org.carl.infra.mq.common.ex.UnsupportedMQCapabilityException;
+import org.carl.infra.mq.pulsar.consumer.PulsarSubscriptionModes;
+import org.carl.infra.mq.pulsar.consumer.PulsarSubscriptionTypes;
+import org.carl.infra.mq.pulsar.consumer.PulsarConsumerOptions;
+import org.carl.infra.mq.consumer.ConsumerOption;
 
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -50,10 +58,25 @@ class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
 
     private PulsarConsumerBuilder(
             PulsarClient client, Schema<T> schema, MQConfig.ConsumerConfig consumerConfig) {
+        this(client, schema, consumerConfig, client.newConsumer(schema));
+        applyConfig();
+    }
+
+    private PulsarConsumerBuilder(
+            PulsarClient client,
+            Schema<T> schema,
+            MQConfig.ConsumerConfig consumerConfig,
+            ConsumerBuilder<T> consumerBuilder) {
         this.pulsarClient = client;
         this.schema = schema;
         this.consumerConfig = consumerConfig;
-        this.consumerBuilder = client.newConsumer(schema);
+        this.consumerBuilder = consumerBuilder;
+    }
+
+    @Override
+    public IConsumerBuilder<T> option(ConsumerOption option) {
+        PulsarConsumerOptions.apply(option, consumerBuilder);
+        return this;
     }
 
     @Override
@@ -64,7 +87,16 @@ class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
 
     @Override
     public IConsumerBuilder<T> clone() {
-        return new PulsarConsumerBuilder<>(this.pulsarClient, this.schema, this.consumerConfig);
+        PulsarConsumerBuilder<T> copy =
+                new PulsarConsumerBuilder<>(
+                        this.pulsarClient,
+                        this.schema,
+                        this.consumerConfig,
+                        this.consumerBuilder.clone());
+        copy.messageListener = this.messageListener;
+        copy.autoAck = this.autoAck;
+        copy.topics = this.topics == null ? null : new ArrayList<>(this.topics);
+        return copy;
     }
 
     @Override
@@ -76,12 +108,14 @@ class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
     @Override
     public IConsumerBuilder<T> conf(java.util.function.Consumer<MQConfig.ConsumerConfig> config) {
         config.accept(consumerConfig);
+        applyConfig();
         return this;
     }
 
     @Override
     public IConsumerBuilder<T> overiteConf(MQConfig.ConsumerConfig config) {
         this.consumerConfig = config;
+        applyConfig();
         return this;
     }
 
@@ -228,7 +262,41 @@ class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
 
     @Override
     public CompletableFuture<IConsumer<T>> subscribeAsync() {
-        return consumerBuilder.subscribeAsync().thenApply(PulsarConsumer::new);
+        return CompletableFuture.supplyAsync(
+                () -> {
+                    try {
+                        return subscribe();
+                    } catch (ConsumerException error) {
+                        throw new java.util.concurrent.CompletionException(error);
+                    }
+                });
+    }
+
+    private void applyConfig() {
+        if (consumerConfig == null) {
+            return;
+        }
+        autoAck = consumerConfig.autoAck();
+        if (consumerConfig.ackTimeout() != null) {
+            consumerBuilder.ackTimeout(consumerConfig.ackTimeout().toMillis(), TimeUnit.MILLISECONDS);
+        }
+        if (consumerConfig.ackTimeoutTickTime() != null) {
+            consumerBuilder.ackTimeoutTickTime(
+                    consumerConfig.ackTimeoutTickTime().toMillis(), TimeUnit.MILLISECONDS);
+        }
+        if (consumerConfig.negativeAckRedeliveryDelay() != null) {
+            consumerBuilder.negativeAckRedeliveryDelay(
+                    consumerConfig.negativeAckRedeliveryDelay().toMillis(), TimeUnit.MILLISECONDS);
+        }
+        consumerBuilder.receiverQueueSize(consumerConfig.receiverQueueSize());
+        consumerBuilder.priorityLevel(consumerConfig.priority());
+        consumerBuilder.readCompacted(consumerConfig.readCompacted());
+        if (consumerConfig.subscriptionInitialPosition() != null) {
+            subscriptionInitialPosition(consumerConfig.subscriptionInitialPosition());
+        }
+        if (consumerConfig.subscriptionType() != null) {
+            subscriptionType(consumerConfig.subscriptionType());
+        }
     }
 
     @Override
@@ -291,24 +359,35 @@ class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
 
     @Override
     public IConsumerBuilder<T> subscriptionType(SubscriptionType subscriptionType) {
-        var type =
-                switch (subscriptionType) {
-                    case SHARED -> org.apache.pulsar.client.api.SubscriptionType.Shared;
-                    case FAILOVER -> org.apache.pulsar.client.api.SubscriptionType.Failover;
-                    case KEY_SHARED -> org.apache.pulsar.client.api.SubscriptionType.Key_Shared;
-                    case EXCLUSIVE -> org.apache.pulsar.client.api.SubscriptionType.Exclusive;
-                };
+        final org.apache.pulsar.client.api.SubscriptionType type;
+        if (subscriptionType == SubscriptionTypes.LOAD_BALANCED
+                || subscriptionType == PulsarSubscriptionTypes.SHARED) {
+            type = org.apache.pulsar.client.api.SubscriptionType.Shared;
+        } else if (subscriptionType == PulsarSubscriptionTypes.FAILOVER) {
+            type = org.apache.pulsar.client.api.SubscriptionType.Failover;
+        } else if (subscriptionType == PulsarSubscriptionTypes.KEY_SHARED) {
+            type = org.apache.pulsar.client.api.SubscriptionType.Key_Shared;
+        } else if (subscriptionType == PulsarSubscriptionTypes.EXCLUSIVE) {
+            type = org.apache.pulsar.client.api.SubscriptionType.Exclusive;
+        } else {
+            throw new UnsupportedMQCapabilityException(
+                    "pulsar", "subscription type", subscriptionType);
+        }
         consumerBuilder.subscriptionType(type);
         return this;
     }
 
     @Override
     public IConsumerBuilder<T> subscriptionMode(SubscriptionMode subscriptionMode) {
-        var mode =
-                switch (subscriptionMode) {
-                    case Durable -> org.apache.pulsar.client.api.SubscriptionMode.Durable;
-                    case NonDurable -> org.apache.pulsar.client.api.SubscriptionMode.NonDurable;
-                };
+        final org.apache.pulsar.client.api.SubscriptionMode mode;
+        if (subscriptionMode == SubscriptionModes.DURABLE) {
+            mode = org.apache.pulsar.client.api.SubscriptionMode.Durable;
+        } else if (subscriptionMode == PulsarSubscriptionModes.NON_DURABLE) {
+            mode = org.apache.pulsar.client.api.SubscriptionMode.NonDurable;
+        } else {
+            throw new UnsupportedMQCapabilityException(
+                    "pulsar", "subscription mode", subscriptionMode);
+        }
         consumerBuilder.subscriptionMode(mode);
         return this;
     }
@@ -501,7 +580,7 @@ class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
     }
 
     private void logErrorTopic() {
-        if (this.topics.isEmpty()) {
+        if (this.topics == null || this.topics.isEmpty()) {
             log.error("Consumer topic is null");
             return;
         }

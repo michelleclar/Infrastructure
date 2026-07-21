@@ -1,6 +1,6 @@
 # infra-component-mq-api
 
-消息队列抽象层（SPI）。定义生产者、消费者、消息模型和配置契约的纯接口，业务代码面向这套接口编程，运行时行为由具体实现模块注入。当前官方实现：[infra-component-mq-pulsar](../infra-component-mq-pulsar)。
+消息队列抽象层（SPI）。定义生产者、消费者、消息模型、配置契约和统一客户端工厂，业务代码面向这套接口编程，运行时行为由具体实现模块注入。当前实现包括 [infra-component-mq-kafka](../infra-component-mq-kafka) 和 [infra-component-mq-pulsar](../infra-component-mq-pulsar)。
 
 ---
 
@@ -10,10 +10,12 @@
 // build.gradle.kts
 dependencies {
     implementation(project(":infra-component-mq-api"))
+    runtimeOnly(project(":infra-component-mq-kafka"))
+    // 或 runtimeOnly(project(":infra-component-mq-pulsar"))
 }
 ```
 
-模块本身无第三方运行时依赖（测试依赖 JUnit 5）。
+模块本身无第三方运行时依赖（测试依赖 JUnit 5）。应用运行时需要在 Kafka 与 Pulsar Provider 中二选一。
 
 ---
 
@@ -21,7 +23,7 @@ dependencies {
 
 ```
 org.carl.infra.mq
-├── client/        MQClient（客户端门面）、IClientBuilder
+├── client/        MQClient（客户端门面）、MQClientFactory、MQClientProvider
 ├── model/         Message<T>、MessageBuilder<T>
 ├── producer/      IProducer<T>、IProducerBuilder<T>、枚举
 ├── consumer/      IConsumer<T>、IConsumerBuilder<T>、MessageListener<T>、枚举
@@ -40,7 +42,11 @@ org.carl.infra.mq
 | 接口 / 类 | 职责 |
 |---|---|
 | `MQClient` | 顶层客户端，创建生产者与消费者；实现 `AutoCloseable` |
-| `IClientBuilder` | 构建 `MQClient` 实例的 SPI 入口（实现由具体模块提供） |
+| `MQClientFactory` | 从运行时 classpath 发现唯一 Provider 并创建客户端 |
+| `MQClientProvider` | 具体 MQ 实现注册客户端创建逻辑的 SPI |
+| `IClientBuilder` | 历史占位接口；不再作为客户端创建入口 |
+
+应用运行时必须存在且只能存在一个 `MQClientProvider`。未引入实现模块，或者同时引入 Kafka 和 Pulsar 实现模块时，`MQClientFactory.create(...)` 会抛出 `MQClientException`，不会隐式选择。
 
 `MQClient` 的核心方法：
 
@@ -179,8 +185,8 @@ org.carl.infra.mq
 ### 发送消息（同步）
 
 ```java
-// 由具体实现（如 mq-pulsar）提供 MQClient 实例，此处假设已注入
-MQClient client = ...; // 由 infra-component-mq-pulsar 实现并注入
+// Quarkus/CDI 场景直接注入 MQClient；普通 Java/Spring 装配层使用：
+MQClient client = MQClientFactory.create(config);
 
 IProducer<String> producer = client.newProducer(String.class)
         .producerName("order-producer")
@@ -220,7 +226,7 @@ producer.sendDelayedMessage(msg, 5_000L); // 5 秒后投递
 ```java
 IConsumer<String> consumer = client.newConsumer(String.class)
         .subscriptionName("order-sub")
-        .subscriptionType(SubscriptionType.SHARED)
+        .subscriptionType(SubscriptionTypes.LOAD_BALANCED)
         .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
         .subscribe("persistent://public/default/order-topic");
 
@@ -241,7 +247,7 @@ while (true) {
 ```java
 IConsumer<String> consumer = client.newConsumer(String.class)
         .subscriptionName("order-listener-sub")
-        .subscriptionType(SubscriptionType.EXCLUSIVE)
+        .subscriptionType(SubscriptionTypes.LOAD_BALANCED)
         .messageListener((c, msg) -> {
             System.out.println("pushed: " + msg.getValue());
             c.acknowledge(msg);
@@ -253,7 +259,14 @@ IConsumer<String> consumer = client.newConsumer(String.class)
 
 ## 与实现模块的关系
 
-本模块是纯抽象 SPI，不含任何 Broker 连接代码；`MQClient` 实例由 [infra-component-mq-pulsar](../infra-component-mq-pulsar) 提供（基于 Apache Pulsar 客户端），传递依赖本模块。业务代码只需依赖 `:infra-component-mq-api`，运行时替换实现模块即可。
+本模块是纯抽象 SPI，不含任何 Broker 连接代码。业务代码只依赖 `MQClient` 等公共类型；应用装配层通过 `MQClientFactory` 创建客户端，并在运行时依赖中二选一引入 `infra-component-mq-kafka` 或 `infra-component-mq-pulsar`。
+
+切换实现时需要替换 Provider 依赖并调整对应中间件配置。使用
+`SubscriptionTypes.LOAD_BALANCED` 等公共能力对象时，业务收发代码不需要修改。
+
+Provider 专属能力仍使用同一个方法名，但能力对象来自对应实现模块。例如 Pulsar 的
+Key_Shared 使用 `subscriptionType(PulsarSubscriptionTypes.KEY_SHARED)`。把 Provider 专属能力
+传给其它实现时会立即抛出 `UnsupportedMQCapabilityException`，不会静默忽略或自动降级。
 
 ---
 
@@ -263,3 +276,4 @@ IConsumer<String> consumer = client.newConsumer(String.class)
 - 标注 `@Deprecated` 的方法（`create()`、`subscribe()`、`loadConf(Map)`、`getStats()`）在当前 SPI 版本中已不推荐直接使用，请改用带 topic 参数的 `create(String topicName)` 和 `subscribe(String... topic)`，以及 `conf(Consumer<...>)` 配置方式。
 - `MessageType` 枚举（`PULSAR` / `KAFKA` / `JSON`）为预留类型标志，当前实现尚未在接口方法中使用。
 - `ProcessorBuilder` 目前仅为内部组合占位，尚未形成完整 API，不建议在业务代码中使用。
+- `MQClient.builder()` 是未实现的历史入口，现已废弃并明确抛出异常；统一使用 `MQClientFactory.create(MQConfig)`。

@@ -1,6 +1,7 @@
 package org.carl.infra.mq.pulsar.builder;
 
 import org.apache.pulsar.client.api.*;
+import org.apache.pulsar.client.api.transaction.Transaction;
 import org.carl.infra.mq.common.ex.ProducerException;
 import org.carl.infra.mq.config.MQConfig;
 import org.carl.infra.mq.model.Message;
@@ -8,6 +9,7 @@ import org.carl.infra.mq.model.MessageBuilder;
 import org.carl.infra.mq.producer.IProducer;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -49,7 +51,7 @@ public class PulsarProducer<T> implements IProducer<T> {
         } catch (PulsarClientException e) {
             throw new ProducerException(e);
         }
-        msg.messageId(send.toString());
+        msg.messageId(PulsarMessageIdCodec.encode(send));
         return wrapperSuccess(msg.build());
     }
 
@@ -62,8 +64,8 @@ public class PulsarProducer<T> implements IProducer<T> {
             return tSendResult;
         } catch (ProducerException e) {
             callback.onFailure(e);
+            return wrapperFailure(e, new PulsarMessageBuilder<T>(value).build());
         }
-        return null;
     }
 
     @Override
@@ -85,7 +87,7 @@ public class PulsarProducer<T> implements IProducer<T> {
         CompletableFuture<MessageId> messageIdCompletableFuture = tTypedMessageBuilder.sendAsync();
         return messageIdCompletableFuture.thenApply(
                 id -> {
-                    msg.messageId(id.toString());
+                    msg.messageId(PulsarMessageIdCodec.encode(id));
                     return wrapperSuccess(msg.build());
                 });
     }
@@ -105,37 +107,116 @@ public class PulsarProducer<T> implements IProducer<T> {
     }
 
     @Override
-    public void sendMessages(List<MessageBuilder<T>> messages) {}
+    public void sendMessages(List<MessageBuilder<T>> messages) {
+        sendMessagesAsync(messages).join();
+    }
 
     @Override
-    public void sendMessages(List<MessageBuilder<T>> messages, BatchSendCallback<T> callback) {}
+    public void sendMessages(List<MessageBuilder<T>> messages, BatchSendCallback<T> callback) {
+        sendMessagesAsync(messages)
+                .whenComplete(
+                        (results, error) -> {
+                            if (error != null) {
+                                callback.onFailure(error);
+                                return;
+                            }
+                            long successCount = results.stream().filter(SendResult::isSuccess).count();
+                            if (successCount == results.size()) {
+                                callback.onSuccess(results);
+                            } else if (successCount == 0) {
+                                callback.onFailure(
+                                        new ProducerException("All messages in the batch failed"));
+                            } else {
+                                callback.onPartialSuccess(results);
+                            }
+                        });
+    }
 
     @Override
     public CompletableFuture<List<SendResult<T>>> sendMessagesAsync(
             List<MessageBuilder<T>> messages) {
-        return null;
+        List<CompletableFuture<SendResult<T>>> futures = new ArrayList<>(messages.size());
+        for (MessageBuilder<T> message : messages) {
+            CompletableFuture<SendResult<T>> future;
+            try {
+                future =
+                        transfer(message)
+                                .sendAsync()
+                                .handle(
+                                        (messageId, error) -> {
+                                            if (error != null) {
+                                                return wrapperFailure(error, message.build());
+                                            }
+                                            message.messageId(PulsarMessageIdCodec.encode(messageId));
+                                            return wrapperSuccess(message.build());
+                                        });
+            } catch (RuntimeException error) {
+                future = CompletableFuture.completedFuture(wrapperFailure(error, message.build()));
+            }
+            futures.add(future);
+        }
+        return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new))
+                .thenApply(ignored -> futures.stream().map(CompletableFuture::join).toList());
     }
 
     @Override
-    public void sendDelayedMessage(MessageBuilder<T> message, long delayMillis) {}
+    public void sendDelayedMessage(MessageBuilder<T> message, long delayMillis) {
+        message.deliverAfter(delayMillis);
+        try {
+            MessageId messageId = transfer(message).send();
+            message.messageId(PulsarMessageIdCodec.encode(messageId));
+        } catch (PulsarClientException error) {
+            throw new RuntimeException(new ProducerException(error));
+        }
+    }
 
     @Override
     public void sendDelayedMessage(
-            MessageBuilder<T> message, long delayMillis, SendCallback<T> callback) {}
+            MessageBuilder<T> message, long delayMillis, SendCallback<T> callback) {
+        message.deliverAfter(delayMillis);
+        transfer(message)
+                .sendAsync()
+                .whenComplete(
+                        (messageId, error) -> {
+                            if (error != null) {
+                                callback.onFailure(error);
+                                return;
+                            }
+                            message.messageId(PulsarMessageIdCodec.encode(messageId));
+                            callback.onSuccess(wrapperSuccess(message.build()));
+                        });
+    }
 
     @Override
-    public void sendMessageInTransaction(MessageBuilder<T> message) throws ProducerException {}
+    public void sendMessageInTransaction(MessageBuilder<T> message) throws ProducerException {
+        throw new ProducerException("A Pulsar transaction is required");
+    }
 
     @Override
     public void sendMessageInTransaction(MessageBuilder<T> message, Object transaction)
-            throws ProducerException {}
+            throws ProducerException {
+        Transaction pulsarTransaction = requireTransaction(transaction);
+        try {
+            MessageId messageId = transfer(message, pulsarTransaction).send();
+            message.messageId(PulsarMessageIdCodec.encode(messageId));
+        } catch (PulsarClientException error) {
+            throw new ProducerException(error);
+        }
+    }
 
     @Override
-    public void sendMessageInTransactionAsync(MessageBuilder<T> message) throws ProducerException {}
+    public void sendMessageInTransactionAsync(MessageBuilder<T> message) throws ProducerException {
+        throw new ProducerException("A Pulsar transaction is required");
+    }
 
     @Override
     public void sendMessageInTransactionAsync(MessageBuilder<T> message, Object transaction)
-            throws ProducerException {}
+            throws ProducerException {
+        Transaction pulsarTransaction = requireTransaction(transaction);
+        transfer(message, pulsarTransaction)
+                .sendAsync()
+                .thenAccept(messageId -> message.messageId(PulsarMessageIdCodec.encode(messageId)));
+    }
 
     @Override
     public void flush() throws ProducerException {
@@ -211,11 +292,16 @@ public class PulsarProducer<T> implements IProducer<T> {
     }
 
     private TypedMessageBuilder<T> transfer(MessageBuilder<T> message) {
+        return transfer(message, null);
+    }
+
+    private TypedMessageBuilder<T> transfer(MessageBuilder<T> message, Transaction transaction) {
         TypedMessageBuilder<T> tTypedMessageBuilder =
-                producer.newMessage().value(message.getValue());
+                (transaction == null ? producer.newMessage() : producer.newMessage(transaction))
+                        .value(message.getValue());
         message.topic(producer.getTopic());
         if (message.hasDeliverAfter()) {
-            tTypedMessageBuilder.deliverAfter(message.getDeliverAfter(), TimeUnit.SECONDS);
+            tTypedMessageBuilder.deliverAfter(message.getDeliverAfter(), TimeUnit.MILLISECONDS);
         }
         if (message.hasDeliverAt()) {
             tTypedMessageBuilder.deliverAt(message.getDeliverAt());
@@ -236,6 +322,14 @@ public class PulsarProducer<T> implements IProducer<T> {
             tTypedMessageBuilder.eventTime(message.getEventTime());
         }
         return tTypedMessageBuilder;
+    }
+
+    private Transaction requireTransaction(Object transaction) throws ProducerException {
+        if (transaction instanceof Transaction pulsarTransaction) {
+            return pulsarTransaction;
+        }
+        throw new ProducerException(
+                "Transaction must implement org.apache.pulsar.client.api.transaction.Transaction");
     }
 
     private SendResult<T> wrapperSuccess(Message<T> message) {

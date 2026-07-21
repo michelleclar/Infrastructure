@@ -49,6 +49,10 @@ class PulsarClientFactory {
                     .connectionTimeout(
                             (int) clientConfig.connectionTimeout().toSeconds(), TimeUnit.SECONDS)
                     .connectionsPerBroker(clientConfig.connectionsPerBroker())
+                    // Pulsar 4.1.2 closes its EventLoopGroup before ConnectionPool. With idle
+                    // detection enabled, ConnectionPool.close() then tries to cancel a task on
+                    // the terminated executor and closeAsync() never completes.
+                    .connectionMaxIdleSeconds(-1)
                     .enableTcpNoDelay(clientConfig.tcpNoDelay())
                     .keepAliveInterval(
                             (int) clientConfig.keepAliveInterval().toSeconds(), TimeUnit.SECONDS)

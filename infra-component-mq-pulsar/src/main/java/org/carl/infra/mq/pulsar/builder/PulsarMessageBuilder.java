@@ -2,6 +2,8 @@ package org.carl.infra.mq.pulsar.builder;
 
 import org.carl.infra.mq.model.Message;
 import org.carl.infra.mq.model.MessageBuilder;
+import org.carl.infra.mq.model.MessageOption;
+import org.carl.infra.mq.pulsar.producer.PulsarMessageOptions;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,12 +16,22 @@ class PulsarMessageBuilder<T> implements MessageBuilder<T> {
     private long sequenceId;
     private long deliverAfter;
     private long deliverAt;
+    private boolean eventTimeSet;
+    private boolean sequenceIdSet;
+    private boolean deliverAfterSet;
+    private boolean deliverAtSet;
     private boolean disableReplication = false;
     private String messageId;
     private String topic;
 
     public PulsarMessageBuilder(T value) {
         this.value = value;
+    }
+
+    @Override
+    public MessageBuilder<T> option(MessageOption option) {
+        PulsarMessageOptions.apply(option, this);
+        return this;
     }
 
     @Override
@@ -61,24 +73,28 @@ class PulsarMessageBuilder<T> implements MessageBuilder<T> {
     @Override
     public MessageBuilder<T> eventTime(long timestamp) {
         this.eventTime = timestamp;
+        this.eventTimeSet = true;
         return this;
     }
 
     @Override
     public MessageBuilder<T> sequenceId(long sequenceId) {
         this.sequenceId = sequenceId;
+        this.sequenceIdSet = true;
         return this;
     }
 
     @Override
     public MessageBuilder<T> deliverAfter(long delayMillis) {
         this.deliverAfter = delayMillis;
+        this.deliverAfterSet = true;
         return this;
     }
 
     @Override
     public MessageBuilder<T> deliverAt(long timestamp) {
         this.deliverAt = timestamp;
+        this.deliverAtSet = true;
         return this;
     }
 
@@ -145,27 +161,27 @@ class PulsarMessageBuilder<T> implements MessageBuilder<T> {
 
     @Override
     public Message<T> build() {
-        return new PulsarMessage<>(value, key, eventTime, sequenceId, messageId, topic);
+        return new PulsarMessage<>(value, key, payload, eventTime, sequenceId, messageId, topic);
     }
 
     @Override
     public boolean hasDeliverAfter() {
-        return false;
+        return deliverAfterSet;
     }
 
     @Override
     public boolean hasDeliverAt() {
-        return false;
+        return deliverAtSet;
     }
 
     @Override
     public boolean hasSequenceId() {
-        return false;
+        return sequenceIdSet;
     }
 
     @Override
     public boolean hasEventTime() {
-        return false;
+        return eventTimeSet;
     }
 
     public static class PulsarMessage<T> implements Message<T> {
@@ -181,12 +197,14 @@ class PulsarMessageBuilder<T> implements MessageBuilder<T> {
         public PulsarMessage(
                 T value,
                 String key,
+                Map<String, String> properties,
                 long eventTime,
                 long sequenceId,
                 String messageId,
                 String topic) {
             this.value = value;
             this.key = key;
+            this.payload.putAll(properties);
             this.eventTime = eventTime;
             this.sequenceId = sequenceId;
             this.messageId = messageId;
@@ -264,13 +282,17 @@ class PulsarMessageBuilder<T> implements MessageBuilder<T> {
         }
 
         public static <T> Message<T> wrapper(org.apache.pulsar.client.api.Message<T> msg) {
+            if (msg == null) {
+                return null;
+            }
             PulsarMessage<T> tPulsarMessage =
                     new PulsarMessage<>(
                             msg.getValue(),
                             msg.getKey(),
+                            msg.getProperties(),
                             msg.getEventTime(),
                             msg.getSequenceId(),
-                            msg.getMessageId().toString(),
+                            PulsarMessageIdCodec.encode(msg.getMessageId()),
                             msg.getTopicName());
             tPulsarMessage.setSourceMessage(msg);
             return tPulsarMessage;

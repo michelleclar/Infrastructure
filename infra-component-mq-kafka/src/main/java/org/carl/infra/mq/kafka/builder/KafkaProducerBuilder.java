@@ -1,8 +1,7 @@
 package org.carl.infra.mq.kafka.builder;
 
-import org.carl.infra.logging.ILogger;
-import org.carl.infra.logging.LoggerFactory;
 import org.carl.infra.mq.common.ex.ProducerException;
+import org.carl.infra.mq.common.ex.UnsupportedMQCapabilityException;
 import org.carl.infra.mq.config.MQConfig;
 import org.carl.infra.mq.kafka.config.KafkaConfig;
 import org.carl.infra.mq.producer.*;
@@ -15,8 +14,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class KafkaProducerBuilder<T> implements IProducerBuilder<T> {
-
-    private static final ILogger log = LoggerFactory.getLogger(KafkaProducerBuilder.class);
 
     private final KafkaMQClient client;
     private final Class<T> clazz;
@@ -39,6 +36,11 @@ public class KafkaProducerBuilder<T> implements IProducerBuilder<T> {
         this.client = client;
         this.clazz = clazz;
         this.producerConfig = copyProducerConfig(producerConfig);
+    }
+
+    @Override
+    public IProducerBuilder<T> option(ProducerOption option) {
+        throw unsupported("producer option", option);
     }
 
     private KafkaConfig.KafkaProducerConfig copyProducerConfig(MQConfig.ProducerConfig source) {
@@ -147,8 +149,9 @@ public class KafkaProducerBuilder<T> implements IProducerBuilder<T> {
 
     @Override
     public IProducerBuilder<T> accessMode(ProducerAccessMode accessMode) {
-        // Pulsar specific setting, ignored or logged in Kafka
-        log.debug("accessMode is not supported in Kafka, ignored: {}", accessMode);
+        if (accessMode != ProducerAccessModes.SHARED) {
+            throw unsupported("producer access mode", accessMode);
+        }
         return this;
     }
 
@@ -160,28 +163,22 @@ public class KafkaProducerBuilder<T> implements IProducerBuilder<T> {
 
     @Override
     public IProducerBuilder<T> maxPendingMessages(int maxPendingMessages) {
-        this.producerConfig.setMaxPendingMessages(maxPendingMessages);
-        return this;
+        throw unsupported("maximum pending messages", maxPendingMessages);
     }
 
     @Override
     public IProducerBuilder<T> blockIfQueueFull(boolean blockIfQueueFull) {
-        this.producerConfig.setBlockIfQueueFull(String.valueOf(blockIfQueueFull));
-        return this;
+        throw unsupported("block if queue full", blockIfQueueFull);
     }
 
     @Override
     public IProducerBuilder<T> messageRoutingMode(MessageRoutingMode messageRoutingMode) {
-        // Pulsar specific setting, ignored or logged in Kafka
-        log.debug("messageRoutingMode is not supported in Kafka, ignored: {}", messageRoutingMode);
-        return this;
+        throw unsupported("message routing mode", messageRoutingMode);
     }
 
     @Override
     public IProducerBuilder<T> hashingScheme(HashingScheme hashingScheme) {
-        // Pulsar specific setting, ignored or logged in Kafka
-        log.debug("hashingScheme is not supported in Kafka, ignored: {}", hashingScheme);
-        return this;
+        throw unsupported("hashing scheme", hashingScheme);
     }
 
     @Override
@@ -198,14 +195,12 @@ public class KafkaProducerBuilder<T> implements IProducerBuilder<T> {
 
     @Override
     public IProducerBuilder<T> enableChunking(boolean enableChunking) {
-        this.producerConfig.setChunkingEnabled(enableChunking);
-        return this;
+        throw unsupported("message chunking", enableChunking);
     }
 
     @Override
     public IProducerBuilder<T> chunkMaxMessageSize(int chunkMaxMessageSize) {
-        this.producerConfig.setChunkMaxMessageSize(chunkMaxMessageSize);
-        return this;
+        throw unsupported("chunk maximum message size", chunkMaxMessageSize);
     }
 
     @Override
@@ -216,14 +211,12 @@ public class KafkaProducerBuilder<T> implements IProducerBuilder<T> {
 
     @Override
     public IProducerBuilder<T> roundRobinRouterBatchingPartitionSwitchFrequency(int frequency) {
-        // Pulsar specific setting
-        return this;
+        throw unsupported("round-robin batching partition switch frequency", frequency);
     }
 
     @Override
     public IProducerBuilder<T> batchingMaxMessages(int batchMessagesMaxMessagesPerBatch) {
-        this.producerConfig.setBatchingMaxMessages(batchMessagesMaxMessagesPerBatch);
-        return this;
+        throw unsupported("batching maximum message count", batchMessagesMaxMessagesPerBatch);
     }
 
     @Override
@@ -234,8 +227,7 @@ public class KafkaProducerBuilder<T> implements IProducerBuilder<T> {
 
     @Override
     public IProducerBuilder<T> initialSequenceId(long initialSequenceId) {
-        // Pulsar specific setting
-        return this;
+        throw unsupported("initial sequence id", initialSequenceId);
     }
 
     @Override
@@ -254,26 +246,26 @@ public class KafkaProducerBuilder<T> implements IProducerBuilder<T> {
 
     @Override
     public IProducerBuilder<T> autoUpdatePartitions(boolean autoUpdate) {
-        // Pulsar specific setting
-        return this;
+        throw unsupported("partition auto update switch", autoUpdate);
     }
 
     @Override
     public IProducerBuilder<T> autoUpdatePartitionsInterval(int interval, TimeUnit unit) {
-        // Pulsar specific setting
-        return this;
+        throw unsupported("partition auto update interval", Duration.ofMillis(unit.toMillis(interval)));
     }
 
     @Override
     public IProducerBuilder<T> enableMultiSchema(boolean multiSchema) {
-        // Pulsar specific setting
-        return this;
+        throw unsupported("multiple schemas", multiSchema);
     }
 
     @Override
     public IProducerBuilder<T> enableLazyStartPartitionedProducers(boolean lazyStartPartitionedProducers) {
-        // Pulsar specific setting
-        return this;
+        throw unsupported("lazy partitioned producers", lazyStartPartitionedProducers);
+    }
+
+    private UnsupportedMQCapabilityException unsupported(String capability, Object value) {
+        return new UnsupportedMQCapabilityException("kafka", capability, value);
     }
 
     private Map<String, Object> buildProducerProperties() {

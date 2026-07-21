@@ -20,6 +20,9 @@ import java.util.Map;
  * @param <T> 消息类型
  */
 public interface MessageBuilder<T> {
+    /** Apply one explicit provider-specific message option. */
+    MessageBuilder<T> option(MessageOption option);
+
     MessageBuilder<T> messageId(String messageId);
 
     MessageBuilder<T> topic(String topic);
