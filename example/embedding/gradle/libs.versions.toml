@@ -1,15 +1,15 @@
 [versions]
 quarkus = "3.19.3"
-carl = '1.0-BATE'
+carl = '1.0-BATE-SNAPSHOT'
 testcontainers = "1.20.4"
 [libraries]
 quarkus-platform-bom = { module = "io.quarkus.platform:quarkus-bom", version.ref = "quarkus" }
-infra-component-authorization = { module = "org.carl:infra-component-authorization", version.ref = "carl" }
-infra-component-cache = { module = "org.carl:infra-component-cache", version.ref = "carl" }
+infra-component-authorization = { module = "org.carl:infra-component-quarkus-authorization", version.ref = "carl" }
+infra-component-cache = { module = "org.carl:infra-component-quarkus-cache", version.ref = "carl" }
 infra-component-quarkus-persistence = { module = "org.carl:infra-component-quarkus-persistence", version.ref = "carl" }
 infra-component-persistence-jooq = { module = "org.carl:infra-component-persistence-jooq", version.ref = "carl" }
-infra-component-search = { module = "org.carl:infra-component-search", version.ref = "carl" }
-infra-component-web = { module = "org.carl:infra-component-web", version.ref = "carl" }
+infra-component-search = { module = "org.carl:infra-component-quarkus-search", version.ref = "carl" }
+infra-component-web = { module = "org.carl:infra-component-quarkus-web", version.ref = "carl" }
 infra-component-dto= { module = "org.carl:infra-component-dto", version.ref = "carl" }
 infra-component-qdrant-grpc = { module = "org.carl:infra-component-qdrant-grpc", version.ref = "carl" }
 infra-component-embedding-grpc = { module = "org.carl:infra-component-embedding-grpc", version.ref = "carl" }
