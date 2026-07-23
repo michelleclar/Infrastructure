@@ -4,38 +4,54 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import io.vertx.core.Vertx;
+import io.vertx.core.impl.VertxInternal;
 
 import org.carl.infra.redis.factory.jackson.module.*;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
-@EnabledIfEnvironmentVariable(named = "TEST_REDIS_URL", matches = ".+")
+@Testcontainers(disabledWithoutDocker = true)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class RedisClientTest {
+
+    private static final DockerImageName REDIS_IMAGE =
+            DockerImageName.parse("redis:7.4.9-alpine");
+
+    @Container
+    private static final GenericContainer<?> REDIS =
+            new GenericContainer<>(REDIS_IMAGE).withExposedPorts(6379);
 
     private RedisClient redisClient;
 
     @BeforeAll
     public void setup() {
-        String redisUrl = System.getenv("TEST_REDIS_URL");
-        String redisPassword = System.getenv("TEST_REDIS_PASSWORD");
+        String redisUrl =
+                "redis://" + REDIS.getHost() + ":" + REDIS.getMappedPort(6379);
         RedisConfigOptions options = new RedisConfigOptions();
         options.setConnectionString(redisUrl);
-        if (redisPassword != null && !redisPassword.isEmpty()) {
-            options.setPassword(redisPassword);
-        }
         SimpleModule customModule = new SimpleModule();
         customModule.addSerializer(Date.class, new CustomDateSerializer());
         customModule.addSerializer(LocalDateTime.class, new CustomLocalDateTimeSerializer());
@@ -125,13 +141,12 @@ public class RedisClientTest {
         String key = "test:expire:" + UUID.randomUUID();
         String value = "expire me";
 
-        redisClient.setSync(key, value, Duration.ofSeconds(2));
+        redisClient.setSync(key, value, Duration.ofMillis(150));
 
         String retrieved = redisClient.getSync(key);
         assertEquals(value, retrieved);
 
-        // Wait for expiration
-        Thread.sleep(2500);
+        Thread.sleep(250);
 
         String expired = redisClient.getSync(key);
         assertNull(expired);
@@ -161,10 +176,7 @@ public class RedisClientTest {
         redisClient.setSync(key2, "v2");
 
         List<String> keys = redisClient.keysSync(prefix);
-        assertNotNull(keys);
-        assertTrue(keys.size() >= 2);
-        // Note: checking detailed content might be flaky depending on order, but size check is
-        // good.
+        assertEquals(Set.of(key1, key2), Set.copyOf(keys));
 
         redisClient.delSync(key1);
         redisClient.delSync(key2);
@@ -355,8 +367,132 @@ public class RedisClientTest {
         // the timer is running and doesn't crash.
         Thread.sleep(12000);
 
-        // Let's rely on unlocking succeeding.
+        long ttlAfterRenewal = redisClient.pttlSync(key);
+        assertTrue(ttlAfterRenewal > 20_000);
         lock.unlock().get();
+    }
+
+    @Test
+    public void testScanTreatsPrefixAsLiteralText() {
+        String prefix = "test:scan:*?[]\\:" + UUID.randomUUID();
+        String key1 = prefix + ":1";
+        String key2 = prefix + ":2";
+        redisClient.setSync(key1, "v1");
+        redisClient.setSync(key2, "v2");
+
+        List<String> keys = redisClient.keysSync(prefix);
+
+        assertEquals(Set.of(key1, key2), Set.copyOf(keys));
+        redisClient.delSync(List.of(key1, key2));
+    }
+
+    @Test
+    public void testSubSecondTtlRemainsInMilliseconds() {
+        String key = "test:ttl:millis:" + UUID.randomUUID();
+
+        redisClient.setSync(key, "v", Duration.ofMillis(750));
+        long ttl = redisClient.pttlSync(key);
+
+        assertTrue(ttl > 0);
+        assertTrue(ttl <= 750);
+        redisClient.delSync(key);
+    }
+
+    @Test
+    public void testInvalidExpirationIsRejectedBeforeSending() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> redisClient.set("key", "value", Duration.ZERO));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> redisClient.getOrSet("key", "value", Duration.ofNanos(1)));
+    }
+
+    @Test
+    public void testLockHandleCannotBeAcquiredTwiceConcurrently() {
+        String key = "test:lock:reuse:" + UUID.randomUUID();
+        RedisClient.RedisLock lock = redisClient.getLock(key);
+        assertTrue(lock.tryLock(Duration.ZERO, Duration.ofSeconds(5)).join());
+
+        CompletionException failure =
+                assertThrows(
+                        CompletionException.class,
+                        () -> lock.tryLock(Duration.ZERO, Duration.ofSeconds(5)).join());
+
+        assertInstanceOf(IllegalStateException.class, failure.getCause());
+        lock.unlock().join();
+        assertTrue(lock.tryLock(Duration.ZERO, Duration.ofSeconds(5)).join());
+        lock.unlock().join();
+    }
+
+    @Test
+    public void testFixedLeaseReportsLoss() throws Exception {
+        String key = "test:lock:loss:" + UUID.randomUUID();
+        RedisClient.RedisLock lock = redisClient.getLock(key);
+        assertTrue(lock.tryLock(Duration.ZERO, Duration.ofMillis(150)).join());
+
+        RedisClient.RedisLock.LockTermination termination =
+                lock.terminationFuture().get(2, TimeUnit.SECONDS);
+
+        assertEquals(RedisClient.RedisLock.LockTermination.LOST, termination);
+        assertFalse(lock.isHeldByThisInstance());
+        lock.unlock().join();
+    }
+
+    @Test
+    public void testOwnedVertxIsClosedWithClient() {
+        RedisClient client = RedisClientFactory.create();
+        Vertx ownedVertx = client.vertxInstance();
+        assertTrue(client.ownsVertxInstance());
+
+        client.closeAsync().join();
+
+        assertTrue(((VertxInternal) ownedVertx).closeFuture().isClosed());
+    }
+
+    @Test
+    public void testInjectedVertxRemainsOpen() {
+        Vertx sharedVertx = Vertx.vertx();
+        RedisClient client = RedisClientFactory.create(sharedVertx);
+        assertFalse(client.ownsVertxInstance());
+
+        client.closeAsync().join();
+
+        assertFalse(((VertxInternal) sharedVertx).closeFuture().isClosed());
+        sharedVertx.close().toCompletionStage().toCompletableFuture().join();
+    }
+
+    @Test
+    public void testCommandTimeoutCompletesStalledRequest() throws Exception {
+        try (ServerSocket server = new ServerSocket(0)) {
+            CompletableFuture<Socket> accepted = new CompletableFuture<>();
+            Thread serverThread =
+                    Thread.ofPlatform()
+                            .start(
+                                    () -> {
+                                        try {
+                                            accepted.complete(server.accept());
+                                        } catch (Exception exception) {
+                                            accepted.completeExceptionally(exception);
+                                        }
+                                    });
+
+            RedisConfigOptions options =
+                    new RedisConfigOptions()
+                            .setConnectionString("redis://127.0.0.1:" + server.getLocalPort())
+                            .setConnectTimeout(1_000)
+                            .setCommandTimeout(Duration.ofMillis(150));
+
+            try (RedisClient client = RedisClientFactory.create(options)) {
+                CompletionException failure =
+                        assertThrows(CompletionException.class, () -> client.get("key").join());
+                assertInstanceOf(TimeoutException.class, failure.getCause());
+            } finally {
+                Socket socket = accepted.get(2, TimeUnit.SECONDS);
+                socket.close();
+                serverThread.join(2_000);
+            }
+        }
     }
 
     public static class ComplexPojo {

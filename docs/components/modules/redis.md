@@ -24,7 +24,7 @@
 - `RedisClient#get(...)`、`getSync(...)`。
 - `RedisClient#set(...)`、`setSync(...)`。
 - `RedisClient#del(...)`、`delSync(...)`。
-- `RedisClient#pttl(...)`、`keys(...)`、`incr(...)`。
+- `RedisClient#pttl(...)`、`scan(...)`、`keys(...)`、`incr(...)`。
 
 ## 典型使用场景
 
@@ -34,14 +34,15 @@
 
 ## 维护事项
 
-- `keys(prefix)` 使用 Redis `KEYS` 命令，生产大 keyspace 场景应谨慎，必要时增加 scan API。
-- 同步 API 基于异步 join，应明确异常包装行为。
-- 连接关闭要释放 Vert.x 和 Redis 资源，避免测试或短生命周期任务泄漏。
+- `keys(prefix)` 使用 SCAN 汇总结果；大 keyspace 使用分页 `scan(...)`，Cluster 模式明确不支持跨节点 SCAN。
+- 同步 API 基于异步 join，所有命令有默认 30 秒总超时。
+- 工厂创建的 Vert.x 随客户端关闭，注入的共享 Vert.x 由调用方关闭。
+- 分布式锁提供 `terminationFuture()` 锁丢失通知，但不提供 fencing token。
 
 ## 测试验收
 
 - `./gradlew :infra-component-redis:test` 通过。
-- Redis 集成测试在无本地 Redis 时应可跳过或明确失败原因。
+- Testcontainers 覆盖 Standalone、Sentinel、Cluster 和 Replication；Docker 不可用时容器测试跳过。
 - 源码中没有 Quarkus、CDI、MicroProfile Config import。
 
 ## 使用与依赖补充
@@ -50,6 +51,6 @@
 
 **如何使用**：通过 `RedisClientFactory.create(...)` 创建 `RedisClient`，异步调用 `get/set/del/pttl/keys/incr`，同步场景调用对应 `getSync/setSync/delSync`。复杂对象读取可使用函数转换或泛型反序列化能力。
 
-**当前依赖了什么**：`api(libs.bundles.cache)`，实现使用 Vert.x Redis client；另依赖 `jackson-datatype-jsr310:2.18.2` 支持 Java 时间类型。
+**当前依赖了什么**：直接依赖 Vert.x Core / Redis Client `4.5.23` 与 Jackson `2.20.1`，不通过 Quarkus Redis 或 Quarkus Cache 传递依赖。
 
-**需要注意什么**：`keys(prefix)` 使用 Redis `KEYS`，生产环境大 keyspace 有阻塞风险，应考虑补 `SCAN`。同步方法基于 `join()`，异常会包装成 unchecked，需要在调用方明确处理。
+**需要注意什么**：`keys(prefix)` 会聚合全部 SCAN 结果，大结果集使用分页 `scan(...)`；同步方法基于 `join()`，异常会包装成 unchecked；强一致业务不能只依赖无 fencing token 的 Redis 租约锁。

@@ -25,12 +25,14 @@ publishing {
     }
 }
 dependencies {
-    api(libs.bundles.cache)
-//    api(libs.vertx.redis.client)
-//    api(libs.vertx.core)
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2")
+    api(libs.vertx.core)
+    api(libs.vertx.redis.client)
+    api("com.fasterxml.jackson.core:jackson-databind:2.20.1")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.20.1")
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.testcontainers:junit-jupiter:1.21.4")
+    testRuntimeOnly("org.slf4j:slf4j-simple:2.0.17")
 }
 
 

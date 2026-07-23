@@ -14,7 +14,7 @@ slf4j = "2.0.9"
 jbossLogging = "3.5.3.Final"
 temporal = "0.1.2"
 temporal-sdk = "1.29.0"
-vertx = "5.0.6"
+vertx = "4.5.23"
 httpcomponentsClient5 = "5.4.1"
 [libraries]
 quarkus-platform-bom = { module = "io.quarkus.platform:quarkus-bom", version.ref = "quarkus" }

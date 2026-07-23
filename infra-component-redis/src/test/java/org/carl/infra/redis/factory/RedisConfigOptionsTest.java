@@ -1,6 +1,7 @@
 package org.carl.infra.redis.factory;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.vertx.core.json.jackson.DatabindCodec;
@@ -19,5 +20,13 @@ class RedisConfigOptionsTest {
 
         assertEquals(1, options.getJacksonModules().size());
         assertEquals(registeredModuleIds, DatabindCodec.mapper().getRegisteredModuleIds());
+    }
+
+    @Test
+    @SuppressWarnings("removal")
+    void databaseSetterFailsInsteadOfSilentlyIgnoringValue() {
+        RedisConfigOptions options = new RedisConfigOptions();
+
+        assertThrows(UnsupportedOperationException.class, () -> options.setDatabase(1));
     }
 }

@@ -1,6 +1,6 @@
 # infra-component-redis
 
-> 基于 Vert.x Redis Client 的轻量封装。提供同步/异步 KV 操作、泛型对象序列化、原子 Lua 脚本操作，以及内置 Watchdog 自动续期的分布式锁。支持 Standalone、Sentinel、Cluster、Replication 四种连接模式。
+> 基于 Vert.x Redis Client 的独立轻量封装。提供带命令超时的同步/异步 KV 操作、泛型对象序列化、分页 SCAN、原子 Lua 脚本操作，以及带生命周期通知的 Watchdog 分布式锁。支持 Standalone、Sentinel、Cluster、Replication 四种连接模式。
 
 ---
 
@@ -44,8 +44,18 @@ dependencies {
 | `setPassword(String)` | Redis 认证密码 |
 | `setMaxPoolSize(int)` | 连接池最大连接数 |
 | `setMaxPoolWaiting(int)` | 连接池最大等待队列长度 |
+| `setMaxWaitingHandlers(int)` | 单连接 pipeline 最大等待响应数量 |
 | `setConnectTimeout(int)` | 连接超时（毫秒） |
+| `setCommandTimeout(Duration)` | 单条命令总超时，默认 30 秒 |
+| `setSentinelAutoFailover(boolean)` | Sentinel master 连接自动故障切换 |
+| `setUseReplicas(RedisReplicas)` | Cluster / Replication 读取副本策略 |
+| `setClusterTransactions(RedisClusterTransactions)` | Cluster 事务策略 |
+| `setNetClientOptions(NetClientOptions)` | TLS、TCP、idle timeout 等底层连接配置 |
+| `setTracingPolicy(TracingPolicy)` | Vert.x tracing 策略 |
+| `setPoolName(String)` / `setMetricsName(String)` | 连接池与客户端指标名称 |
 | `registerModules(Module)` | 为当前 Redis 客户端配置自定义 Jackson 序列化模块 |
+
+`setDatabase(int)` 不再静默忽略调用，而是直接抛出 `UnsupportedOperationException`。数据库必须写在连接 URI 中，例如 `redis://localhost:6379/2`；Redis Cluster 不支持多数据库。
 
 ---
 
@@ -68,7 +78,11 @@ dependencies {
 | `CompletableFuture<Response> del(String key)` | 删除单个 key |
 | `CompletableFuture<Response> del(List<String> keys)` | 批量删除 |
 | `CompletableFuture<Long> pttl(String key)` | 获取 key 剩余毫秒 TTL（-2 不存在，-1 无过期） |
-| `CompletableFuture<List<String>> keys(String prefix)` | 按前缀查找 key（内部追加 `*`） |
+| `CompletableFuture<ScanPage> scan(String prefix, String cursor)` | 分页扫描字面前缀，首次 cursor 传 `"0"` |
+| `CompletableFuture<ScanPage> scan(String prefix, String cursor, int count)` | 带 Redis `COUNT` hint 的分页扫描 |
+| `CompletableFuture<List<String>> keys(String prefix)` | 使用 SCAN 汇总全部匹配 key，结果量大时应改用分页 API |
+
+Cluster 模式下，连接无状态的 Vert.x `SCAN` 只访问一个节点，因此本模块会明确拒绝 `scan` / `keys`，避免返回不完整结果。
 
 ### 原子操作（Lua 脚本）
 
@@ -93,8 +107,10 @@ RedisClient.RedisLock lock = redisClient.getLock("lock:order:12345");
 | `CompletableFuture<Boolean> tryLock(long waitTime)` | 带 Watchdog 自动续期（初始 lease 30s，每 10s 续期），`waitTime` 毫秒 |
 | `CompletableFuture<Boolean> tryLock(Duration waitTime)` | 同上，`Duration` 重载 |
 | `CompletableFuture<Response> unlock()` | 释放锁并停止 Watchdog |
+| `CompletableFuture<LockTermination> terminationFuture()` | 锁正常释放时返回 `RELEASED`，租约过期或续期失败时返回 `LOST` |
+| `boolean isHeldByThisInstance()` | 当前句柄是否仍处于本地持锁状态 |
 
-锁实现：`SET key value NX PX leaseTime`；解锁使用 Lua 脚本保证原子性（只删自己持有的锁）；续期同样通过 Lua 脚本 `PEXPIRE`。
+锁实现：每次加锁生成新的 UUID token，通过 `SET key value NX PX leaseTime` 获取；解锁使用 Lua 脚本保证只删除当前 token；续期通过 Lua 脚本 `PEXPIRE`。同一个锁句柄不允许并发或重复获取，续期请求不会重叠。
 
 ---
 
@@ -109,6 +125,13 @@ try (RedisClient client = RedisClientFactory.create()) {
     String value = client.getSync("greeting");
     System.out.println(value); // hello
 }
+```
+
+工厂创建的客户端拥有其内部 Vert.x，`close()` 会关闭 Redis 和 Vert.x。应用已有共享 Vert.x 时，应显式注入；客户端关闭时不会关闭外部 Vert.x：
+
+```java
+Vertx vertx = Vertx.vertx();
+RedisClient client = RedisClientFactory.create(vertx, options);
 ```
 
 ### 2. 自定义连接参数
@@ -180,6 +203,11 @@ if (acquired) {
 // Watchdog 自动续期（适合耗时不确定的操作）
 boolean acquired = lock.tryLock(Duration.ofSeconds(5)).join(); // lease 30s，每 10s 续期
 if (acquired) {
+    lock.terminationFuture().thenAccept(termination -> {
+        if (termination == RedisClient.RedisLock.LockTermination.LOST) {
+            // 停止后续业务写入，进入补偿或重试流程
+        }
+    });
     try {
         // 长时间业务逻辑
     } finally {
@@ -187,6 +215,8 @@ if (acquired) {
     }
 }
 ```
+
+该锁基于单 Redis 实例的租约语义，不提供 fencing token。资金、库存、订单状态迁移等需要强一致互斥的场景，受保护资源必须额外校验 fencing token 或使用具备该能力的协调系统。
 
 ### 5. 注册自定义 Jackson 序列化模块
 
@@ -208,26 +238,20 @@ RedisClient client = RedisClientFactory.create(options);
 
 ## 注意事项
 
-1. **`RedisClient` 是 `AutoCloseable`**，建议在 try-with-resources 或应用关闭钩子中调用 `close()`，释放底层 Vert.x 连接和线程。
-2. **`keysSync` / `keys` 使用 Redis `KEYS` 命令**（内部追加 `*`），生产环境大数据量时有阻塞风险，建议仅在数据量可控或非关键路径使用。
+1. **`RedisClient` 是 `AutoCloseable`**。工厂内部创建的 Vert.x 会随客户端关闭；注入的共享 Vert.x 由调用方管理。事件循环内需要等待关闭完成时使用 `closeAsync()`，不要阻塞事件循环。
+2. **`keysSync` / `keys` 会用 SCAN 汇总全部结果**，不会执行阻塞式 `KEYS`，但仍可能占用大量内存；大结果集使用分页 `scan`。
 3. **同步方法调用 `.join()`**，若在 Vert.x EventLoop 线程上调用会阻塞事件循环；建议在 Worker 线程或非 EventLoop 上下文中使用 Sync 系列方法，异步场景优先使用 `CompletableFuture` 系列。
-4. **分布式锁的 Watchdog** 依赖 Vert.x 定时器，`unlock()` 会自动取消定时器，确保每次业务结束都调用 `unlock()`，避免定时器泄漏。
-5. **`RedisClientFactory` 的默认 Codec 在类加载时初始化一次**，内置 `JavaTimeModule`（`LocalDateTime` 等序列化为 ISO 字符串而非时间戳数组）。如需自定义时间格式，在调用 `create(options)` 前通过 `options.registerModules(...)` 配置。
+4. **所有命令默认 30 秒超时**，通过 `setCommandTimeout(Duration)` 调整；连接超时由 `setConnectTimeout(int)` 单独控制。
+5. **分布式锁的 Watchdog** 在续期失败时停止并将 `terminationFuture()` 完成为 `LOST`。业务必须处理锁丢失，且每次成功获取后都应在 `finally` 中调用 `unlock()`。
+6. **`RedisClientFactory` 的默认 Codec 在类加载时初始化一次**，内置 `JavaTimeModule`（`LocalDateTime` 等序列化为 ISO 字符串而非时间戳数组）。如需自定义时间格式，在调用 `create(options)` 前通过 `options.registerModules(...)` 配置。
 
 ---
 
 ## 测试
 
-测试通过环境变量激活，未设置时跳过：
+Standalone、Sentinel、Cluster、Replication 测试使用 Testcontainers 和官方 `redis:7.4.9-alpine` 镜像；Docker 不可用时仅跳过容器测试，生命周期、超时和 Codec 单元测试仍会执行：
 
 ```bash
-# Standalone 测试
-TEST_REDIS_URL=redis://localhost:6379 \
-./gradlew :infra-component-redis:test
-
-# Sentinel 测试
-TEST_REDIS_SENTINEL_URL=redis://sentinel1:26379 \
-TEST_REDIS_SENTINEL_MASTER=mymaster \
 ./gradlew :infra-component-redis:test
 ```
 

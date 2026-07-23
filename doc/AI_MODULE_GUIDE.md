@@ -192,15 +192,19 @@ public class UserRepository implements IPersistenceOperations {
 #### 创建客户端
 
 ```java
-// 默认配置（从环境变量读取）
+// 默认配置（redis://localhost:6379，命令超时 30 秒）
 RedisClient client = RedisClientFactory.create();
 
 // 自定义配置
 RedisConfigOptions options = new RedisConfigOptions()
     .setConnectionString("redis://localhost:6379")
     .setPassword("secret")
-    .setMaxPoolSize(16);
+    .setMaxPoolSize(16)
+    .setCommandTimeout(Duration.ofSeconds(5));
 RedisClient client = RedisClientFactory.create(options);
+
+// 复用应用已有 Vert.x；关闭 RedisClient 时不会关闭外部 Vert.x
+RedisClient client = RedisClientFactory.create(vertx, options);
 
 // Sentinel 配置
 RedisConfigOptions options = new RedisConfigOptions()
@@ -227,7 +231,7 @@ String val = client.getSync("key");
 client.delSync("key");
 
 // Async（返回 CompletableFuture）
-CompletableFuture<Void> f = client.set("key", "value");
+CompletableFuture<Response> f = client.set("key", "value");
 CompletableFuture<String> f = client.get("key");
 CompletableFuture<Response> f = client.del("key");
 
@@ -258,36 +262,51 @@ CompletableFuture<T> f = client.get("key", raw -> parse(raw));
 
 ```java
 // GET-OR-SET：不存在时才设置
-String val = client.getOrSet("key", "default", Duration.ofMinutes(5));
+CompletableFuture<String> val = client.getOrSet(
+    "key", "default", Duration.ofMinutes(5));
 
 // INCR with init：先初始化再递增
-Long count = client.incr("counter", 1, 0);
+CompletableFuture<Long> count = client.incr("counter", 1, 0);
 ```
 
 #### 分布式锁
 
 ```java
 RedisLock lock = client.getLock("resource:lock");
-try {
-    if (lock.tryLock(Duration.ofSeconds(10), Duration.ofMinutes(1))) {
+boolean acquired = lock.tryLock(
+    Duration.ofSeconds(10), Duration.ofMinutes(1)).join();
+if (acquired) {
+    try {
         // 持有锁，执行临界区代码
+    } finally {
+        lock.unlock().join();
     }
-} finally {
-    lock.unlock();
 }
+
+// Watchdog 锁必须监听 LOST；该锁不提供 fencing token
+lock.terminationFuture().thenAccept(termination -> {
+    if (termination == RedisClient.RedisLock.LockTermination.LOST) {
+        // 停止后续写入并执行补偿
+    }
+});
 ```
 
 #### 前缀扫描
 
 ```java
-CompletableFuture<List<String>> keys = client.keys("user:*");
+CompletableFuture<RedisClient.ScanPage> firstPage =
+    client.scan("user:", "0", 100);
+CompletableFuture<List<String>> allKeys = client.keys("user:");
 ```
 
 #### 使用约定
 
 - 所有 sync 方法内部调用 `.join()`，在异步上下文中优先使用 async 方法
 - 泛型操作依赖 Jackson，可通过 `RedisConfigOptions.registerModules()` 注册自定义序列化模块
-- `RedisClient` 实现 `AutoCloseable`，使用完毕需关闭
+- 所有命令默认 30 秒超时，可通过 `setCommandTimeout(Duration)` 调整
+- `RedisClient` 实现 `AutoCloseable`；工厂创建的 Vert.x 随客户端关闭，注入的 Vert.x 由调用方管理
+- `keys(prefix)` 使用 SCAN 聚合；大结果集使用分页 `scan(...)`；Cluster 不支持跨节点 SCAN
+- 数据库通过连接 URI 的 `/db` 指定，`setDatabase(int)` 会明确拒绝调用
 - 连接类型枚举: `SentinelType.{STANDALONE, SENTINEL, CLUSTER, REPLICATION}`
 - Sentinel 角色: `SentinelRole.{MASTER, REPLICA, SENTINEL}`
 
@@ -869,8 +888,9 @@ public class UserService {
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
-// Redis 集成测试需要本地 Redis 服务
-// 数据库测试使用 testcontainers 或本地 PostgreSQL
+// Redis Standalone / Sentinel / Cluster / Replication 集成测试使用 Testcontainers
+// Docker 不可用时容器测试跳过，生命周期、超时和 Codec 单元测试仍执行
+// 数据库测试使用 Testcontainers 或本地 PostgreSQL
 ```
 
 ```bash
