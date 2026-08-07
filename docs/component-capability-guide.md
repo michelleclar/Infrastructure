@@ -1,6 +1,6 @@
 # 基础设施组件能力总览
 
-更新时间：2026-06-15
+更新时间：2026-07-24
 
 本文档用于快速判断本仓库每个组件能做什么、如何使用、使用时要注意什么。组件清单以 `settings.gradle.kts` 中的 `include(...)` 为准；`infra-component-quarkus` 是 Quarkus 适配层父项目，不作为单独业务能力组件使用。
 
@@ -38,6 +38,8 @@
 | `infra-component-mq-api` | 定义 MQ client、provider、producer、consumer、message、processor、transaction、配置和异常抽象。 | 业务代码接收 `MQClient`；普通 Java/Spring 装配层通过 `MQClientFactory` 创建客户端。 | 不依赖 Pulsar、Kafka、RabbitMQ 或 Quarkus；运行时必须且只能存在一个 Provider。 |
 | `infra-component-mq-kafka` | 实现 `mq-api` 到 Apache Kafka Client 的映射，并注册 Kafka Provider。 | 作为运行时 Provider 引入；新代码通过公共 `MQClientFactory` 创建客户端。 | 不读取 Quarkus 配置，不添加 CDI 注解；公共接口中的产品专属语义不得静默假装等价。 |
 | `infra-component-mq-pulsar` | 实现 `mq-api` 到 Apache Pulsar Client 的映射，并注册 Pulsar Provider。 | 作为运行时 Provider 引入；新代码通过公共 `MQClientFactory` 创建客户端。 | 不读取 Quarkus 配置，不添加 CDI 注解；重点检查资源关闭幂等、异常转换和泛型消息序列化。 |
+| `infra-component-discover-api` | 定义服务注册、健康实例发现、动态配置快照、校验和变更订阅 API。 | 业务依赖公共接口；异步结果使用 `CompletionStage`，变更订阅使用 JDK `Flow.Publisher`。 | 不依赖 Quarkus、Vert.x、Consul、CDI 或 MicroProfile Config；地址、端口、实例 ID 和配置 key 都由调用方明确提供。 |
+| `infra-component-discover-consul` | 基于 Vert.x Consul Client 实现服务注册/注销、passing 实例发现、blocking query 监听和 KV properties 热加载。 | 用 `ConsulDiscoverOptions.builder(consulUri, configKey)` 创建配置，再通过 `ConsulDiscoverClient.create(options)` 启动；注册使用 `ServiceRegistration`，配置通过 `current()` 或 `changes()` 读取。 | 配置必须完整解析并通过全部校验器后才原子生效；失败时保留上一版本；ACL token 不记录到日志；`discover-k8s` 当前仅有 README 占位。 |
 | `infra-component-persistence-jooq` | 提供 jOOQ 持久化 core：`PersistenceContext`、`IPersistenceOperations`、metadata reader、table builder、DSLContext 工厂和 SQL 日志。 | 查询用 `ctx.get(dsl -> ...)`，变更用 `ctx.run(dsl -> ...)`，异步用 `fetchAsync(...)` 或 `executeAsync(...)`；schema 元数据用 `DatabaseMetadataReader`。 | 不能依赖 Quarkus datasource/Agroal/CDI；SQL 日志使用 `ILogger`；集成测试无 `JDBC_URL`、`JDBC_USER`、`JDBC_PASSWORD` 时应跳过。 |
 | `infra-component-redis` | 基于 Vert.x Redis client 提供异步/同步 API、泛型序列化、毫秒 TTL、分页 SCAN、计数器、连接配置和租约锁。 | 通过 `RedisClientFactory.create(...)` 创建 `RedisClient`，调用 `get/set/del/pttl/scan/keys/incr` 或同步方法；已有 Vert.x 时通过工厂重载注入。 | 命令默认 30 秒超时；`keys(prefix)` 会聚合全部 SCAN 结果；Cluster 不支持跨节点 SCAN；Redis 锁不提供 fencing token。 |
 | `infra-component-rule-engine` | 提供轻量规则引擎：`RuleEngine`、`Rule`、`Condition`、`Action`、`Fact`、`Facts`、组合规则和默认执行器。 | 使用 `RuleBuilder` 构造规则，准备 `Facts`，通过 `new DefaultRuleEngine().fire(rule, facts)` 执行；组合规则使用 `AllRules`、`AnyRules`、`CompositeRule`。 | 规则执行顺序、组合规则短路语义、动作异常策略是核心契约；当前 `DefaultRuleEngine` 对 null rule 使用 `System.err`，维护时应改为 `ILogger` 或明确异常。 |
@@ -57,7 +59,6 @@
 | `infra-component-quarkus:mq` | 提供产品中立的 `msg.*` 配置映射和 `MQClient` 生命周期。 | 应用通过 `infra-component-quarkus:mq-kafka` 或 `infra-component-quarkus:mq-pulsar` 二选一间接引入。 | 本模块不创建具体客户端，不依赖 Kafka/Pulsar SDK。 |
 | `infra-component-quarkus:mq-kafka` / `mq-pulsar` | 分别生产 Kafka 或 Pulsar 的应用级 `MQClient` Bean。 | 替换 Provider 模块与连接配置即可切换，业务仍注入 `MQClient`。 | Provider 缺失或两个模块同时引入时启动失败；`msg.client.service-url` 必填。 |
 | `infra-component-quarkus:cache` | 提供 Quarkus 本地缓存和远程 Redis 缓存访问入口，统一 get/set/delete/keys 等操作。 | 注入 `ICacheProvider`、`ICacheOperations` 或 `CacheContext`；本地缓存通过 Caffeine，远程缓存通过 Quarkus `ReactiveRedisDataSource`；远程 key 当前按 `quarkus.application.name` 作为前缀。 | `RemoteCacheContext.prefix` 是内部类字段上的 `@ConfigProperty`，普通 `new RemoteCacheContext(...)` 场景需要重点验证；抽象层不应暴露 Mutiny 或 Quarkus Redis 类型；生产环境慎用 `keys()`。 |
-| `infra-component-quarkus:discover` | 在 Quarkus 启动时注册服务到 Consul，关闭时注销，接入服务发现和健康检查。 | 配置 `consul.host`、`consul.port`、`quarkus.application.name`、`quarkus.http.port`；`ServiceLifecycle` 监听 `StartupEvent` 和 `ShutdownEvent`。 | 当前是 Quarkus 生命周期 adapter；不要加入通用服务发现策略；如支持非 Quarkus 应用，再抽 `discover-api`。 |
 | `infra-component-quarkus:workflow` | 提供 Temporal/状态机编排、事务工作流构建、事件、快照持久化、worker lifecycle 和 Quarkus 配置装配。 | 配置 Temporal/Quarkus 连接和 `workflow.enable.log`；业务使用 `TXWorkflowBuilder`、`TXWorkflowExecuter` 或 `IStateMachineAbility` 组合状态机和 Temporal workflow。 | 工作流模型、事件、构建器、执行器、repository 契约应脱离 Quarkus；lifecycle、ConfigMapping、worker 注册、CDI 注入留在 adapter。 |
 | `infra-component-quarkus:metrics` | 作为 Quarkus OpenTelemetry、Micrometer 或 SmallRye Metrics 的接入点，承载指标和链路追踪依赖与配置。 | 依赖模块后按 Quarkus 原生 metrics/tracing 配置启用 exporter、采样、resource attributes。 | 当前源码较少，更像依赖聚合和扩展占位；不要把业务指标计算逻辑写进该模块。 |
 | `infra-component-quarkus:search` | 封装 Elasticsearch client、index/search/get/update/delete action、mapping/query builder 和搜索能力注册。 | 配置 `quarkus.plugins.search.enable=true`，并按 Quarkus Elasticsearch client 方式配置连接；业务通过 `ISearchAbility`、`IESOperations` 或 `ESContext` 执行 ES action。 | ES action、mapping/query builder 与 Quarkus 无关，应迁到 search core；如果 `co.elastic.clients.*` 和 `jakarta.inject.*` 在同一能力链路里混用，需要拆层。 |

@@ -75,14 +75,11 @@ temporal-sdk = { module = "io.temporal:temporal-sdk", version.ref = "temporal-sd
 temporal-testing = { module = "io.temporal:temporal-testing", version.ref = "temporal-sdk" }
 quarkus-smallrye-fault-tolerance = { module = "io.quarkus:quarkus-smallrye-fault-tolerance", version.ref = "quarkus" }
 openfga = { module = "dev.openfga:openfga-sdk", version.require = "0.9.3" }
-stork = { module = "io.quarkus:quarkus-smallrye-stork", version.ref = "quarkus" }
-consul-stork = { module = "io.smallrye.stork:stork-service-discovery-consul", version.ref = "quarkus" }
-consul = { module = "io.quarkiverse.config:quarkus-config-consul", version.ref = "quarkus" }
-consul-client = { module = "io.smallrye.reactive:smallrye-mutiny-vertx-consul-client", version.ref = "quarkus" }
 vertx-client = { module = "io.smallrye.reactive:smallrye-mutiny-vertx-web-client", version.ref = "quarkus" }
 velocity = { module = "org.apache.velocity:velocity-engine-core", version.ref = "velocity" }
 
 vertx-core = { module = "io.vertx:vertx-core", version.ref = "vertx" }
+vertx-consul-client = { module = "io.vertx:vertx-consul-client", version.ref = "vertx" }
 vertx-redis-client = { module = "io.vertx:vertx-redis-client", version.ref = "vertx" }
 httpcomponents-client5 = { module = "org.apache.httpcomponents.client5:httpclient5", version.ref = "httpcomponentsClient5" }
 
@@ -119,9 +116,6 @@ base = [
 ]
 
 auth = ["quarkus-oidc", "quarkus-keycloak", "quarkus-keycloak-admin-rest-client", "openfga"]
-
-discover = ["stork", "consul", "consul-stork", "consul-client"]
-
 
 persistence-jooq = [
     "velocity",

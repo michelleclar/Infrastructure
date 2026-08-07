@@ -21,6 +21,8 @@ dependencies {
         api("org.carl:infra-component-mq-api:${version}")
         api("org.carl:infra-component-mq-kafka:${version}")
         api("org.carl:infra-component-mq-pulsar:${version}")
+        api("org.carl:infra-component-discover-api:${version}")
+        api("org.carl:infra-component-discover-consul:${version}")
         api("org.carl:infra-component-quarkus-authorization:${version}")
         api("org.carl:infra-component-quarkus-persistence:${version}")
         api("org.carl:infra-component-utils:${version}")

@@ -16,7 +16,6 @@
 | persistence   | 数据持久化（Quarkus 集成）       | quarkus-jdbc-postgresql, quarkus-agroal |
 | mq            | 消息队列（Quarkus 集成）        | quarkus-pulsar                          |
 | cache         | 本地与分布式缓存                | quarkus-cache, quarkus-redis            |
-| discover      | 服务发现与负载均衡               | consul, consul-stork                    |
 | workflow      | 工作流编排与执行                | quarkus-temporal                        |
 | metrics       | 应用监控与指标采集               | quarkus-opentelemetry                   |
 | search        | 全文搜索                    | quarkus-elasticsearch                   |
@@ -32,6 +31,9 @@
 | redis            | Redis 客户端（异步/Sync、分布式锁、泛型序列化）              | Vert.x Redis                |
 | mq-api           | 消息队列抽象接口                                   | 无                           |
 | mq-pulsar        | Pulsar 消息队列实现                              | Apache Pulsar               |
+| infra-component-discover-api | 注册发现与动态配置公共 API                  | JDK                         |
+| infra-component-discover-consul | Consul 注册、健康发现与 KV 配置热加载       | Vert.x Consul               |
+| discover-k8s     | Kubernetes 发现与配置热加载（仅占位，尚未实现）            | —                           |
 | statemachine     | 状态机                                        | 无                           |
 | rule-engine      | 规则引擎                                       | 无                           |
 | pdp              | 策略决策点                                      | 无                           |
@@ -49,7 +51,6 @@
 - [x] persistence
 - [x] mq
 - [x] cache
-- [x] discover
 - [x] workflow
 - [x] metrics
 - [ ] search
@@ -63,6 +64,9 @@
 - [x] redis
 - [x] mq-api
 - [x] mq-pulsar
+- [x] infra-component-discover-api
+- [x] infra-component-discover-consul
+- [ ] discover-k8s
 - [ ] statemachine
 - [ ] rule-engine
 - [ ] pdp
@@ -77,7 +81,38 @@
 ./gradlew build                                         # 构建全部
 ./gradlew test                                          # 测试全部
 ./gradlew :infra-component-redis:test          # 测试单模块
+./gradlew :infra-component-discover-consul:test # 测试 Consul 注册发现与动态配置
 ```
+
+### Consul 注册发现与动态配置
+
+`infra-component-discover-consul` 是普通 Java 21 库，不依赖 Quarkus、CDI、MicroProfile Config 或 Stork。
+
+```java
+ConsulDiscoverOptions options =
+    ConsulDiscoverOptions.builder(
+            URI.create("http://127.0.0.1:8500"),
+            "config/orders")
+        .addValidator(snapshot -> snapshot.get("order.timeout", Duration.class))
+        .build();
+
+ConsulDiscoverClient client = ConsulDiscoverClient.create(options);
+client.start().toCompletableFuture().join();
+
+client.register(new ServiceRegistration(
+    "orders",
+    "orders-10.0.0.8-8080",
+    "10.0.0.8",
+    8080
+)).toCompletableFuture().join();
+
+List<ServiceInstance> instances =
+    client.discover(new ServiceQuery("orders")).toCompletableFuture().join();
+
+Duration timeout = client.current().get("order.timeout", Duration.class);
+```
+
+配置 KV 的值必须是完整的 properties 文档。新版本只有在完整解析并通过全部校验器后才会原子生效；错误版本不会覆盖上一有效快照。
 
 ### Native 构建
 

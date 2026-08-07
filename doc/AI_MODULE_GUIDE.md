@@ -20,7 +20,6 @@ infra-component-quarkus/     # Quarkus 集成模块 — 依赖 Quarkus 框架
  ├── persistence/                     # 数据持久化（Quarkus 集成）
  ├── mq/                              # 消息队列（Quarkus 集成）
  ├── cache/                           # 缓存
- ├── discover/                        # 服务发现
  ├── workflow/                        # 工作流 (Temporal)
  ├── metrics/                         # 监控 (OpenTelemetry)
  └── search/                          # 全文搜索
@@ -35,6 +34,9 @@ infra-component-redis/       # Redis 客户端（无 Quarkus 依赖）
 infra-component-mq-api/      # 消息队列抽象接口（无 Quarkus 依赖）
 infra-component-mq-pulsar/   # Pulsar 实现（无 Quarkus 依赖）
 infra-component-mq-kafka/    # Kafka 实现（无 Quarkus 依赖）
+infra-component-discover-api/ # 注册发现与动态配置公共 API（无 Quarkus 依赖）
+infra-component-discover-consul/ # Consul 实现（无 Quarkus 依赖）
+discover-k8s/                 # Kubernetes 实现占位（尚未加入构建）
 infra-component-statemachine/ # 状态机（无依赖）
 infra-component-rule-engine/ # 规则引擎（无依赖）
 infra-component-qdrant-grpc/ # Qdrant 向量库 gRPC
@@ -617,22 +619,81 @@ CacheContext ctx = cacheService.getCacheContext();
 
 ---
 
-### Discover — 服务发现
+### Discover API / Consul — 注册发现与动态配置
 
-**包**: `org.carl.infra.discover`
-**依赖**: consul, consul-stork
+**公共包**: `org.carl.infra.discover`
 
-应用启停时自动注册/注销到 Consul，无需手动调用：
+**Consul 实现包**: `org.carl.infra.discover.consul`
 
-```properties
-consul.host=localhost
-consul.port=8500
-quarkus.consul-config.enabled=true
-quarkus.consul-config.agent.host-port=localhost:8500
-quarkus.consul-config.properties-value-keys=config/${quarkus.application.name}
+**模块**: `infra-component-discover-api`、`infra-component-discover-consul`
+
+**运行依赖**: `infra-component-discover-api` 仅依赖 JDK 和项目日志模块；`infra-component-discover-consul` 使用 Vert.x Consul Client，不依赖 Quarkus、CDI、MicroProfile Config 或 Stork。
+
+连接信息、配置 key 和服务注册信息必须由调用方精确提供：
+
+```java
+ConsulDiscoverOptions options =
+    ConsulDiscoverOptions.builder(
+            URI.create("http://127.0.0.1:8500"),
+            "config/orders")
+        .connectTimeout(Duration.ofSeconds(5))
+        .blockingWait(Duration.ofSeconds(55))
+        .addValidator(snapshot -> snapshot.get("order.timeout", Duration.class))
+        .build();
+
+ConsulDiscoverClient client = ConsulDiscoverClient.create(options);
+client.start().toCompletableFuture().join();
+
+ServiceRegistration registration =
+    new ServiceRegistration(
+        "orders",
+        "orders-10.0.0.8-8080",
+        "10.0.0.8",
+        8080,
+        List.of("http"),
+        Map.of("zone", "zone-a"),
+        new HttpHealthCheck(
+            URI.create("http://10.0.0.8:8080/q/health/live"),
+            Duration.ofSeconds(10),
+            Duration.ofMinutes(1)));
+
+client.register(registration).toCompletableFuture().join();
+
+List<ServiceInstance> instances =
+    client.discover(new ServiceQuery("orders"))
+        .toCompletableFuture()
+        .join();
 ```
 
-注册的服务 ID 格式：`{appName}-{httpPort}`。
+动态配置读取与监听：
+
+```java
+Duration timeout = client.current().get("order.timeout", Duration.class);
+
+client.changes().subscribe(new Flow.Subscriber<>() {
+    @Override
+    public void onSubscribe(Flow.Subscription subscription) {
+        subscription.request(Long.MAX_VALUE);
+    }
+
+    @Override
+    public void onNext(DynamicConfigChanged change) {
+        // change.current() 是完整、不可变且已经通过校验的配置快照
+    }
+
+    @Override
+    public void onError(Throwable throwable) {}
+
+    @Override
+    public void onComplete() {}
+});
+```
+
+- Consul KV 的值是完整 properties 文档。
+- 配置更新完整解析并通过全部 `DynamicConfigValidator` 后才会原子生效。
+- 格式错误或校验失败时继续使用上一有效版本。
+- `ConsulDiscoverClient.create(options)` 管理内部 Vert.x；`create(vertx, options)` 不关闭调用方传入的 Vert.x。
+- `discover-k8s` 当前只有范围说明，不加入 Gradle 构建和发布。
 
 ---
 

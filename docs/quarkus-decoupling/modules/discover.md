@@ -2,56 +2,38 @@
 
 ## 当前定位
 
-`infra-component-quarkus:discover` 当前核心代码是 `ServiceLifecycle`，通过 Quarkus 启停事件、Vert.x Consul client 和配置项完成服务注册与注销。它本质上是 Quarkus 生命周期 adapter。
+原 `infra-component-quarkus:discover` 已删除，能力拆为两个独立模块：
 
-## 是否需要独立 core
+- `infra-component-discover-api`：只包含 JDK 类型和公共契约。
+- `infra-component-discover-consul`：基于 Vert.x Consul Client 的实现。
 
-暂不需要强拆。当前没有明显的跨运行时服务发现 core。后续如需要支持非 Quarkus 应用，可抽出服务注册 API。
+两者均不依赖 Quarkus、CDI、MicroProfile Config 或 Stork。Quarkus 应用与普通 Java 应用使用相同的创建、启动和关闭 API。
 
-## 建议独立模块名
+## 已实现能力
 
-可选：`infra-component-discover-api`
-
-仅在需要复用服务注册模型或支持多种注册中心时创建。
-
-## Quarkus adapter 应保留内容
-
-- `StartupEvent`、`ShutdownEvent` 观察者。
-- Vert.x `ConsulClient` 创建和关闭。
-- `ConfigProperty` 读取。
-- Quarkus 应用端口、服务名、健康检查地址的组装。
-
-## 需要迁出的核心能力
-
-- 可选迁出服务实例描述模型，例如 service id、name、host、port、tags、health check。
-- 可选迁出服务注册接口，例如 register、deregister、heartbeat。
-- 与 Consul 无关的注册参数校验。
+- 显式服务注册和注销。
+- HTTP、TCP、TTL 健康检查及 `deregisterAfter`。
+- 仅发现 passing 实例。
+- blocking query 监听实例列表变化。
+- Consul KV 完整 properties 文档热加载。
+- 完整校验后原子替换不可变配置快照。
+- 断线重试、索引回退保护和上一有效配置保留。
 
 ## 依赖边界
 
-- adapter 可以依赖 Quarkus runtime、MicroProfile Config、Vert.x Consul client。
-- 如果创建 discover api，api 层不得依赖 Quarkus、Vert.x 或 Consul client 类型。
-- Consul 具体实现可留在 Quarkus adapter，或拆成独立 `discover-consul` 实现模块。
+- `infra-component-discover-api` 不得出现 Vert.x、Consul 或框架类型。
+- `infra-component-discover-consul` 可以依赖 Vert.x Core 和 Vert.x Consul Client。
+- 两个模块的运行时依赖守卫禁止 Quarkus、Quarkiverse Config、Stork 和 MicroProfile Config。
+- 日志使用 `ILogger`。
 
-## 拆分任务清单
+## Kubernetes 状态
 
-- 保持当前 discover 为 Quarkus adapter。
-- 给 `ServiceLifecycle` 补充职责说明，避免继续加入通用发现逻辑。
-- 如果后续出现非 Quarkus 使用场景，再创建 discover api。
-- 抽出服务注册参数模型时，先保证不泄漏 Vert.x/Quarkus 类型。
+`discover-k8s` 当前只有 README，不加入 Gradle 构建、BOM 或发布流程。后续基于 EndpointSlice 和 ConfigMap watch 实现；Kubernetes 控制面负责 Pod 注册，因此不会提供应用侧注册实现。
 
-## 验收标准
+## 验收命令
 
-- `./gradlew :infra-component-quarkus:discover:test` 通过。
-- discover 模块中的新增代码仍然只处理 Quarkus 生命周期和 Consul adapter。
-- 若新增 api 模块，其源码中没有 Quarkus、Vert.x、MicroProfile Config import。
+```bash
+./gradlew :infra-component-discover-api:check :infra-component-discover-consul:check
+```
 
-## 模块审查补充
-
-**解决的问题**：在 Quarkus 应用启动时把服务注册到 Consul，在关闭时注销，解决服务发现和健康检查接入问题。
-
-**如何使用**：依赖 `infra-component-quarkus:discover`，配置 `consul.host`、`consul.port`、`quarkus.application.name`、`quarkus.http.port`。应用启动后 `ServiceLifecycle` 监听 `StartupEvent` 完成注册，关闭时监听 `ShutdownEvent` 注销。
-
-**当前依赖**：`implementation(libs.bundles.discover)`，源码使用 Quarkus lifecycle、Vert.x Consul client、MicroProfile Config。
-
-**需要注意**：当前模块只有 adapter 性质，不要继续加入通用服务发现策略。审查时重点看注册服务名、端口、健康检查地址是否满足部署环境；如要支持非 Quarkus 应用，再抽 `discover-api`。
+Consul 集成测试使用 Testcontainers；Docker 不可用时由 JUnit/Testcontainers 明确标记为跳过。
