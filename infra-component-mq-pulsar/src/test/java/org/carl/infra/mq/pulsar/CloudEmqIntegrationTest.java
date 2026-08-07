@@ -1,6 +1,6 @@
 package org.carl.infra.mq.pulsar;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -15,7 +15,6 @@ import org.carl.infra.mq.pulsar.config.PulsarConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
-import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -28,26 +27,26 @@ class CloudEmqIntegrationTest {
         String runId = UUID.randomUUID().toString();
         String topic = "infra-cloudemq-smoke-" + runId;
         String subscription = "infra-cloudemq-smoke-sub-" + runId;
-        byte[] payload = ("cloudemq-smoke-" + runId).getBytes(StandardCharsets.UTF_8);
+        String payload = "cloudemq-smoke-" + runId;
 
         MQClient client = MQClientBuilder.createClient(new PulsarConfig(serviceUrl));
-        IConsumer<byte[]> consumer = null;
-        IProducer<byte[]> producer = null;
+        IConsumer<String> consumer = null;
+        IProducer<String> producer = null;
         try {
             consumer =
-                    client.newConsumer()
+                    client.newConsumer(String.class)
                             .subscriptionName(subscription)
                             .subscriptionType(SubscriptionTypes.LOAD_BALANCED)
                             .subscriptionInitialPosition(SubscriptionInitialPosition.Earliest)
                             .subscribe(topic);
-            producer = client.newProducer().create(topic);
+            producer = client.newProducer(String.class).create(topic);
 
-            IProducer.SendResult<byte[]> sendResult = producer.sendMessage(payload);
+            IProducer.SendResult<String> sendResult = producer.sendMessage(payload);
             assertTrue(sendResult.isSuccess(), sendResult.getErrorMessage());
 
-            Message<byte[]> received = consumer.receive(20, TimeUnit.SECONDS);
+            Message<String> received = consumer.receive(20, TimeUnit.SECONDS);
             assertNotNull(received, "CloudEMQ did not deliver the test message within 20 seconds");
-            assertArrayEquals(payload, received.getValue());
+            assertEquals(payload, received.getValue());
             consumer.acknowledge(received);
         } finally {
             if (producer != null) {
