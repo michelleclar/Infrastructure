@@ -4,6 +4,7 @@ import org.apache.pulsar.client.api.ConsumerBuilder;
 import org.apache.pulsar.client.api.ProducerBuilder;
 import org.apache.pulsar.client.api.PulsarClient;
 import org.carl.infra.mq.common.ex.UnsupportedMQCapabilityException;
+import org.carl.infra.mq.consumer.DeadLetterPolicy;
 import org.carl.infra.mq.consumer.SubscriptionType;
 import org.carl.infra.mq.consumer.SubscriptionTypes;
 import org.carl.infra.mq.producer.ProducerAccessMode;
@@ -21,6 +22,34 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class PulsarCapabilityMappingTest {
+
+    @Test
+    void mapsAllDeadLetterPolicyFields() {
+        Map<String, Object> calls = new HashMap<>();
+        ConsumerBuilder<?> nativeBuilder = fluentProxy(ConsumerBuilder.class, calls);
+        PulsarClient client = clientProxy(nativeBuilder, null);
+        PulsarConfig config = new PulsarConfig("pulsar://localhost:6650");
+        PulsarConsumerBuilder<byte[]> builder =
+                PulsarConsumerBuilder.create(client, config.consumer());
+
+        builder.deadLetterPolicy(
+                DeadLetterPolicy.builder()
+                        .maxRedeliverCount(5)
+                        .retryLetterTopic("persistent://public/default/orders-retry")
+                        .deadLetterTopic("persistent://public/default/orders-dlq")
+                        .initialSubscriptionName("orders-dlq-initial")
+                        .build());
+
+        org.apache.pulsar.client.api.DeadLetterPolicy nativePolicy =
+                (org.apache.pulsar.client.api.DeadLetterPolicy) calls.get("deadLetterPolicy");
+        assertEquals(5, nativePolicy.getMaxRedeliverCount());
+        assertEquals(
+                "persistent://public/default/orders-retry",
+                nativePolicy.getRetryLetterTopic());
+        assertEquals(
+                "persistent://public/default/orders-dlq", nativePolicy.getDeadLetterTopic());
+        assertEquals("orders-dlq-initial", nativePolicy.getInitialSubscriptionName());
+    }
 
     @Test
     void mapsPortableAndPulsarSubscriptionTypesExplicitly() {

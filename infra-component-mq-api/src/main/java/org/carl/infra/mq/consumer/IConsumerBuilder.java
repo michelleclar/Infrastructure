@@ -1,13 +1,11 @@
 package org.carl.infra.mq.consumer;
 
 import org.carl.infra.mq.common.ex.ConsumerException;
-import org.carl.infra.mq.config.MQConfig;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 /**
@@ -16,9 +14,6 @@ import java.util.regex.Pattern;
  * @param <T>
  */
 public interface IConsumerBuilder<T> extends Cloneable {
-
-    /** Apply one explicit provider-specific option. */
-    IConsumerBuilder<T> option(ConsumerOption option);
 
     IConsumerBuilder<T> autoAck(boolean flag);
 
@@ -64,10 +59,6 @@ public interface IConsumerBuilder<T> extends Cloneable {
      */
     @Deprecated
     IConsumerBuilder<T> loadConf(Map<String, Object> config);
-
-    IConsumerBuilder<T> conf(Consumer<MQConfig.ConsumerConfig> config);
-
-    IConsumerBuilder<T> overiteConf(MQConfig.ConsumerConfig config);
 
     @Deprecated
     IConsumer<T> subscribe() throws ConsumerException;
@@ -503,40 +494,18 @@ public interface IConsumerBuilder<T> extends Cloneable {
     //     *     builder.
     //     */
     //    ConsumerBuilder<T> intercept(ConsumerInterceptor<T>... interceptors);
-    //
-    //    /**
-    //     * Sets dead letter policy for a consumer.
-    //     * TODO: 需要实现
-    //     * <p>By default, messages are redelivered as many times as possible until they are
-    //     * acknowledged. If you enable a dead letter mechanism, messages will have a
-    // maxRedeliverCount.
-    //     * When a message exceeds the maximum number of redeliveries, the message is sent to the
-    // Dead
-    //     * Letter Topic and acknowledged automatically.
-    //     *
-    //     * <p>Enable the dead letter mechanism by setting dead letter policy. example:
-    //     *
-    //     * <pre>
-    //     * client.newConsumer()
-    //     *          .deadLetterPolicy(DeadLetterPolicy.builder().maxRedeliverCount(10).build())
-    //     *          .subscribe();
-    //     * </pre>
-    //     *
-    //     * Default dead letter topic name is {TopicName}-{Subscription}-DLQ. To set a custom dead
-    // letter
-    //     * topic name:
-    //     *
-    //     * <pre>
-    //     * client.newConsumer()
-    //     *          .deadLetterPolicy(DeadLetterPolicy
-    //     *              .builder()
-    //     *              .maxRedeliverCount(10)
-    //     *              .deadLetterTopic("your-topic-name")
-    //     *              .build())
-    //     *          .subscribe();
-    //     * </pre>
-    //     */
-    //    ConsumerBuilder<T> deadLetterPolicy(DeadLetterPolicy deadLetterPolicy);
+
+    /**
+     * Sets the dead letter policy for this consumer.
+     *
+     * <p>Messages that exceed {@link DeadLetterPolicy#maxRedeliverCount()} redeliveries are sent to
+     * the configured dead letter topic. Provider implementations may reject this capability when
+     * their delivery model does not support it.
+     *
+     * @param deadLetterPolicy non-null dead letter policy
+     * @return the consumer builder instance
+     */
+    IConsumerBuilder<T> deadLetterPolicy(DeadLetterPolicy deadLetterPolicy);
 
     /**
      * If enabled, the consumer auto-subscribes for partition increases. This is only for

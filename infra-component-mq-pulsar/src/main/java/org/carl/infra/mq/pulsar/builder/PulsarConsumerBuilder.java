@@ -4,7 +4,9 @@ import org.apache.pulsar.client.api.*;
 import org.carl.infra.logging.ILogger;
 import org.carl.infra.logging.LoggerFactory;
 import org.carl.infra.mq.common.ex.ConsumerException;
+import org.carl.infra.mq.common.ex.UnsupportedMQCapabilityException;
 import org.carl.infra.mq.config.MQConfig;
+import org.carl.infra.mq.consumer.DeadLetterPolicy;
 import org.carl.infra.mq.consumer.IConsumer;
 import org.carl.infra.mq.consumer.IConsumerBuilder;
 import org.carl.infra.mq.consumer.SubscriptionInitialPosition;
@@ -12,16 +14,14 @@ import org.carl.infra.mq.consumer.SubscriptionMode;
 import org.carl.infra.mq.consumer.SubscriptionType;
 import org.carl.infra.mq.consumer.SubscriptionModes;
 import org.carl.infra.mq.consumer.SubscriptionTypes;
-import org.carl.infra.mq.common.ex.UnsupportedMQCapabilityException;
 import org.carl.infra.mq.pulsar.consumer.PulsarSubscriptionModes;
 import org.carl.infra.mq.pulsar.consumer.PulsarSubscriptionTypes;
-import org.carl.infra.mq.pulsar.consumer.PulsarConsumerOptions;
-import org.carl.infra.mq.consumer.ConsumerOption;
 
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -40,7 +40,7 @@ class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
     private org.carl.infra.mq.consumer.MessageListener<T> messageListener;
     private boolean autoAck = false;
     private List<String> topics;
-    private MQConfig.ConsumerConfig consumerConfig;
+    private final MQConfig.ConsumerConfig consumerConfig;
     private final ConsumerBuilder<T> consumerBuilder;
 
     public static <T> PulsarConsumerBuilder<T> create(
@@ -74,12 +74,6 @@ class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
     }
 
     @Override
-    public IConsumerBuilder<T> option(ConsumerOption option) {
-        PulsarConsumerOptions.apply(option, consumerBuilder);
-        return this;
-    }
-
-    @Override
     public IConsumerBuilder<T> autoAck(boolean flag) {
         this.autoAck = flag;
         return this;
@@ -102,20 +96,6 @@ class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
     @Override
     public IConsumerBuilder<T> loadConf(Map<String, Object> config) {
         consumerBuilder.loadConf(config);
-        return this;
-    }
-
-    @Override
-    public IConsumerBuilder<T> conf(java.util.function.Consumer<MQConfig.ConsumerConfig> config) {
-        config.accept(consumerConfig);
-        applyConfig();
-        return this;
-    }
-
-    @Override
-    public IConsumerBuilder<T> overiteConf(MQConfig.ConsumerConfig config) {
-        this.consumerConfig = config;
-        applyConfig();
         return this;
     }
 
@@ -495,6 +475,20 @@ class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
                             org.apache.pulsar.client.api.SubscriptionInitialPosition.Earliest;
                 };
         this.consumerBuilder.subscriptionInitialPosition(type);
+        return this;
+    }
+
+    @Override
+    public IConsumerBuilder<T> deadLetterPolicy(DeadLetterPolicy deadLetterPolicy) {
+        Objects.requireNonNull(deadLetterPolicy, "deadLetterPolicy must not be null");
+        org.apache.pulsar.client.api.DeadLetterPolicy pulsarPolicy =
+                org.apache.pulsar.client.api.DeadLetterPolicy.builder()
+                        .maxRedeliverCount(deadLetterPolicy.maxRedeliverCount())
+                        .retryLetterTopic(deadLetterPolicy.retryLetterTopic())
+                        .deadLetterTopic(deadLetterPolicy.deadLetterTopic())
+                        .initialSubscriptionName(deadLetterPolicy.initialSubscriptionName())
+                        .build();
+        this.consumerBuilder.deadLetterPolicy(pulsarPolicy);
         return this;
     }
 

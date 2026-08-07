@@ -182,10 +182,24 @@ Pulsar 原生能力仍使用同一个 `subscriptionType` 方法：
 client.newConsumer(MyOrder.class)
         .subscriptionName("orders-by-key")
         .subscriptionType(PulsarSubscriptionTypes.KEY_SHARED)
-        .option(PulsarConsumerOptions.configure(
-                nativeBuilder -> nativeBuilder.receiverQueueSize(500)))
         .subscribe("persistent://public/default/orders");
 ```
+
+死信和重试策略通过 `mq-api` 的公共 `DeadLetterPolicy` 配置，不需要引用 Pulsar 原生类型：
+
+```java
+client.newConsumer(MyOrder.class)
+        .subscriptionName("orders")
+        .deadLetterPolicy(DeadLetterPolicy.builder()
+                .maxRedeliverCount(5)
+                .retryLetterTopic("persistent://public/default/orders-retry")
+                .deadLetterTopic("persistent://public/default/orders-dlq")
+                .initialSubscriptionName("orders-dlq-initial")
+                .build())
+        .subscribe("persistent://public/default/orders");
+```
+
+`maxRedeliverCount` 必须大于 0。其他三个字段可省略，Pulsar 会按其默认规则确定 Topic，且不会为死信 Topic 创建初始订阅。
 
 ### 2. 发送消息（泛型对象，AVRO Schema）
 

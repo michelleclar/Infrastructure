@@ -12,7 +12,6 @@ import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
 public class KafkaConsumerBuilder<T> implements IConsumerBuilder<T> {
@@ -48,11 +47,6 @@ public class KafkaConsumerBuilder<T> implements IConsumerBuilder<T> {
         this.consumerConfig = copyConsumerConfig(consumerConfig);
         validateConfig();
         this.autoAck = this.consumerConfig.autoAck();
-    }
-
-    @Override
-    public IConsumerBuilder<T> option(ConsumerOption option) {
-        throw unsupported("consumer option", option);
     }
 
     private KafkaConfig.KafkaConsumerConfig copyConsumerConfig(MQConfig.ConsumerConfig source) {
@@ -115,35 +109,6 @@ public class KafkaConsumerBuilder<T> implements IConsumerBuilder<T> {
         if (config != null) {
             customConf.putAll(config);
         }
-        return this;
-    }
-
-    @Override
-    public IConsumerBuilder<T> conf(Consumer<MQConfig.ConsumerConfig> config) {
-        config.accept(this.consumerConfig);
-        validateConfig();
-        return this;
-    }
-
-    @Override
-    public IConsumerBuilder<T> overiteConf(MQConfig.ConsumerConfig config) {
-        KafkaConfig.KafkaConsumerConfig copy = copyConsumerConfig(config);
-        this.consumerConfig.setAutoAck(copy.autoAck());
-        this.consumerConfig.setAckTimeout(copy.ackTimeout());
-        this.consumerConfig.setAckTimeoutTickTime(copy.ackTimeoutTickTime());
-        this.consumerConfig.setNegativeAckRedeliveryDelay(copy.negativeAckRedeliveryDelay());
-        this.consumerConfig.setReceiverQueueSize(copy.receiverQueueSize());
-        this.consumerConfig.setMaxRedeliverCount(copy.maxRedeliverCount());
-        this.consumerConfig.setDeadLetterTopicSuffix(copy.deadLetterTopicSuffix());
-        this.consumerConfig.setRetryTopicSuffix(copy.retryTopicSuffix());
-        this.consumerConfig.setBatchReceiveEnabled(copy.batchReceiveEnabled());
-        this.consumerConfig.setBatchReceiveMaxMessages(copy.batchReceiveMaxMessages());
-        this.consumerConfig.setBatchReceiveTimeout(copy.batchReceiveTimeout());
-        this.consumerConfig.setSubscriptionInitialPosition(copy.subscriptionInitialPosition());
-        this.consumerConfig.setPriority(copy.priority());
-        this.consumerConfig.setReadCompacted(copy.readCompacted());
-        this.consumerConfig.setSubscriptionType(copy.subscriptionType());
-        validateConfig();
         return this;
     }
 
@@ -355,6 +320,11 @@ public class KafkaConsumerBuilder<T> implements IConsumerBuilder<T> {
     public IConsumerBuilder<T> subscriptionInitialPosition(SubscriptionInitialPosition subscriptionInitialPosition) {
         this.consumerConfig.setSubscriptionInitialPosition(subscriptionInitialPosition);
         return this;
+    }
+
+    @Override
+    public IConsumerBuilder<T> deadLetterPolicy(DeadLetterPolicy deadLetterPolicy) {
+        throw unsupported("dead letter policy", deadLetterPolicy);
     }
 
     @Override

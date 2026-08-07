@@ -1,8 +1,8 @@
 package org.carl.infra.mq.kafka.builder;
 
 import org.carl.infra.mq.common.ex.UnsupportedMQCapabilityException;
+import org.carl.infra.mq.consumer.DeadLetterPolicy;
 import org.carl.infra.mq.consumer.SubscriptionModes;
-import org.carl.infra.mq.consumer.ConsumerOption;
 import org.carl.infra.mq.consumer.SubscriptionMode;
 import org.carl.infra.mq.consumer.SubscriptionType;
 import org.carl.infra.mq.consumer.SubscriptionTypes;
@@ -77,7 +77,11 @@ class KafkaCapabilityBoundaryTest {
                 () -> producerBuilder.initialSequenceId(1));
         assertThrows(
                 UnsupportedMQCapabilityException.class,
-                () -> consumerBuilder.option(new ConsumerOption() {}));
+                () ->
+                        consumerBuilder.deadLetterPolicy(
+                                DeadLetterPolicy.builder()
+                                        .maxRedeliverCount(5)
+                                        .build()));
         assertThrows(
                 UnsupportedMQCapabilityException.class,
                 () -> producerBuilder.option(new ProducerOption() {}));

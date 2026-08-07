@@ -132,16 +132,32 @@ org.carl.infra.mq
 | 方法 | 说明 |
 |---|---|
 | `subscribe(String... topic)` | 订阅并创建消费者 |
-| `conf(Consumer<MQConfig.ConsumerConfig> config)` | 函数式配置（推荐） |
 | `subscriptionName(String)` | 订阅名称（必填） |
 | `subscriptionType(SubscriptionType)` | 订阅类型（见下表） |
 | `subscriptionMode(SubscriptionMode)` | `Durable`（持久）/ `NonDurable` |
 | `subscriptionInitialPosition(SubscriptionInitialPosition)` | `Latest` / `Earliest` |
+| `deadLetterPolicy(DeadLetterPolicy)` | 设置重投上限、重试 Topic 与死信 Topic |
 | `messageListener(MessageListener<T>)` | 注册推送监听器 |
 | `ackTimeout(long, TimeUnit)` | 未确认超时，超时后重新投递 |
 | `autoAck(boolean)` | 是否自动确认 |
 | `receiverQueueSize(int)` | 预取队列大小（默认 1000） |
 | `enableRetry(boolean)` | 是否开启自动重试 |
+
+死信策略是公共的不可变配置，`maxRedeliverCount` 必须大于 0；重试 Topic、死信 Topic 和初始订阅名称均可省略，由 Provider 使用默认值。Provider 不支持该能力时会抛出 `UnsupportedMQCapabilityException`。
+
+```java
+DeadLetterPolicy deadLetterPolicy = DeadLetterPolicy.builder()
+        .maxRedeliverCount(5)
+        .retryLetterTopic("persistent://public/default/orders-retry")
+        .deadLetterTopic("persistent://public/default/orders-dlq")
+        .initialSubscriptionName("orders-dlq-initial")
+        .build();
+
+IConsumer<MyOrder> consumer = client.newConsumer(MyOrder.class)
+        .subscriptionName("orders")
+        .deadLetterPolicy(deadLetterPolicy)
+        .subscribe("persistent://public/default/orders");
+```
 
 `SubscriptionType` 枚举值：
 
@@ -273,7 +289,7 @@ Key_Shared 使用 `subscriptionType(PulsarSubscriptionTypes.KEY_SHARED)`。把 P
 ## 注意事项
 
 - `IProducer` 和 `IConsumer` 均实现（或等价于）`AutoCloseable`，建议使用 try-with-resources 或在 Bean 销毁钩子中显式关闭，避免连接泄漏。
-- 标注 `@Deprecated` 的方法（`create()`、`subscribe()`、`loadConf(Map)`、`getStats()`）在当前 SPI 版本中已不推荐直接使用，请改用带 topic 参数的 `create(String topicName)` 和 `subscribe(String... topic)`，以及 `conf(Consumer<...>)` 配置方式。
+- 标注 `@Deprecated` 的方法（`create()`、`subscribe()`、`loadConf(Map)`、`getStats()`）在当前 SPI 版本中已不推荐直接使用；请改用带 topic 参数的 `create(String topicName)` 和 `subscribe(String... topic)`。生产者的可变配置仍可使用 `conf(Consumer<MQConfig.ProducerConfig>)`。
 - `MessageType` 枚举（`PULSAR` / `KAFKA` / `JSON`）为预留类型标志，当前实现尚未在接口方法中使用。
 - `ProcessorBuilder` 目前仅为内部组合占位，尚未形成完整 API，不建议在业务代码中使用。
 - `MQClient.builder()` 是未实现的历史入口，现已废弃并明确抛出异常；统一使用 `MQClientFactory.create(MQConfig)`。
