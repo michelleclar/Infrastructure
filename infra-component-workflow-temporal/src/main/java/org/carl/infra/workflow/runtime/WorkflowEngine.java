@@ -11,6 +11,8 @@ import io.temporal.worker.WorkerFactory;
 import org.carl.infra.workflow.archive.ArchiveActivities;
 import org.carl.infra.workflow.definition.WorkflowDefinition;
 import org.carl.infra.workflow.interceptor.WorkflowInterceptorRegistry;
+import org.carl.infra.workflow.schedule.WorkflowScheduler;
+import org.carl.infra.workflow.schedule.temporal.TemporalWorkflowScheduler;
 import org.carl.infra.workflow.spi.NodeHandlerRegistry;
 
 import java.util.Map;
@@ -44,6 +46,7 @@ public final class WorkflowEngine implements AutoCloseable {
     private final WorkflowClient client;
     private final WorkerFactory factory;
     private final String taskQueue;
+    private final WorkflowScheduler scheduler;
     private boolean workerStarted;
 
     private WorkflowEngine(
@@ -55,6 +58,7 @@ public final class WorkflowEngine implements AutoCloseable {
         this.client = client;
         this.factory = factory;
         this.taskQueue = taskQueue;
+        this.scheduler = new TemporalWorkflowScheduler(client, taskQueue);
     }
 
     /** Connect to Temporal using {@code config}. Does not start a worker — call {@code withWorker}. */
@@ -131,6 +135,11 @@ public final class WorkflowEngine implements AutoCloseable {
     public WorkflowHandle attach(String workflowId) {
         GenericWorkflow stub = client.newWorkflowStub(GenericWorkflow.class, workflowId);
         return new WorkflowHandle(stub, workflowId);
+    }
+
+    /** Manage recurring workflow executions through the runtime-independent scheduling API. */
+    public WorkflowScheduler schedules() {
+        return scheduler;
     }
 
     @Override

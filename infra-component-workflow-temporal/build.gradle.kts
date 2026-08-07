@@ -29,7 +29,7 @@ dependencies {
     api(libs.temporal.sdk)
     implementation(project(":infra-component-log"))
     implementation(project(":infra-component-persistence-jooq"))
-    implementation(project(":infra-component-workflow-core"))
+    api(project(":infra-component-workflow-core"))
 
     testImplementation(libs.temporal.testing)
     testRuntimeOnly(libs.postgresql)

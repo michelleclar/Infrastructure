@@ -13,11 +13,13 @@ infra-component-workflow-core         纯 Java，无 Temporal 依赖
   spi/         NodeHandler<C> 接口 / NodeHandlerRegistry / NodeType / NodeTypes
   graph/       WorkflowGraph + GraphValidator（可达性 + Tarjan 循环）
   interceptor/ DeterministicInterceptor / AsyncInterceptor / WorkflowInterceptorRegistry
+  schedule/    WorkflowScheduler API + 时间规则 / 重叠 / 补跑 / 状态模型
 
 infra-component-workflow-temporal      Temporal 运行时适配
   runtime/  GenericWorkflowImpl / WorkerSetup / WorkflowInput / WorkflowResult
             BusinessActivityRegistry / HandlerHolder / InterceptorHolder
   archive/  ArchiveActivities / DatabaseArchiveActivities（可选）
+  schedule/ TemporalWorkflowScheduler（Temporal Schedule 实现）
   example/  QuickStartExample / QuickStartWorker / QuickStartClient
 ```
 
@@ -71,6 +73,94 @@ try (WorkflowEngine engine =
 - `WorkflowEngine` 是 `AutoCloseable`，try-with-resources 自动关 worker + 连接。
 
 > Temporal 仍是**运行时依赖**（jar 在 classpath、server 要起）；门面只是隐藏 API 表面，让业务代码编译期 0 碰 `io.temporal.*`。下面的「手动」写法展示门面底层做了什么。
+
+---
+
+## 分布式定时任务：`WorkflowScheduler`
+
+定时任务建模为“按时间规则反复启动一个 `WorkflowDefinition`”。公共契约位于
+`workflow-core` 的 `org.carl.infra.workflow.schedule`，不依赖 Temporal；
+`workflow-temporal` 的 `TemporalWorkflowScheduler` 将其完整映射到 Temporal Schedule。
+
+通过 `WorkflowEngine.schedules()` 使用时，业务代码仍然不需要导入 `io.temporal.*`：
+
+```java
+WorkflowDefinition reportFlow = buildReportFlow();
+
+ScheduledWorkflowAction action = ScheduledWorkflowAction.of(
+        "daily-report-workflow",
+        reportFlow,
+        Map.of("reportType", "settlement"));
+
+WorkflowSchedule schedule = new WorkflowSchedule(
+        "daily-report",
+        action,
+        ScheduleSpec.cron("0 2 * * *", "Asia/Shanghai"),
+        new SchedulePolicy(
+                ScheduleOverlapPolicy.SKIP,
+                Duration.ofHours(24),
+                true),
+        ScheduleState.active());
+
+try (WorkflowEngine engine = WorkflowEngine.connect(
+        EngineConfig.of("localhost:7233", "REPORT_TASKS"))) {
+    WorkflowScheduler scheduler = engine.schedules();
+    WorkflowScheduleDescription created = scheduler.create(schedule);
+
+    scheduler.pause("daily-report", "maintenance");
+    scheduler.resume("daily-report", "maintenance finished");
+    scheduler.trigger("daily-report");
+    WorkflowScheduleDescription current = scheduler.describe("daily-report");
+}
+```
+
+时间规则支持：
+
+- `ScheduleSpec.cron(...)`：Cron + IANA 时区。
+- `ScheduleSpec.interval(...)`：固定间隔。
+- `ScheduleSpec.Calendar`：秒、分、时、月日、月、年、星期的结构化日历规则。
+- 多条 Calendar / Interval / Cron 取并集，再扣除 `skipCalendars`。
+- `startAt` / `endAt` 限定有效期，`jitter` 分散同一时刻的任务压力。
+
+管理 API：
+
+| 方法 | 语义 |
+|------|------|
+| `create` | 创建；`ScheduleCreateOptions` 可要求立即触发或在创建时补跑 |
+| `describe` / `list` | 查询完整定义、运行计数、最近执行和下次执行时间 |
+| `update` | 原子替换完整 Schedule 定义 |
+| `pause` / `resume` | 暂停或恢复自动触发 |
+| `trigger` | 立即执行一次，可覆盖本次重叠策略 |
+| `backfill` | 对历史时间区间进行补跑 |
+| `delete` | 删除 Schedule，不终止已经启动的 Workflow Execution |
+
+`ScheduleOverlapPolicy` 明确定义了重叠执行行为：跳过、缓存一个、缓存全部、取消当前、
+终止当前或全部并发。Activity 的外部副作用仍然必须自行保证幂等。
+
+> Temporal Java SDK 1.29.0 的 `TestWorkflowEnvironment` 未实现 Schedule RPC；Schedule 的真实
+> 服务集成验证必须连接 Temporal Server。Core 契约、精确类型映射和管理生命周期由本模块
+> 的本地单元测试覆盖。
+
+真实服务集成测试可以使用隔离的本地开发容器：
+
+```bash
+docker run --rm --name workflow-temporal-test \
+  -p 127.0.0.1:17233:7233 \
+  temporalio/temporal:latest \
+  server start-dev --ip 0.0.0.0 --headless
+```
+
+另一个终端执行：
+
+```bash
+TEMPORAL_SCHEDULE_TEST_TARGET=127.0.0.1:17233 \
+  ./gradlew :infra-component-workflow-temporal:test \
+  --tests org.carl.infra.workflow.schedule.temporal.TemporalWorkflowSchedulerServerTest
+```
+
+该测试覆盖创建与重复创建、查询与列表、更新、暂停与恢复、立即触发、全部重叠策略映射、
+历史补跑、创建时立即执行与补跑、重叠跳过、并发执行、删除及不存在错误映射。未设置
+`TEMPORAL_SCHEDULE_TEST_TARGET` 时，真实服务测试自动跳过。
 
 ---
 
