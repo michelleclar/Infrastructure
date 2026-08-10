@@ -28,21 +28,47 @@ class PulsarProducerBuilder<T> implements IProducerBuilder<T> {
     private final PulsarClient pulsarClient;
     private final Schema<T> schema;
     private final ProducerBuilder<T> producerBuilder;
+    private final PulsarTopicResolver topicResolver;
     private MQConfig.ProducerConfig producerConfig;
 
     public static <T> PulsarProducerBuilder<T> create(
             PulsarClient client, Class<T> clazz, MQConfig.ProducerConfig producerConfig) {
-        return new PulsarProducerBuilder<>(client, Schema.AVRO(clazz), producerConfig);
+        return create(client, clazz, producerConfig, PulsarTopicResolver.defaults());
+    }
+
+    static <T> PulsarProducerBuilder<T> create(
+            PulsarClient client,
+            Class<T> clazz,
+            MQConfig.ProducerConfig producerConfig,
+            PulsarTopicResolver topicResolver) {
+        return new PulsarProducerBuilder<>(
+                client, Schema.AVRO(clazz), producerConfig, topicResolver);
     }
 
     public static PulsarProducerBuilder<byte[]> create(
             PulsarClient client, MQConfig.ProducerConfig producerConfig) {
-        return new PulsarProducerBuilder<>(client, Schema.AUTO_PRODUCE_BYTES(), producerConfig);
+        return create(client, producerConfig, PulsarTopicResolver.defaults());
+    }
+
+    static PulsarProducerBuilder<byte[]> create(
+            PulsarClient client,
+            MQConfig.ProducerConfig producerConfig,
+            PulsarTopicResolver topicResolver) {
+        return new PulsarProducerBuilder<>(
+                client, Schema.AUTO_PRODUCE_BYTES(), producerConfig, topicResolver);
     }
 
     public PulsarProducerBuilder(
             PulsarClient client, Schema<T> schema, MQConfig.ProducerConfig producerConfig) {
-        this(client, schema, producerConfig, client.newProducer(schema));
+        this(client, schema, producerConfig, PulsarTopicResolver.defaults());
+    }
+
+    private PulsarProducerBuilder(
+            PulsarClient client,
+            Schema<T> schema,
+            MQConfig.ProducerConfig producerConfig,
+            PulsarTopicResolver topicResolver) {
+        this(client, schema, producerConfig, client.newProducer(schema), topicResolver);
         applyConfig();
     }
 
@@ -50,11 +76,13 @@ class PulsarProducerBuilder<T> implements IProducerBuilder<T> {
             PulsarClient client,
             Schema<T> schema,
             MQConfig.ProducerConfig producerConfig,
-            ProducerBuilder<T> producerBuilder) {
+            ProducerBuilder<T> producerBuilder,
+            PulsarTopicResolver topicResolver) {
         this.pulsarClient = client;
         this.schema = schema;
         this.producerBuilder = producerBuilder;
         this.producerConfig = producerConfig;
+        this.topicResolver = topicResolver;
     }
 
     @Override
@@ -75,7 +103,7 @@ class PulsarProducerBuilder<T> implements IProducerBuilder<T> {
 
     @Override
     public IProducer<T> create(String topicName) throws ProducerException {
-        producerBuilder.topic(topicName);
+        producerBuilder.topic(topicResolver.resolve(topicName));
         try {
             Producer<T> tProducer = producerBuilder.create();
             return new PulsarProducer<>(tProducer, producerConfig);
@@ -115,12 +143,16 @@ class PulsarProducerBuilder<T> implements IProducerBuilder<T> {
     @Override
     public IProducerBuilder<T> clone() {
         return new PulsarProducerBuilder<>(
-                pulsarClient, schema, producerConfig, producerBuilder.clone());
+                pulsarClient,
+                schema,
+                producerConfig,
+                producerBuilder.clone(),
+                topicResolver);
     }
 
     @Override
     public IProducerBuilder<T> topic(String topicName) {
-        producerBuilder.topic(topicName);
+        producerBuilder.topic(topicResolver.resolve(topicName));
         return this;
     }
 

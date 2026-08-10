@@ -42,23 +42,47 @@ class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
     private List<String> topics;
     private final MQConfig.ConsumerConfig consumerConfig;
     private final ConsumerBuilder<T> consumerBuilder;
+    private final PulsarTopicResolver topicResolver;
 
     public static <T> PulsarConsumerBuilder<T> create(
             PulsarClient client, Class<T> clazz, MQConfig.ConsumerConfig consumerConfig) {
-        return new PulsarConsumerBuilder<>(client, Schema.AVRO(clazz), consumerConfig);
+        return create(client, clazz, consumerConfig, PulsarTopicResolver.defaults());
+    }
+
+    static <T> PulsarConsumerBuilder<T> create(
+            PulsarClient client,
+            Class<T> clazz,
+            MQConfig.ConsumerConfig consumerConfig,
+            PulsarTopicResolver topicResolver) {
+        return new PulsarConsumerBuilder<>(client, Schema.AVRO(clazz), consumerConfig, topicResolver);
     }
 
     public static PulsarConsumerBuilder<byte[]> create(
             PulsarClient client, MQConfig.ConsumerConfig consumerConfig) {
+        return create(client, consumerConfig, PulsarTopicResolver.defaults());
+    }
+
+    static PulsarConsumerBuilder<byte[]> create(
+            PulsarClient client,
+            MQConfig.ConsumerConfig consumerConfig,
+            PulsarTopicResolver topicResolver) {
         // Schema.BYTES (not AUTO_PRODUCE_BYTES, which is a producer-only schema and throws
         // "Schema is not initialized before used" when used to consume a schema'd topic).
         // BYTES delivers the raw message payload regardless of the topic's registered schema.
-        return new PulsarConsumerBuilder<>(client, Schema.BYTES, consumerConfig);
+        return new PulsarConsumerBuilder<>(client, Schema.BYTES, consumerConfig, topicResolver);
     }
 
     private PulsarConsumerBuilder(
             PulsarClient client, Schema<T> schema, MQConfig.ConsumerConfig consumerConfig) {
-        this(client, schema, consumerConfig, client.newConsumer(schema));
+        this(client, schema, consumerConfig, PulsarTopicResolver.defaults());
+    }
+
+    private PulsarConsumerBuilder(
+            PulsarClient client,
+            Schema<T> schema,
+            MQConfig.ConsumerConfig consumerConfig,
+            PulsarTopicResolver topicResolver) {
+        this(client, schema, consumerConfig, client.newConsumer(schema), topicResolver);
         applyConfig();
     }
 
@@ -66,11 +90,13 @@ class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
             PulsarClient client,
             Schema<T> schema,
             MQConfig.ConsumerConfig consumerConfig,
-            ConsumerBuilder<T> consumerBuilder) {
+            ConsumerBuilder<T> consumerBuilder,
+            PulsarTopicResolver topicResolver) {
         this.pulsarClient = client;
         this.schema = schema;
         this.consumerConfig = consumerConfig;
         this.consumerBuilder = consumerBuilder;
+        this.topicResolver = topicResolver;
     }
 
     @Override
@@ -86,7 +112,8 @@ class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
                         this.pulsarClient,
                         this.schema,
                         this.consumerConfig,
-                        this.consumerBuilder.clone());
+                        this.consumerBuilder.clone(),
+                        this.topicResolver);
         copy.messageListener = this.messageListener;
         copy.autoAck = this.autoAck;
         copy.topics = this.topics == null ? null : new ArrayList<>(this.topics);
@@ -291,13 +318,13 @@ class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
 
     @Override
     public IConsumerBuilder<T> topicsPattern(Pattern topicsPattern) {
-        consumerBuilder.topicsPattern(topicsPattern);
+        consumerBuilder.topicsPattern(topicResolver.resolve(topicsPattern));
         return this;
     }
 
     @Override
     public IConsumerBuilder<T> topicsPattern(String topicsPattern) {
-        consumerBuilder.topicsPattern(topicsPattern);
+        consumerBuilder.topicsPattern(topicResolver.resolvePatternText(topicsPattern));
         return this;
     }
 
@@ -484,8 +511,8 @@ class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
         org.apache.pulsar.client.api.DeadLetterPolicy pulsarPolicy =
                 org.apache.pulsar.client.api.DeadLetterPolicy.builder()
                         .maxRedeliverCount(deadLetterPolicy.maxRedeliverCount())
-                        .retryLetterTopic(deadLetterPolicy.retryLetterTopic())
-                        .deadLetterTopic(deadLetterPolicy.deadLetterTopic())
+                        .retryLetterTopic(resolveOptionalTopic(deadLetterPolicy.retryLetterTopic()))
+                        .deadLetterTopic(resolveOptionalTopic(deadLetterPolicy.deadLetterTopic()))
                         .initialSubscriptionName(deadLetterPolicy.initialSubscriptionName())
                         .build();
         this.consumerBuilder.deadLetterPolicy(pulsarPolicy);
@@ -562,15 +589,21 @@ class PulsarConsumerBuilder<T> implements IConsumerBuilder<T> {
     }
 
     private IConsumerBuilder<T> recordTopic(String... topicNames) {
-        this.consumerBuilder.topic(topicNames);
-        this.topics = Arrays.asList(topicNames);
+        String[] resolvedTopics = topicResolver.resolve(topicNames);
+        this.consumerBuilder.topic(resolvedTopics);
+        this.topics = Arrays.asList(resolvedTopics);
         return this;
     }
 
     private IConsumerBuilder<T> recordTopic(List<String> topicNames) {
-        this.consumerBuilder.topics(topicNames);
-        this.topics = topicNames;
+        List<String> resolvedTopics = topicResolver.resolve(topicNames);
+        this.consumerBuilder.topics(resolvedTopics);
+        this.topics = resolvedTopics;
         return this;
+    }
+
+    private String resolveOptionalTopic(String topic) {
+        return topic == null ? null : topicResolver.resolve(topic);
     }
 
     private void logErrorTopic() {

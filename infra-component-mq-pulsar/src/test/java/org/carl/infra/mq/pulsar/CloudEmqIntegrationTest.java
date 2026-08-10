@@ -28,8 +28,13 @@ class CloudEmqIntegrationTest {
         String topic = "infra-cloudemq-smoke-" + runId;
         String subscription = "infra-cloudemq-smoke-sub-" + runId;
         String payload = "cloudemq-smoke-" + runId;
+        String topicNamespace = System.getenv("CLOUDEMQ_TOPIC_NAMESPACE");
 
-        MQClient client = MQClientBuilder.createClient(new PulsarConfig(serviceUrl));
+        PulsarConfig config = new PulsarConfig(serviceUrl);
+        if (topicNamespace != null && !topicNamespace.isBlank()) {
+            config.topicNamespace(topicNamespace);
+        }
+        MQClient client = MQClientBuilder.createClient(config);
         IConsumer<String> consumer = null;
         IProducer<String> producer = null;
         try {
@@ -47,6 +52,9 @@ class CloudEmqIntegrationTest {
             Message<String> received = consumer.receive(20, TimeUnit.SECONDS);
             assertNotNull(received, "CloudEMQ did not deliver the test message within 20 seconds");
             assertEquals(payload, received.getValue());
+            assertEquals(
+                    "persistent://public/" + config.getTopicNamespace() + "/" + topic,
+                    received.getTopic());
             consumer.acknowledge(received);
         } finally {
             if (producer != null) {

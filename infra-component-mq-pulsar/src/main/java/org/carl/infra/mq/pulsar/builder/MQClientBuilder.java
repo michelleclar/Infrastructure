@@ -38,7 +38,11 @@ public class MQClientBuilder {
             PulsarClient pulsarClient = build.build();
             PulsarAdmin pulsarAdmin = PulsarAdminFactory.create(config.client()).orElse(null);
             return new PulsarMQClient(
-                    pulsarClient, config.producer(), config.consumer(), pulsarAdmin);
+                    pulsarClient,
+                    config.producer(),
+                    config.consumer(),
+                    pulsarAdmin,
+                    PulsarTopicResolver.from(config));
         } catch (PulsarClientException e) {
             throw new MQClientException(e);
         }
@@ -70,7 +74,11 @@ public class MQClientBuilder {
             PulsarClient pulsarClient = build.build();
             PulsarAdmin pulsarAdmin = PulsarAdminFactory.create(config.client()).orElse(null);
             return new PulsarMQClient(
-                    pulsarClient, config.producer(), config.consumer(), pulsarAdmin);
+                    pulsarClient,
+                    config.producer(),
+                    config.consumer(),
+                    pulsarAdmin,
+                    PulsarTopicResolver.from(config));
         } catch (PulsarClientException e) {
             throw new MQClientException(e);
         }

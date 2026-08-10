@@ -59,7 +59,42 @@ MQConfig config = new PulsarConfig("pulsar://localhost:6650",
         "token:eyJhbGc...");
 ```
 
+### 配置 Topic 的 tenant 和 namespace
+
+`PulsarConfig` 默认使用 `public/default`。配置后，生产者、消费者、Reader、重试 Topic 和死信 Topic
+接收到短 Topic 名时，会统一补全为 `persistent://{tenant}/{namespace}/{topic}`：
+
+```java
+PulsarConfig config = new PulsarConfig("cloudmq://172.16.252.194:6500")
+        .topicTenant("public")
+        .topicNamespace("test");
+
+MQClient client = MQClientFactory.create(config);
+
+// 实际订阅 persistent://public/test/orders
+IConsumer<byte[]> consumer = client.newConsumer()
+        .subscriptionName("orders-subscription")
+        .subscribe("orders");
+
+// 实际创建 persistent://public/test/orders 的生产者
+IProducer<byte[]> producer = client.newProducer().create("orders");
+```
+
+环境对应关系由使用方的 Spring Profile 配置决定：测试使用 `test`，生产试验使用 `pro`，预生产使用
+`prod`。组件只选择 namespace，不自动创建 tenant、namespace 或权限；这些资源需要先在 Pulsar/CloudEMQ
+服务端创建并授权。
+
+传入完整 Topic（例如 `persistent://other/ns/orders` 或
+`non-persistent://other/ns/orders`）时，组件保持原值，不会用配置覆盖。
+
 ### 配置块说明与默认值
+
+#### `PulsarConfig`（Topic 归属）
+
+| 字段 | 默认值 | 说明 |
+|---|---|---|
+| `topicTenant` | `public` | 短 Topic 名使用的 tenant |
+| `topicNamespace` | `default` | 短 Topic 名使用的 namespace |
 
 #### `PulsarClientConfig`（连接层）
 

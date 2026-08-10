@@ -23,6 +23,7 @@ class PulsarReaderBuilder<T> implements IReaderBuilder<T> {
     private final org.apache.pulsar.client.api.ReaderBuilder<T> readerBuilder;
     /** 用于 {@code topicsPattern} 解析；为 {@code null} 表示未配置 adminUrl，此时使用 pattern 会在创建阶段失败。 */
     private final PulsarAdmin pulsarAdmin;
+    private final PulsarTopicResolver topicResolver;
 
     /** 用户设置的正则（原始字符串可经 {@link Pattern#pattern()} 取回，用于解析命名空间）。 */
     private Pattern topicsPattern;
@@ -30,34 +31,54 @@ class PulsarReaderBuilder<T> implements IReaderBuilder<T> {
     private boolean topicSet;
 
     static PulsarReaderBuilder<byte[]> create(PulsarClient client, PulsarAdmin pulsarAdmin) {
-        return new PulsarReaderBuilder<>(client, Schema.BYTES, pulsarAdmin);
+        return create(client, pulsarAdmin, PulsarTopicResolver.defaults());
+    }
+
+    static PulsarReaderBuilder<byte[]> create(
+            PulsarClient client,
+            PulsarAdmin pulsarAdmin,
+            PulsarTopicResolver topicResolver) {
+        return new PulsarReaderBuilder<>(client, Schema.BYTES, pulsarAdmin, topicResolver);
     }
 
     static <T> PulsarReaderBuilder<T> create(PulsarClient client, Class<T> clazz, PulsarAdmin pulsarAdmin) {
-        return new PulsarReaderBuilder<>(client, Schema.AVRO(clazz), pulsarAdmin);
+        return create(client, clazz, pulsarAdmin, PulsarTopicResolver.defaults());
     }
 
-    private PulsarReaderBuilder(PulsarClient client, Schema<T> schema, PulsarAdmin pulsarAdmin) {
+    static <T> PulsarReaderBuilder<T> create(
+            PulsarClient client,
+            Class<T> clazz,
+            PulsarAdmin pulsarAdmin,
+            PulsarTopicResolver topicResolver) {
+        return new PulsarReaderBuilder<>(client, Schema.AVRO(clazz), pulsarAdmin, topicResolver);
+    }
+
+    private PulsarReaderBuilder(
+            PulsarClient client,
+            Schema<T> schema,
+            PulsarAdmin pulsarAdmin,
+            PulsarTopicResolver topicResolver) {
         this.readerBuilder = client.newReader(schema);
         this.pulsarAdmin = pulsarAdmin;
+        this.topicResolver = topicResolver;
     }
 
     @Override
     public IReaderBuilder<T> topic(String topic) {
         this.topicSet = true;
-        readerBuilder.topic(topic);
+        readerBuilder.topic(topicResolver.resolve(topic));
         return this;
     }
 
     @Override
     public IReaderBuilder<T> topicsPattern(Pattern topicsPattern) {
-        this.topicsPattern = topicsPattern;
+        this.topicsPattern = topicResolver.resolve(topicsPattern);
         return this;
     }
 
     @Override
     public IReaderBuilder<T> topicsPattern(String topicsPattern) {
-        this.topicsPattern = Pattern.compile(topicsPattern);
+        this.topicsPattern = Pattern.compile(topicResolver.resolvePatternText(topicsPattern));
         return this;
     }
 
@@ -103,7 +124,7 @@ class PulsarReaderBuilder<T> implements IReaderBuilder<T> {
         if (topicsPattern != null) {
             throw new ReaderException("topicsPattern 与 create(topic) 互斥，不能同时使用");
         }
-        readerBuilder.topic(topic);
+        readerBuilder.topic(topicResolver.resolve(topic));
         return create();
     }
 

@@ -52,6 +52,54 @@ class PulsarCapabilityMappingTest {
     }
 
     @Test
+    void resolvesShortConsumerAndDeadLetterTopicsUsingConfiguredNamespace() {
+        Map<String, Object> calls = new HashMap<>();
+        ConsumerBuilder<?> nativeBuilder = fluentProxy(ConsumerBuilder.class, calls);
+        PulsarClient client = clientProxy(nativeBuilder, null);
+        PulsarConfig config = new PulsarConfig("pulsar://localhost:6650");
+        PulsarConsumerBuilder<byte[]> builder =
+                PulsarConsumerBuilder.create(
+                        client,
+                        config.consumer(),
+                        new PulsarTopicResolver("public", "test"));
+
+        builder.topic("orders");
+        builder.deadLetterPolicy(
+                DeadLetterPolicy.builder()
+                        .maxRedeliverCount(5)
+                        .retryLetterTopic("orders-retry")
+                        .deadLetterTopic("orders-dlq")
+                        .build());
+
+        String[] nativeTopics = (String[]) calls.get("topic");
+        assertEquals("persistent://public/test/orders", nativeTopics[0]);
+        org.apache.pulsar.client.api.DeadLetterPolicy nativePolicy =
+                (org.apache.pulsar.client.api.DeadLetterPolicy) calls.get("deadLetterPolicy");
+        assertEquals(
+                "persistent://public/test/orders-retry",
+                nativePolicy.getRetryLetterTopic());
+        assertEquals(
+                "persistent://public/test/orders-dlq", nativePolicy.getDeadLetterTopic());
+    }
+
+    @Test
+    void resolvesShortProducerTopicUsingConfiguredNamespace() {
+        Map<String, Object> calls = new HashMap<>();
+        ProducerBuilder<?> nativeBuilder = fluentProxy(ProducerBuilder.class, calls);
+        PulsarClient client = clientProxy(null, nativeBuilder);
+        PulsarConfig config = new PulsarConfig("pulsar://localhost:6650");
+        PulsarProducerBuilder<byte[]> builder =
+                PulsarProducerBuilder.create(
+                        client,
+                        config.producer(),
+                        new PulsarTopicResolver("public", "prod"));
+
+        builder.topic("orders");
+
+        assertEquals("persistent://public/prod/orders", calls.get("topic"));
+    }
+
+    @Test
     void mapsPortableAndPulsarSubscriptionTypesExplicitly() {
         Map<String, Object> calls = new HashMap<>();
         ConsumerBuilder<?> nativeBuilder = fluentProxy(ConsumerBuilder.class, calls);

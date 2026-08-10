@@ -29,16 +29,27 @@ class PulsarMQClient implements MQClient {
     private final MQConfig.ProducerConfig producerConfig;
     private final MQConfig.ConsumerConfig consumerConfig;
     private final Duration closeTimeout;
+    private final PulsarTopicResolver topicResolver;
 
     public PulsarMQClient(PulsarClient pulsarClient) {
-        this(pulsarClient, new PulsarConfig.PulsarProducerConfig(), new PulsarConfig.PulsarConsumerConfig(), null);
+        this(
+                pulsarClient,
+                new PulsarConfig.PulsarProducerConfig(),
+                new PulsarConfig.PulsarConsumerConfig(),
+                null,
+                PulsarTopicResolver.defaults());
     }
 
     public PulsarMQClient(
             PulsarClient pulsarClient,
             MQConfig.ProducerConfig producerConfig,
             MQConfig.ConsumerConfig consumerConfig) {
-        this(pulsarClient, producerConfig, consumerConfig, null);
+        this(
+                pulsarClient,
+                producerConfig,
+                consumerConfig,
+                null,
+                PulsarTopicResolver.defaults());
     }
 
     public PulsarMQClient(
@@ -51,7 +62,22 @@ class PulsarMQClient implements MQClient {
                 producerConfig,
                 consumerConfig,
                 pulsarAdmin,
-                DEFAULT_CLOSE_TIMEOUT);
+                PulsarTopicResolver.defaults());
+    }
+
+    PulsarMQClient(
+            PulsarClient pulsarClient,
+            MQConfig.ProducerConfig producerConfig,
+            MQConfig.ConsumerConfig consumerConfig,
+            PulsarAdmin pulsarAdmin,
+            PulsarTopicResolver topicResolver) {
+        this(
+                pulsarClient,
+                producerConfig,
+                consumerConfig,
+                pulsarAdmin,
+                DEFAULT_CLOSE_TIMEOUT,
+                topicResolver);
     }
 
     PulsarMQClient(
@@ -60,41 +86,58 @@ class PulsarMQClient implements MQClient {
             MQConfig.ConsumerConfig consumerConfig,
             PulsarAdmin pulsarAdmin,
             Duration closeTimeout) {
+        this(
+                pulsarClient,
+                producerConfig,
+                consumerConfig,
+                pulsarAdmin,
+                closeTimeout,
+                PulsarTopicResolver.defaults());
+    }
+
+    PulsarMQClient(
+            PulsarClient pulsarClient,
+            MQConfig.ProducerConfig producerConfig,
+            MQConfig.ConsumerConfig consumerConfig,
+            PulsarAdmin pulsarAdmin,
+            Duration closeTimeout,
+            PulsarTopicResolver topicResolver) {
         this.pulsarClient = pulsarClient;
         this.producerConfig = producerConfig;
         this.consumerConfig = consumerConfig;
         this.pulsarAdmin = pulsarAdmin;
         this.closeTimeout = closeTimeout;
+        this.topicResolver = topicResolver;
     }
 
     @Override
     public IProducerBuilder<byte[]> newProducer() {
-        return PulsarProducerBuilder.create(pulsarClient, producerConfig);
+        return PulsarProducerBuilder.create(pulsarClient, producerConfig, topicResolver);
     }
 
     @Override
     public <T> IProducerBuilder<T> newProducer(Class<T> clazz) {
-        return PulsarProducerBuilder.create(pulsarClient, clazz, producerConfig);
+        return PulsarProducerBuilder.create(pulsarClient, clazz, producerConfig, topicResolver);
     }
 
     @Override
     public IConsumerBuilder<byte[]> newConsumer() {
-        return PulsarConsumerBuilder.create(pulsarClient, consumerConfig);
+        return PulsarConsumerBuilder.create(pulsarClient, consumerConfig, topicResolver);
     }
 
     @Override
     public <T> IConsumerBuilder<T> newConsumer(Class<T> clazz) {
-        return PulsarConsumerBuilder.create(pulsarClient, clazz, consumerConfig);
+        return PulsarConsumerBuilder.create(pulsarClient, clazz, consumerConfig, topicResolver);
     }
 
     @Override
     public IReaderBuilder<byte[]> newReader() {
-        return PulsarReaderBuilder.create(pulsarClient, pulsarAdmin);
+        return PulsarReaderBuilder.create(pulsarClient, pulsarAdmin, topicResolver);
     }
 
     @Override
     public <T> IReaderBuilder<T> newReader(Class<T> clazz) {
-        return PulsarReaderBuilder.create(pulsarClient, clazz, pulsarAdmin);
+        return PulsarReaderBuilder.create(pulsarClient, clazz, pulsarAdmin, topicResolver);
     }
 
     @Override

@@ -13,6 +13,8 @@ import java.util.Optional;
 public class PulsarConfig implements MQConfig {
 
     private String name;
+    private String topicTenant = "public";
+    private String topicNamespace = "default";
     private PulsarClientConfig clientConfig;
     private PulsarProducerConfig producerConfig;
     private PulsarConsumerConfig consumerConfig;
@@ -102,6 +104,34 @@ public class PulsarConfig implements MQConfig {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    /** Tenant used when a producer, consumer, or reader receives a short topic name. */
+    public String getTopicTenant() {
+        return topicTenant;
+    }
+
+    public void setTopicTenant(String topicTenant) {
+        this.topicTenant = topicTenant;
+    }
+
+    /** Namespace used when a producer, consumer, or reader receives a short topic name. */
+    public String getTopicNamespace() {
+        return topicNamespace;
+    }
+
+    public void setTopicNamespace(String topicNamespace) {
+        this.topicNamespace = topicNamespace;
+    }
+
+    public PulsarConfig topicTenant(String topicTenant) {
+        setTopicTenant(topicTenant);
+        return this;
+    }
+
+    public PulsarConfig topicNamespace(String topicNamespace) {
+        setTopicNamespace(topicNamespace);
+        return this;
     }
 
     public void setClientConfig(PulsarClientConfig clientConfig) {
