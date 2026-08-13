@@ -32,6 +32,9 @@ dependencies {
         api("org.carl:infra-component-quarkus-mq-pulsar:${version}")
         api("org.carl:infra-component-quarkus-cache:${version}")
         api("org.carl:infra-component-quarkus-search:${version}")
+        api("org.carl:infra-component-persistence-jooq:${version}")
+        api("org.carl:infra-component-artifact-storage:${version}")
+        api("org.carl:infra-component-quarkus-test:${version}")
         // 注意：不约束 postgresql —— 现状下其版本已被 enforced quarkus-bom 实际接管，
         // 单独约束会改变既有解析结果，故保持行为不变。
     }

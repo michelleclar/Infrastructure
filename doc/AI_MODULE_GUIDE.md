@@ -944,6 +944,19 @@ public class UserService {
 
 ## 测试约定
 
+Quarkus 业务项目统一使用 `infra-component-quarkus-test`，该模块传递提供
+Quarkus JUnit 5、Flyway、Rest Assured 和 Mockito：
+
+```kotlin
+dependencies {
+    implementation(enforcedPlatform(libs.infra.bom))
+    testImplementation(libs.infra.component.test)
+}
+```
+
+Gradle 构建可应用 `org.carl.infra.quarkus` 约定插件。插件版本与 Infra 发布版本一致，
+业务项目只需维护 `carl = "1.0-BATE-SNAPSHOT"`，不再单独维护 Quarkus Gradle 插件版本。
+
 ```java
 // 使用 JUnit 5
 import org.junit.jupiter.api.Test;

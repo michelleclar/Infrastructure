@@ -21,7 +21,9 @@ subprojects {
         plugin("java")
         plugin("idea")
         plugin("java-library")
-        plugin("org.kordamp.gradle.jandex")
+        if (project.name != "infra-gradle-plugin") {
+            plugin("org.kordamp.gradle.jandex")
+        }
     }
     group = "org.carl"
     version = "1.0-BATE-SNAPSHOT"
@@ -72,7 +74,7 @@ subprojects {
     }
     dependencies {
         // 为所有子项目添加日志模块依赖,但排除 log 模块自己
-        if (project.name != "infra-component-log") {
+        if (project.name != "infra-component-log" && project.name != "infra-gradle-plugin") {
             implementation(project(":infra-component-log"))
         }
     }

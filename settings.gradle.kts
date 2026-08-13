@@ -18,6 +18,7 @@ include("infra-component-quarkus:metrics")
 include("infra-component-quarkus:workflow")
 include("infra-component-quarkus:persistence")
 include("infra-component-quarkus:authorization")
+include("infra-component-quarkus:test")
 include("infra-component-qdrant-grpc")
 include("infra-component-embedding-grpc")
 
@@ -42,6 +43,9 @@ include("infra-component-statemachine")
 include("infra-component-redis")
 include("infra-component-discover-api")
 include("infra-component-discover-consul")
+
+// Gradle 约定插件：统一应用并配置 Java/Quarkus 插件
+include("infra-gradle-plugin")
 
 // 平台/版本收口 BOM（java-platform）
 include("infra-bom")
