@@ -1,202 +1,58 @@
 # infra-component-rule-engine
 
-> 轻量级自研规则引擎（灵感来自 [COLA](https://github.com/alibaba/COLA)，无第三方规则引擎依赖）。将业务判断逻辑封装为可组合的 `Rule`，通过 `RuleEngine` 触发执行，事实（fact）通过 `Facts` 传入传出。
+QLExpress 4.1.3 的薄封装，只有三个顶层类，包名 `org.carl.infra.ruleengine`：
 
----
+- `ScriptValidator.check(String)`：拒绝 null/空白，仅检查语法；原样传播 QLExpress 语法异常（行、列、错误码）。不执行脚本、不校验业务。
+- `ConditionCompiler.compile(Map<String, ?>)`：将应用已绑定的 JSON 条件树编译为嵌套 record `CompiledCondition(script, parameters)`。
+- `QLExpressExecutor.execute(String, Map<String, ?>)` / `execute(CompiledCondition, Map<String, ?>)`：返回原始结果 `Object`，运行时错误原样传播。
 
-## 依赖引入
-
-```kotlin
-// build.gradle.kts
-dependencies {
-    implementation(project(":infra-component-rule-engine"))
-}
-```
-
----
-
-## 核心概念
-
-| 类 / 接口 | 包 | 说明 |
-|---|---|---|
-| `Fact<T>` | `api` | 单条命名事实，持有 `name` + `value`（均不可为 null） |
-| `Facts` | `api` | 事实容器（`Set` 语义，同名覆盖），引擎执行时作为输入/输出共享载体 |
-| `Condition` | `api` | `@FunctionalInterface`，`boolean evaluate(Facts facts)`；内置 `TRUE` / `FALSE` 常量，支持 `.and()` / `.or()` 组合 |
-| `Action` | `api` | `@FunctionalInterface`，`void execute(Facts facts)` |
-| `Rule` | `api` | 接口，含 `evaluate` / `execute` / `apply`（= evaluate + execute）；实现 `Comparable` 按优先级排序 |
-| `RuleEngine` | `api` | 接口，入口为 `void fire(Rule rule, Facts facts)` |
-| `RuleBuilder` | `core` | 流式 Builder，组装 `Condition` + 多个 `Action` 生成 `DefaultRule` |
-| `DefaultRuleEngine` | `core` | `RuleEngine` 默认实现，委托给 `rule.apply(facts)` |
-| `AllRules` | `core` | 组合规则（AND 语义）：所有子规则条件全部满足才执行 |
-| `AnyRules` | `core` | 组合规则（OR 短路语义）：第一个 `apply` 成功即返回，后续不再执行 |
-| `NaturalRules` | `core` | 组合规则（顺序语义）：按优先级依次 `apply` 所有子规则，不做短路 |
-| `AbstractRule` | `core` | 继承基类，子类覆写 `evaluate` / `execute` / `apply` |
-| `IRuleEngineAbility` | 根包 | Mixin 接口，实现类可免费获得共享 `DEFAULT_ENGINE` 以及 `fireRule(rule, facts)` 便捷方法 |
-
----
-
-## 使用方式
-
-### 1. 用 `RuleBuilder` 定义叶子规则
+## 使用
 
 ```java
-import org.carl.infra.ruleengine.api.*;
-import org.carl.infra.ruleengine.core.*;
+ScriptValidator validator = new ScriptValidator();
+validator.check("user.level == 'VIP'");
 
-// 准备事实
-Facts facts = new Facts();
-facts.put("number", 15);
+ConditionCompiler compiler = new ConditionCompiler();
+var condition = compiler.compile(Map.of(
+    "combinator", "and",
+    "rules", List.of(
+        Map.of("field", "user.level", "operator", "==", "value", "VIP"),
+        Map.of("field", "amount", "operator", ">=", "value", 100))));
 
-// 定义规则
-Rule fizzRule = new RuleBuilder()
-        .name("fizzRule")
-        .description("能被 3 整除则输出 Fizz")
-        .priority(10)
-        .when(f -> (int) f.get("number") % 3 == 0)
-        .then(f -> f.put("fizz", "Fizz"))
-        .build();
-
-Rule buzzRule = new RuleBuilder()
-        .name("buzzRule")
-        .description("能被 5 整除则输出 Buzz")
-        .priority(20)
-        .when(f -> (int) f.get("number") % 5 == 0)
-        .then(f -> f.put("buzz", "Buzz"))
-        .build();
-
-Rule defaultRule = new RuleBuilder()
-        .name("defaultRule")
-        .description("兜底：直接输出数字")
-        .priority(40)
-        .when(f -> true)
-        .then(f -> System.out.println(f.get("number")))
-        .build();
-
-// 执行
-RuleEngine engine = new DefaultRuleEngine();
-engine.fire(fizzRule, facts);
-System.out.println(facts.get("fizz")); // "Fizz"
+QLExpressExecutor executor = new QLExpressExecutor(1000L); // 正数毫秒，默认 1000
+Object matched = executor.execute(condition,
+    Map.of("user", Map.of("level", "VIP"), "amount", 150)); // true
+Object raw = executor.execute("amount * 2", Map.of("amount", 150)); // 300
 ```
 
----
+## 条件树契约
 
-### 2. 组合规则
+- 组严格为 `{combinator: "and" | "or", rules: [节点, ...]}`；至少一个子节点。
+- 叶严格为 `{field: "user.level", operator: "==", value: "VIP"}`。
+- 操作符仅 `== != > >= < <= in`；不提供 `=` 别名。
+- `value` 必须存在，显式 null 合法（Java 用可容纳 null 的 Map）。`in` 通常传 JSON 数组；类型兼容、比较、缺失事实语义由 QLExpress 决定，不额外做业务验证。
+- 未知属性、混合组/叶、非法结构一律拒绝；根节点计为第 1 层，最大 32 层。
+- 路径每段为 `[A-Za-z_][A-Za-z0-9_]*`，用点分隔；不接受索引、调用、表达式。根名称还必须通过 QLExpress 语法校验（不能是关键字）；后续段使用安全的 Map 下标访问。
+- 条件和组完整加括号。值只绑定到参数 Map，绝不插入脚本文本。
+- `__condition_` 是保留根命名空间：字段根及编译条件执行时的 facts 顶层键都不得使用该前缀；参数合并遇到任意同名 facts 键（包括 null）立即报错。
+- 参数 Map 是不可修改的浅快照，嵌套值仍共享；调用者不得并发修改这些值。手工构造的 `CompiledCondition` 与原始脚本同样属于调用者负责的脚本输入，不是可信编译证明。
 
-#### AllRules（AND 语义）
+## 运行与边界
 
-所有子规则的 `evaluate` 均为 true 时，才依次执行所有子规则的 `execute`。
+实例可复用，每个 executor 持有一个共享 runner，默认隔离策略、解析缓存开启、正数超时、`polluteUserContext(false)`。每次执行复制顶层 Map，脚本局部赋值不写回调用者顶层 facts；**这不是深拷贝，也不是深层只读保证**。推荐 facts 使用 JSON 风格 Map/List/标量，并在执行期间保持嵌套对象稳定；独立调用使用独立 facts。超时由 QLExpress 协作检查，不是操作系统硬中断，也不限制内存或解析缓存规模。
 
-```java
-// fizzRule 与 buzzRule 都满足 → 同时输出 fizz 和 buzz
-Rule fizzBuzzRule = AllRules.allOf(fizzRule, buzzRule)
-        .name("fizzBuzzRule")
-        .priority(5);
+语法成功不代表运行时成功：不存在的函数、不兼容的值、缺失事实、隔离策略限制等仍可能影响运行。没有业务函数注册、副作用抽象、动作、监听器、元数据或执行轨迹。
+
+应用负责 JSON 解析/绑定、规则存储、授权和业务动作。模块不引入 Jackson，不使用 DTO 自动绑定或反射路径访问，不注册 native 反射配置。已在 macOS arm64、Quarkus 3.19.3、GraalVM CE 21.0.2 实际构建并运行 native image：通过语法校验、条件树、in/null、值注入防护、顶层上下文隔离、脚本 lambda、超时及 16,000 次并发执行。验证工程位于 `/tmp/rulecmp/module-native`（临时文件，不随仓库交付）；其他平台和 POJO 反射访问不在本次验证范围。
+
+## 破坏性变更
+
+此前的 `RuleEngine`、`Rule`、`RuleSet`、`Facts`、lambda DSL、动作/监听器、`IRuleEngineAbility`、JSON 字符串解析、元数据/轨迹 API 全部移除。迁移为应用绑定 Map → `ConditionCompiler` → `QLExpressExecutor`，或直接执行脚本；业务编排由应用承担，不提供兼容层。
+
+## 验收
+
+```bash
+./gradlew :infra-component-rule-engine:clean :infra-component-rule-engine:test :infra-component-rule-engine:build
 ```
 
-#### AnyRules（OR 短路语义）
-
-按优先级排序后，第一个 `apply` 返回 true 的子规则执行后立即停止。
-
-```java
-// 优先级：fizzBuzzRule(5) < fizzRule(10) < buzzRule(20) < defaultRule(40)
-// 传入 15 → fizzBuzzRule 最先命中并执行，后续不再执行
-Rule rootRule = AnyRules.anyOf(fizzBuzzRule, fizzRule, buzzRule, defaultRule)
-        .name("anyRule");
-
-engine.fire(rootRule, facts);
-```
-
-#### NaturalRules（顺序语义）
-
-按优先级排序后，无论条件是否满足，依次对每条子规则调用 `apply`（不做短路）。
-
-```java
-Rule natural = NaturalRules.of(ruleA, ruleB, ruleC).name("naturalRule");
-engine.fire(natural, facts);
-```
-
----
-
-### 3. 继承 `AbstractRule` 自定义规则类
-
-```java
-public class MyRule extends AbstractRule {
-
-    public MyRule() {
-        super("myRule", "自定义规则示例", 1);
-    }
-
-    @Override
-    public boolean evaluate(Facts facts) {
-        Integer score = facts.get("score");
-        return score != null && score >= 60;
-    }
-
-    @Override
-    public void execute(Facts facts) {
-        facts.put("result", "passed");
-    }
-
-    @Override
-    public boolean apply(Facts facts) {
-        if (evaluate(facts)) {
-            execute(facts);
-            return true;
-        }
-        return false;
-    }
-}
-```
-
----
-
-### 4. 通过 `IRuleEngineAbility` Mixin 使用
-
-业务 Service 实现 `IRuleEngineAbility` 即可复用共享的 `DefaultRuleEngine` 静态实例，无需手动构造引擎。
-
-```java
-import org.carl.infra.ruleengine.IRuleEngineAbility;
-import org.carl.infra.ruleengine.api.*;
-import org.carl.infra.ruleengine.core.RuleBuilder;
-
-public class ScoreService implements IRuleEngineAbility {
-
-    public String check(int score) {
-        Facts facts = new Facts();
-        facts.put("score", score);
-
-        Rule passRule = new RuleBuilder()
-                .when(f -> (int) f.get("score") >= 60)
-                .then(f -> f.put("result", "passed"))
-                .build();
-
-        fireRule(passRule, facts);           // 来自 IRuleEngineAbility
-        return facts.get("result");
-    }
-}
-```
-
----
-
-## Facts API 速查
-
-| 方法 | 说明 |
-|---|---|
-| `put(String name, T value)` | 添加或覆盖同名事实 |
-| `add(Fact<T> fact)` | 同上，接受 `Fact` 对象 |
-| `get(String factName)` | 按名称取值（泛型，未找到返回 `null`） |
-| `getFact(String factName)` | 取 `Fact<?>` 对象本身 |
-| `remove(String factName)` | 按名称删除 |
-| `contains(String factName)` | 判断是否存在 |
-| `asMap()` | 导出为 `Map<String, Object>` 快照 |
-| `clear()` | 清空所有事实 |
-
----
-
-## 注意事项
-
-- **优先级数值越小，优先级越高**（`CompositeRule` 内部对子规则执行 `Collections.sort`，`Comparable` 以 `priority` 升序排列）。
-- `AnyRules` 不支持直接调用 `execute(Facts)`（抛 `RuntimeException`），只能通过 `apply` / `fire` 使用。
-- `NaturalRules` 不支持作为其他组合规则的子规则（`evaluate` / `execute` 均抛 `RuntimeException`），只能作为顶层规则交给 `RuleEngine.fire`。
-- `Fact` 的 `name` 和 `value` 均不可为 null，违反时抛 `NullPointerException`。
-- `IRuleEngineAbility.DEFAULT_ENGINE` 是接口字段（`public static final`），被所有实现类共享，线程安全（`DefaultRuleEngine` 本身无状态）。
+公共 QLExpress 文档可能跟随 main 分支演进；当前依赖固定 4.1.3，以本地版本及测试为准。

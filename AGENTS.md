@@ -30,6 +30,7 @@
 | 独立库 | redis | Redis 客户端（异步/同步、分布式锁、泛型序列化） |
 | 独立库 | mq-api / mq-pulsar | 消息队列抽象接口 + Pulsar 实现 |
 | 独立库 | statemachine | 状态机 |
+| 独立库 | rule-engine | QLExpress 薄封装：ScriptValidator / ConditionCompiler（Map 条件树）/ QLExpressExecutor；旧规则编排 API 已移除，Map 路径已实测 native（环境见模块 README） |
 
 `demo/` 目录包含可运行的 Quarkus 示例应用，是各组件接线方式的参考。
 

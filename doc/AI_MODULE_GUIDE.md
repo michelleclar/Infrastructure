@@ -38,7 +38,7 @@ infra-component-discover-api/ # 注册发现与动态配置公共 API（无 Quar
 infra-component-discover-consul/ # Consul 实现（无 Quarkus 依赖）
 discover-k8s/                 # Kubernetes 实现占位（尚未加入构建）
 infra-component-statemachine/ # 状态机（无依赖）
-infra-component-rule-engine/ # 规则引擎（无依赖）
+infra-component-rule-engine/ # QLExpress 薄封装（语法校验 / Map 条件编译 / 执行）
 infra-component-qdrant-grpc/ # Qdrant 向量库 gRPC
 infra-component-embedding-grpc/ # Embedding gRPC
 ```
@@ -436,26 +436,24 @@ machine.generatePlantUML();     // 生成 PlantUML 图
 
 ---
 
-### 7. RuleEngine — 规则引擎
+### 7. QLExpress — 语法校验、条件编译与执行
 
-**包**: `org.carl.infra.ruleengine`
-**依赖**: 无
+**包**: `org.carl.infra.ruleengine`；**依赖**: QLExpress 4.1.3（无 Jackson）。
 
 ```java
-// 构建规则
-Rule rule = new RuleBuilder()
-    .name("AdultEmployedRule")
-    .condition(facts -> facts.get("age") >= 18 && facts.get("employed"))
-    .action(facts -> facts.put("qualified", true))
-    .build();
-
-// 执行
-RuleEngine engine = new DefaultRuleEngine();
-Facts facts = new Facts();
-facts.put("age", 25);
-facts.put("employed", true);
-engine.fire(rule, facts);
+new ScriptValidator().check("age >= 18"); // 仅语法，不执行
+var compiled = new ConditionCompiler().compile(
+    Map.of("field", "user.level", "operator", "==", "value", "VIP"));
+QLExpressExecutor executor = new QLExpressExecutor(1000L); // 实例复用，正数毫秒
+Object result = executor.execute(compiled, Map.of("user", Map.of("level", "VIP")));
+Object raw = executor.execute("age >= 18", Map.of("age", 25));
 ```
+
+应用负责 JSON → Map。组为 `{combinator:and|or,rules:[...]}`，叶支持 `== != > >= < <= in`；value 必填但可显式 null，拒绝空组/混合节点/非法路径，最大 32 层。输出嵌套 record `CompiledCondition(script, parameters)`，值全参数化，保留 `__condition_` 命名空间并拒绝 facts 冲突。
+
+默认隔离、缓存开启、`polluteUserContext(false)`；每次浅复制顶层 facts，不是深层只读；并发调用用独立 Map，嵌套对象执行期间保持稳定。语法成功不保证运行成功。Map 路径已通过 native 实测，环境和范围见模块 README。
+
+破坏性变更：旧 RuleEngine/Rule/RuleSet/Facts/IRuleEngineAbility、lambda、动作、监听器、元数据和轨迹已移除，业务编排由应用承担。详见 `infra-component-rule-engine/README.MD`。
 
 ---
 
