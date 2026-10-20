@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class SlimApiTest {
     private final ConditionCompiler compiler = new ConditionCompiler();
-    private final QLExpressExecutor executor = new QLExpressExecutor();
+    private final ExpressionExecutor executor = new ExpressionExecutor();
 
     private static Map<String, Object> leaf(String field, String operator, Object value) {
         Map<String, Object> leaf = new HashMap<>();
@@ -102,28 +102,27 @@ class SlimApiTest {
 
     @Test
     void validatorOnlyChecksSyntaxAndPreservesDetails() {
-        ScriptValidator validator = new ScriptValidator();
-        assertThrows(IllegalArgumentException.class, () -> validator.check(null));
-        assertThrows(IllegalArgumentException.class, () -> validator.check(" \n"));
-        QLSyntaxException syntax = assertThrows(QLSyntaxException.class, () -> validator.check("x > 0 &&\n(y > 1"));
+        assertThrows(IllegalArgumentException.class, () -> executor.check(null));
+        assertThrows(IllegalArgumentException.class, () -> executor.check(" \n"));
+        QLSyntaxException syntax = assertThrows(QLSyntaxException.class, () -> executor.check("x > 0 &&\n(y > 1"));
         assertEquals(2, syntax.getLineNo());
         assertEquals("SYNTAX_ERROR", syntax.getErrorCode());
         assertTrue(syntax.getMessage().contains("Column"));
-        assertTimeoutPreemptively(java.time.Duration.ofSeconds(2), () -> validator.check("while (true) { 1 + 1 }"));
-        validator.check("unknownFunction(missing)");
+        assertTimeoutPreemptively(java.time.Duration.ofSeconds(2), () -> executor.check("while (true) { 1 + 1 }"));
+        executor.check("unknownFunction(missing)");
         assertThrows(QLException.class, () -> executor.execute("unknownFunction(missing)", Map.of()));
     }
 
     @Test
     void executionIsIsolatedTimedAndDoesNotWriteTopLevelFacts() {
-        assertThrows(IllegalArgumentException.class, () -> new QLExpressExecutor(0));
-        assertThrows(IllegalArgumentException.class, () -> new QLExpressExecutor(-1));
+        assertThrows(IllegalArgumentException.class, () -> new ExpressionExecutor(0));
+        assertThrows(IllegalArgumentException.class, () -> new ExpressionExecutor(-1));
         assertThrows(IllegalArgumentException.class, () -> executor.execute(" ", Map.of()));
         Map<String, Object> facts = new HashMap<>(Map.of("x", 1));
         assertEquals(3, executor.execute("x = 2; created = 3; created", facts));
         assertEquals(Map.of("x", 1), facts);
         assertThrows(QLException.class, () -> executor.execute("name.length()", Map.of("name", "abc")));
-        assertThrows(QLTimeoutException.class, () -> new QLExpressExecutor(20).execute("while (true) { 1 + 1 }", Map.of()));
+        assertThrows(QLTimeoutException.class, () -> new ExpressionExecutor(20).execute("while (true) { 1 + 1 }", Map.of()));
     }
 
     @Test

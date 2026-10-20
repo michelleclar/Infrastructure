@@ -15,12 +15,22 @@ public final class ConditionCompiler {
     private static final int MAX_DEPTH = 32;
     private static final Pattern PATH = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*");
     private static final Set<String> OPERATORS = Set.of("==", "!=", ">", ">=", "<", "<=", "in");
-    private final ScriptValidator validator = new ScriptValidator();
+
+    private final ExpressionExecutor executor;
+
+    public ConditionCompiler() {
+        this(ExpressionFactory.getDefault());
+    }
+
+    /** Uses the selected executor for the compiled script's syntax check. */
+    public ConditionCompiler(ExpressionExecutor executor) {
+        this.executor = Objects.requireNonNull(executor, "executor");
+    }
 
     public CompiledCondition compile(Map<String, ?> tree) {
         Map<String, Object> parameters = new LinkedHashMap<>();
         String script = compileNode(Objects.requireNonNull(tree, "tree"), parameters, 1);
-        validator.check(script);
+        executor.check(script);
         return new CompiledCondition(script, parameters);
     }
 

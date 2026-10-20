@@ -441,17 +441,20 @@ machine.generatePlantUML();     // 生成 PlantUML 图
 **包**: `org.carl.infra.ruleengine`；**依赖**: QLExpress 4.1.3（无 Jackson）。
 
 ```java
-new ScriptValidator().check("age >= 18"); // 仅语法，不执行
-var compiled = new ConditionCompiler().compile(
+ExpressionExecutor executor = ExpressionFactory.getDefault(); // 默认 (1000ms, precise=false)
+// 自有有限配置：ExpressionFactory.get(new ExpressionOptions(2000L, true))
+executor.check("age >= 18"); // 复用执行 runner，仅语法，不执行
+var compiled = new ConditionCompiler(executor).compile(
     Map.of("field", "user.level", "operator", "==", "value", "VIP"));
-QLExpressExecutor executor = new QLExpressExecutor(1000L); // 实例复用，正数毫秒
 Object result = executor.execute(compiled, Map.of("user", Map.of("level", "VIP")));
 Object raw = executor.execute("age >= 18", Map.of("age", 25));
 ```
 
 应用负责 JSON → Map。组为 `{combinator:and|or,rules:[...]}`，叶支持 `== != > >= < <= in`；value 必填但可显式 null，拒绝空组/混合节点/非法路径，最大 32 层。输出嵌套 record `CompiledCondition(script, parameters)`，值全参数化，保留 `__condition_` 命名空间并拒绝 facts 冲突。
 
-默认隔离、缓存开启、`polluteUserContext(false)`；每次浅复制顶层 facts，不是深层只读；并发调用用独立 Map，嵌套对象执行期间保持稳定。语法成功不保证运行成功。Map 路径已通过 native 实测，环境和范围见模块 README。
+`ExpressionOptions` 不可变且拒绝非正超时；工厂使用 `ConcurrentHashMap.computeIfAbsent` 按配置值相等复用 `ExpressionExecutor` 实例；该类是公共 final 具体封装，也可无参或传 `long timeoutMillis` 直接构造（precise=false），配置构造器仅包内可见。工厂缓存和 runner 解析缓存均无界、无淘汰：只使用有限的应用自有配置/脚本，不接受任意公网配置。`ConditionCompiler()` 绑定工厂默认实例，也可注入所选 `ExpressionExecutor` 用于编译检查。
+
+默认隔离、缓存开启、`polluteUserContext(false)`；每次浅复制顶层 facts，不是深层只读；并发调用用独立 Map，嵌套对象执行期间保持稳定。execute 不自动 check；语法成功不保证运行成功。没有新增异常层次，QLExpress 异常原样传播，DSL/异常仍厂商绑定，不承诺透明脚本迁移。历史 native 验证针对旧 API，当前工厂 API 尚未验证 native，详情见模块 README。
 
 破坏性变更：旧 RuleEngine/Rule/RuleSet/Facts/IRuleEngineAbility、lambda、动作、监听器、元数据和轨迹已移除，业务编排由应用承担。详见 `infra-component-rule-engine/README.MD`。
 
